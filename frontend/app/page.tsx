@@ -1,0 +1,307 @@
+import Link from "next/link";
+
+import { MatchCard } from "@/components/ui/match-card";
+import { MetricCard } from "@/components/ui/metric-card";
+import { PageShell } from "@/components/ui/page-shell";
+import { StatusPill } from "@/components/ui/status-pill";
+import { ApiError } from "@/lib/api";
+import { getHomeSummary } from "@/lib/home";
+import type { HomeSummaryResponse } from "@/lib/home";
+import { listUpcomingMatches } from "@/lib/matches";
+import type { MatchResponse } from "@/lib/matches";
+import type { MatchCard as MatchCardType, Metric } from "@/lib/view-data";
+
+const HOUR_IN_MS = 60 * 60 * 1000;
+
+type HomePageData = {
+  errors: string[];
+  matches: MatchResponse[];
+  summary: HomeSummaryResponse | null;
+};
+
+function getLoadErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  return fallback;
+}
+
+async function loadHomePageData(): Promise<HomePageData> {
+  const [summaryResult, matchesResult] = await Promise.allSettled([
+    getHomeSummary(),
+    listUpcomingMatches({ includeLocked: true, limit: 3 }),
+  ]);
+  const errors: string[] = [];
+  let summary: HomeSummaryResponse | null = null;
+  let matches: MatchResponse[] = [];
+
+  if (summaryResult.status === "fulfilled") {
+    summary = summaryResult.value;
+  } else {
+    errors.push(
+      getLoadErrorMessage(
+        summaryResult.reason,
+        "Unable to load tournament summary.",
+      ),
+    );
+  }
+
+  if (matchesResult.status === "fulfilled") {
+    matches = matchesResult.value.items;
+  } else {
+    errors.push(
+      getLoadErrorMessage(
+        matchesResult.reason,
+        "Unable to load upcoming matches.",
+      ),
+    );
+  }
+
+  return { errors, matches, summary };
+}
+
+function formatNumber(value: number | undefined): string {
+  if (value === undefined) {
+    return "N/A";
+  }
+
+  return new Intl.NumberFormat("en").format(value);
+}
+
+function buildDashboardMetrics(summary: HomeSummaryResponse | null): Metric[] {
+  return [
+    {
+      label: "Open matches",
+      tone: "green",
+      value: formatNumber(summary?.open_matches),
+    },
+    {
+      label: "Predictions made",
+      tone: "blue",
+      value: formatNumber(summary?.predictions_made),
+    },
+    {
+      label: "Locking soon",
+      tone: "amber",
+      value: formatNumber(summary?.locking_soon),
+    },
+    {
+      label: "Completed matches",
+      tone: "red",
+      value: formatNumber(summary?.completed_matches),
+    },
+  ];
+}
+
+function formatDateTime(value: string): string {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    month: "short",
+  }).format(date);
+}
+
+function formatGroupLabel(group: string): string {
+  const normalizedGroup = group.trim();
+
+  if (!normalizedGroup) {
+    return "Group TBA";
+  }
+
+  if (/^group\s+/i.test(normalizedGroup)) {
+    return normalizedGroup;
+  }
+
+  return `Group ${normalizedGroup}`;
+}
+
+function formatMatchGroup(match: MatchResponse): string {
+  if (match.team1_group === match.team2_group) {
+    return formatGroupLabel(match.team1_group);
+  }
+
+  return `${formatGroupLabel(match.team1_group)} / ${formatGroupLabel(
+    match.team2_group,
+  )}`;
+}
+
+function getMatchLockState(
+  match: MatchResponse,
+): MatchCardType["lockState"] {
+  if (match.match_locked) {
+    return "Locked";
+  }
+
+  const kickoffTime = new Date(match.match_datetime).getTime();
+  const lockTime = kickoffTime - HOUR_IN_MS;
+  const now = Date.now();
+
+  if (!Number.isFinite(lockTime)) {
+    return "Open";
+  }
+
+  if (now >= lockTime) {
+    return "Locked";
+  }
+
+  if (lockTime - now <= 3 * HOUR_IN_MS) {
+    return "Locking soon";
+  }
+
+  return "Open";
+}
+
+function toMatchCard(match: MatchResponse): MatchCardType {
+  return {
+    awayTeam: match.team2_name,
+    day: `Match day ${match.match_day}`,
+    group: formatMatchGroup(match),
+    homeTeam: match.team1_name,
+    id: match.id,
+    kickOff: formatDateTime(match.match_datetime),
+    lockState: getMatchLockState(match),
+    venue: match.venue_name?.trim() || "TBA",
+  };
+}
+
+function formatMinutes(value: number): string {
+  if (value <= 0) {
+    return "Now";
+  }
+
+  const days = Math.floor(value / (24 * 60));
+  const hours = Math.floor((value % (24 * 60)) / 60);
+  const minutes = value % 60;
+
+  if (days > 0) {
+    return hours > 0 ? `${days}d ${hours}h` : `${days}d`;
+  }
+
+  if (hours > 0) {
+    return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+  }
+
+  return `${minutes}m`;
+}
+
+export default async function Home() {
+  const { errors, matches, summary } = await loadHomePageData();
+  const dashboardMetrics = buildDashboardMetrics(summary);
+  const upcomingMatches = matches.map(toMatchCard);
+  const nextLock = summary?.next_lock ?? null;
+
+  return (
+    <PageShell
+      actions={
+        <>
+          <Link
+            href="/predictions"
+            className="inline-flex h-10 items-center rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800"
+          >
+            Make prediction
+          </Link>
+          <Link
+            href="/leaderboard"
+            className="inline-flex h-10 items-center rounded-md border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50"
+          >
+            View ranks
+          </Link>
+        </>
+      }
+      eyebrow="Match center"
+      subtitle="Upcoming fixtures, prediction windows, standings signals, and quick access to tournament areas."
+      title="Football Tournament Predictor"
+    >
+      {errors.length > 0 ? (
+        <section
+          className="rounded-md border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900"
+          role="alert"
+        >
+          {errors.join(" ")}
+        </section>
+      ) : null}
+
+      <section className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {dashboardMetrics.map((metric) => (
+            <MetricCard key={metric.label} metric={metric} />
+          ))}
+        </div>
+
+        <div className="football-field relative min-h-64 overflow-hidden rounded-md border border-emerald-900/20 p-5 text-white shadow-sm">
+          <div className="relative z-10 flex h-full flex-col justify-between">
+            <div className="flex items-center justify-between">
+              <StatusPill tone={nextLock ? "green" : "zinc"}>
+                {nextLock ? "Live window" : "No open locks"}
+              </StatusPill>
+              <span className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold">
+                {summary ? `${summary.open_matches} open` : "Live API"}
+              </span>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-emerald-50">
+                Next lock closes in
+              </p>
+              <p className="mt-2 text-4xl font-semibold tracking-normal">
+                {nextLock ? formatMinutes(nextLock.minutes_until_lock) : "N/A"}
+              </p>
+              <p className="mt-3 max-w-xs text-sm leading-6 text-emerald-50">
+                {nextLock
+                  ? `${nextLock.label} locks one hour before kickoff.`
+                  : "Upcoming prediction windows will appear here once matches are open."}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-semibold text-zinc-950">
+              Upcoming matches
+            </h2>
+            <p className="mt-1 text-sm text-zinc-500">
+              Open fixtures for score and match detail predictions.
+            </p>
+          </div>
+          <Link
+            href="/predictions"
+            className="hidden text-sm font-semibold text-emerald-700 hover:text-emerald-900 sm:inline"
+          >
+            All predictions
+          </Link>
+        </div>
+        {upcomingMatches.length > 0 ? (
+          <div className="grid gap-4 lg:grid-cols-3">
+            {upcomingMatches.map((match) => (
+              <MatchCard key={match.id} match={match} />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-md border border-zinc-200 bg-white px-5 py-10 text-center shadow-sm">
+            <h2 className="text-lg font-semibold text-zinc-950">
+              No upcoming matches
+            </h2>
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-500">
+              Fixtures will appear here as soon as the API has open upcoming
+              matches.
+            </p>
+          </div>
+        )}
+      </section>
+    </PageShell>
+  );
+}

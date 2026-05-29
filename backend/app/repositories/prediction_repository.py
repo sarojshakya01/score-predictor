@@ -1,0 +1,162 @@
+"""Repository for prediction database operations."""
+
+from collections.abc import Mapping
+
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.models.match import Match
+from app.models.prediction import Prediction
+from app.models.user import User
+
+
+class PredictionRepository:
+    """Encapsulates all database operations for the Prediction model."""
+
+    def __init__(self, db: AsyncSession) -> None:
+        self._db = db
+
+    async def get_by_id(self, prediction_id: int) -> Prediction | None:
+        """Fetch a prediction by primary key."""
+        result = await self._db.execute(
+            select(Prediction).where(Prediction.id == prediction_id),
+        )
+        return result.scalar_one_or_none()
+
+    async def get_for_user(
+        self,
+        *,
+        prediction_id: int,
+        user_id: int,
+    ) -> Prediction | None:
+        """Fetch a prediction by id scoped to a user."""
+        result = await self._db.execute(
+            select(Prediction).where(
+                Prediction.id == prediction_id,
+                Prediction.user_id == user_id,
+            ),
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_user_and_match(
+        self,
+        *,
+        user_id: int,
+        match_id: int,
+    ) -> Prediction | None:
+        """Fetch a user's prediction for a specific match."""
+        result = await self._db.execute(
+            select(Prediction).where(
+                Prediction.user_id == user_id,
+                Prediction.match_id == match_id,
+            ),
+        )
+        return result.scalar_one_or_none()
+
+    async def list_predictions(
+        self,
+        *,
+        offset: int = 0,
+        limit: int = 50,
+        user_id: int | None = None,
+        match_id: int | None = None,
+    ) -> list[Prediction]:
+        """Fetch predictions with optional filters and pagination."""
+        statement = select(Prediction)
+
+        if user_id is not None:
+            statement = statement.where(Prediction.user_id == user_id)
+
+        if match_id is not None:
+            statement = statement.where(Prediction.match_id == match_id)
+
+        result = await self._db.execute(
+            statement.order_by(
+                Prediction.predicted_datetime.desc(),
+                Prediction.id.desc(),
+            )
+            .offset(offset)
+            .limit(limit),
+        )
+        return list(result.scalars().all())
+
+    async def count_predictions(
+        self,
+        *,
+        user_id: int | None = None,
+        match_id: int | None = None,
+    ) -> int:
+        """Count predictions using the same filters as list_predictions."""
+        statement = select(func.count()).select_from(Prediction)
+
+        if user_id is not None:
+            statement = statement.where(Prediction.user_id == user_id)
+
+        if match_id is not None:
+            statement = statement.where(Prediction.match_id == match_id)
+
+        result = await self._db.execute(statement)
+        return int(result.scalar_one())
+
+    async def count_all_predictions(self) -> int:
+        """Count every prediction in the system."""
+        statement = select(func.count()).select_from(Prediction)
+        result = await self._db.execute(statement)
+        return int(result.scalar_one())
+
+    async def list_scored_predictions(self) -> list[Prediction]:
+        """Fetch predictions for active users where the match has a final score."""
+        statement = (
+            select(Prediction)
+            .join(Prediction.match)
+            .join(Prediction.user)
+            .options(
+                selectinload(Prediction.match),
+                selectinload(Prediction.user),
+            )
+            .where(User.is_active.is_(True))
+            .where(Match.team1_score.is_not(None))
+            .where(Match.team2_score.is_not(None))
+            .order_by(Prediction.user_id.asc(), Prediction.match_id.asc())
+        )
+
+        result = await self._db.execute(statement)
+        return list(result.scalars().all())
+
+    async def count_predictions_by_active_user(self) -> dict[int, int]:
+        """Count all predictions made by each active user."""
+        statement = (
+            select(Prediction.user_id, func.count(Prediction.id))
+            .join(Prediction.user)
+            .where(User.is_active.is_(True))
+            .group_by(Prediction.user_id)
+        )
+
+        result = await self._db.execute(statement)
+        return {user_id: int(count) for user_id, count in result.all()}
+
+    async def create(self, prediction: Prediction) -> Prediction:
+        """Persist a new prediction and return the refreshed instance."""
+        self._db.add(prediction)
+        await self._db.commit()
+        await self._db.refresh(prediction)
+        return prediction
+
+    async def update(
+        self,
+        prediction: Prediction,
+        values: Mapping[str, object],
+    ) -> Prediction:
+        """Update an existing prediction and return the refreshed instance."""
+        for field_name, value in values.items():
+            setattr(prediction, field_name, value)
+
+        await self._db.commit()
+        await self._db.refresh(prediction)
+        return prediction
+
+    async def delete(self, prediction: Prediction) -> None:
+        """Delete an existing prediction."""
+        await self._db.delete(prediction)
+        await self._db.commit()

@@ -1,0 +1,42 @@
+import type { UserRole } from "@/lib/auth";
+
+export type UserResponse = {
+  created_at: string;
+  email: string;
+  first_name: string;
+  id: number;
+  is_active: boolean;
+  last_name: string;
+  middle_name: string | null;
+  mobile_no: string;
+  role: UserRole;
+  updated_at: string;
+};
+
+export type UserListResponse = {
+  items: UserResponse[];
+  limit: number;
+  offset: number;
+  total: number;
+};
+
+export type UserCreate = {
+  email: string;
+  first_name: string;
+  middle_name?: string | null;
+  last_name: string;
+  mobile_no: string;
+  password?: string;
+  role?: UserRole;
+  is_active?: boolean;
+};
+
+export type UserUpdate = Partial<UserCreate>;
+
+export type ListAdminUsersParams = {
+  is_active?: boolean;
+  limit?: number;
+  offset?: number;
+  role?: UserRole;
+  search?: string;
+};

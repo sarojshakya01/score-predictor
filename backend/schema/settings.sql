@@ -1,0 +1,24 @@
+CREATE TABLE settings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+
+    name VARCHAR(100) NOT NULL UNIQUE,
+    value TEXT NOT NULL,
+
+    -- TimestampMixin fields
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ON UPDATE CURRENT_TIMESTAMP,
+
+    -- Constraints
+    CONSTRAINT ck_settings_name_not_empty
+        CHECK (CHAR_LENGTH(name) > 0),
+
+    CONSTRAINT ck_settings_value_not_empty
+        CHECK (CHAR_LENGTH(`value`) > 0),
+
+    -- Index
+    INDEX ix_settings_name (name)
+
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_unicode_ci;
