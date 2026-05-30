@@ -71,7 +71,7 @@ export const AuthActions = () => {
         <button
           type="button"
           onClick={handleLogout}
-          className="inline-flex cursor-pointer h-10 items-center cursor-pointer rounded-md border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50"
+          className="inline-flex cursor-pointer h-10 items-center cursor-pointer rounded-md bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50"
         >
           Logout
         </button>
@@ -89,7 +89,7 @@ export const AuthActions = () => {
       </Link>
       <Link
         href="/signup"
-        className="inline-flex h-10 items-center rounded-md text-zinc-700 px-3 text-sm font-semibold text-white transition hover:bg-zinc-800"
+        className="inline-flex h-10 items-center rounded-md text-zinc-700 px-3 text-sm font-semibold text-white transition hover:bg-zinc-50"
       >
         Sign up
       </Link>

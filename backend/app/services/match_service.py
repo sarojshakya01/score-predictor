@@ -21,11 +21,6 @@ from app.services.team_service import TeamService
 
 logger = logging.getLogger(__name__)
 
-MATCH_STAGE_ALIASES = {
-    "quarterfinals": "QF",
-    "semifinals": "SF",
-}
-
 class MatchService:
     """Handles match validation and orchestration."""
 
@@ -45,9 +40,6 @@ class MatchService:
     ) -> MatchListResponse:
         """Return paginated matches for admin screens."""
         try:
-
-            if match_stage is not None:
-                match_stage = MATCH_STAGE_ALIASES.get(match_stage, match_stage)
 
             if match_day is None and match_stage is None:
                 setting = await self._setting_repository.get_by_name("current_match_day")
@@ -375,10 +367,12 @@ class MatchService:
         """Build a match response payload with team display fields."""
         return {
             **match.__dict__,
-            "team1_name": match.team1.name,
+            "team1_name": match.team1.name.replace("-H", "").replace("-A", ""),
+            "team1_name_short": match.team1.fifa_code if match.team1.fifa_code != "NEP" else match.team1.name.replace("-H", "").replace("-A", ""),
             "team1_group": match.team1.group,
             "team1_flag_url": TeamService.team_flag_url(match.team1),
-            "team2_name": match.team2.name,
+            "team2_name": match.team2.name.replace("-H", "").replace("-A", ""),
+            "team2_name_short": match.team2.fifa_code if match.team2.fifa_code != "NEP" else match.team2.name.replace("-H", "").replace("-A", ""),
             "team2_group": match.team2.group,
             "team2_flag_url": TeamService.team_flag_url(match.team2),
         }

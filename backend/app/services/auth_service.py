@@ -48,8 +48,10 @@ class AuthService:
                 mobile_no=data.mobile_no,
                 password=hash_password(data.password),
                 role=UserRole.USER,
+                is_active=False # do not activate by default
             )
             user = await self._repository.create(user)
+
             return self._generate_tokens(user)
         except HTTPException:
             # Re-raise FastAPI HTTP exceptions
@@ -131,7 +133,10 @@ class AuthService:
     @staticmethod
     def _generate_tokens(user: User) -> TokenResponse:
         """Build an access + refresh token pair for the given user ID."""
+        message = "User created and logged in successfully." if user.is_active else "User created successfully. Please contact admin for activation."
+
         return TokenResponse(
             access_token=create_access_token(subject=user.id, role=user.role),
             refresh_token=create_refresh_token(subject=user.id),
+            message=message
         )

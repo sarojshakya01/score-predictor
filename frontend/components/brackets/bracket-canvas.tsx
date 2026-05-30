@@ -18,7 +18,6 @@ import { getMatchLabelWithFlag, MatchVenue } from "../ui/match-card";
 
 type StageConfig = {
   expectedMatches: number;
-  fallbackStage?: string;
   label: string;
   queryStage: string;
 };
@@ -69,19 +68,22 @@ const STAGES: StageConfig[] = [
   },
   {
     expectedMatches: 4,
-    fallbackStage: "QF",
     label: "Quarterfinals",
-    queryStage: "quarterfinals",
+    queryStage: "QF",
   },
   {
     expectedMatches: 2,
-    fallbackStage: "SF",
     label: "Semifinals",
-    queryStage: "semifinals",
+    queryStage: "SF",
   },
   {
     expectedMatches: 1,
-    label: "F",
+    label: "3rd Place",
+    queryStage: "3P",
+  },
+  {
+    expectedMatches: 1,
+    label: "Final",
     queryStage: "F",
   },
 ];
@@ -89,11 +91,38 @@ const STAGES: StageConfig[] = [
 const CANVAS_PADDING_X = 32;
 const CANVAS_PADDING_TOP = 82;
 const CANVAS_PADDING_BOTTOM = 54;
-const CARD_WIDTH = 230;
+const CARD_WIDTH = 170;
 const CARD_HEIGHT = 90;
 const COLUMN_GAP = 78;
-const SLOT_PITCH = 100;
+const SLOT_PITCH = 50;
 const CARD_RADIUS = 8;
+
+const imageCache = new Map<string, Promise<HTMLImageElement | null>>();
+
+const loadImage = (url: string): Promise<HTMLImageElement | null> => {
+  if (!url) {
+    return Promise.resolve(null);
+  }
+
+  const cached = imageCache.get(url);
+  if (cached) {
+    return cached;
+  }
+
+  const promise = new Promise<HTMLImageElement | null>((resolve) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+
+    img.src = url;
+  });
+
+  imageCache.set(url, promise);
+
+  return promise;
+};
 
 const emptyRounds = (): BracketRound[] =>
   STAGES.map((config) => ({
@@ -126,28 +155,16 @@ const fetchStageMatches = async (
     matchStage: config.queryStage,
   });
 
-  if (config.queryStage === "F" && primaryResponse.items.length > 1) {
-    return {
-      matches: [primaryResponse.items[1]],
-      queryStage: config.queryStage,
-    };
-  }
-
-  if (primaryResponse.items.length > 0 || !config.fallbackStage) {
+  if (primaryResponse.items.length > 0) {
     return {
       matches: sortMatches(primaryResponse.items),
       queryStage: config.queryStage,
     };
   }
 
-  const fallbackResponse = await listMatches({
-    limit: 64,
-    matchStage: config.fallbackStage,
-  });
-
   return {
-    matches: sortMatches(fallbackResponse.items),
-    queryStage: config.fallbackStage,
+    matches: [],
+    queryStage: config.queryStage,
   };
 };
 
@@ -198,7 +215,52 @@ const createBracketLayout = (rounds: BracketRound[]): BracketLayout => {
   });
 
   const connectors: Connector[] = [];
-  for (let roundIndex = 0; roundIndex < slotsByRound.length - 1; roundIndex += 1) {
+
+  let semifinalSlots: BracketSlot[] = [];
+  let thirdPlaceSlot: BracketSlot = {} as BracketSlot;
+  let finalSlot: BracketSlot = {} as BracketSlot;
+
+  for (const slots of slotsByRound) {
+    if (slots.some((slot) => slot.match?.match_stage === 'SF')) {
+      semifinalSlots = slots;
+    }
+    if (slots.some((slot) => slot.match?.match_stage === '3P')) {
+      thirdPlaceSlot = slots[0];
+    }
+    if (slots.some((slot) => slot.match?.match_stage === 'F')) {
+      finalSlot = slots[0];
+    }
+  }
+
+  if (
+    semifinalSlots?.length === 2 &&
+    Object.keys(thirdPlaceSlot).length &&
+    Object.keys(finalSlot).length
+  ) {
+    const startX = semifinalSlots[0].x + semifinalSlots[0].width;
+    const midX = startX + COLUMN_GAP / 2;
+
+    // Final connector
+    connectors.push({
+      startX,
+      startY: semifinalSlots[0].y + semifinalSlots[0].height / 2,
+      midX,
+      endX: finalSlot.x - CARD_WIDTH - COLUMN_GAP,
+      endY: (semifinalSlots[0].y + semifinalSlots[1].y) / 2 - semifinalSlots[0].height
+    });
+
+    if (semifinalSlots?.length === 2 && thirdPlaceSlot && finalSlot) {
+      // Upper branch = Final
+      finalSlot.y = (semifinalSlots[0].y + semifinalSlots[1].y) / 2 - 3 / 2 * semifinalSlots[0].height
+      finalSlot.x = thirdPlaceSlot.x;
+
+      // Lower branch = 3rd place
+      thirdPlaceSlot.y =
+        semifinalSlots[1].y - (semifinalSlots[1].y - semifinalSlots[0].y) / 3;
+    }
+  }
+
+  for (let roundIndex = 0; roundIndex < slotsByRound.length - 2; roundIndex += 1) {
     const currentSlots = slotsByRound[roundIndex];
     const nextSlots = slotsByRound[roundIndex + 1];
 
@@ -222,6 +284,7 @@ const createBracketLayout = (rounds: BracketRound[]): BracketLayout => {
         startX,
         startY: upperSlot.y + upperSlot.height / 2,
       });
+
       connectors.push({
         endX,
         endY,
@@ -232,10 +295,13 @@ const createBracketLayout = (rounds: BracketRound[]): BracketLayout => {
     });
   }
 
+  // filter slots with valid match info
+  const flatSlots = slotsByRound.flat().filter((slot) => slot.match);
+
   return {
     connectors,
     height,
-    slots: slotsByRound.flat(),
+    slots: flatSlots,
     slotsByRound,
     width,
   };
@@ -393,17 +459,6 @@ const drawConnector = (
   context.stroke();
 };
 
-const loadImage = async (url: string): Promise<HTMLImageElement | null> => {
-  return new Promise((resolve) => {
-    if (!url) return resolve(null);
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = url;
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-  });
-}
-
 const drawSlot = async (
   context: CanvasRenderingContext2D,
   slot: BracketSlot,
@@ -461,36 +516,49 @@ const drawSlot = async (
     return;
   }
 
+  const flagMaxWidth = 26;
+  const flagMaxHeight = 26;
   const teamTextWidth = slot.width - 72;
-  const maxWidth = 26;
-  const maxHeight = 26;
 
   if (match.team1_flag_url) {
     const flagSrc = await loadImage(match.team1_flag_url)
     if (flagSrc) {
-      const scale = Math.min(maxWidth / flagSrc.width, maxHeight / flagSrc.height, 1);
-      context.drawImage(flagSrc, slot.x + 10, slot.y + 25 / 2, flagSrc.width * scale, flagSrc.height * scale);
+      const scale = Math.min(flagMaxWidth / flagSrc.width, flagMaxHeight / flagSrc.height, 1);
+      context.drawImage(flagSrc, slot.x + 10, slot.y + flagMaxHeight / 2, flagSrc.width * scale, flagSrc.height * scale);
     }
   }
+
   context.fillStyle = winnerSide === "team1" ? "#047857" : "#18181b";
   context.fillText(
-    truncateText(context, match.team1_name, teamTextWidth),
-    slot.x + 30,
-    slot.y + 25,
+    truncateText(context, match.team1_name.length < 12 ? match.team1_name : match.team1_short_name, teamTextWidth),
+    slot.x + flagMaxWidth + 10, // 10 px padding
+    slot.y + flagMaxHeight,
+  );
+
+  context.fillText(
+    truncateText(context, match.team1_score?.toString() ?? "-", teamTextWidth),
+    slot.x + flagMaxWidth + 10 + teamTextWidth + 15, // 20 px padding
+    slot.y + flagMaxHeight,
   );
 
   if (match.team2_flag_url) {
     const flagSrc = await loadImage(match.team2_flag_url)
     if (flagSrc) {
-      const scale = Math.min(maxWidth / flagSrc.width, maxHeight / flagSrc.height, 1);
-      context.drawImage(flagSrc, slot.x + 10, slot.y + 55 - 25 / 2, flagSrc.width * scale, flagSrc.height * scale);
+      const scale = Math.min(flagMaxWidth / flagSrc.width, flagMaxHeight / flagSrc.height, 1);
+      context.drawImage(flagSrc, slot.x + 10, slot.y + 1.5 * flagMaxHeight + 5, flagSrc.width * scale, flagSrc.height * scale);
     }
   }
+
   context.fillStyle = winnerSide === "team2" ? "#047857" : "#18181b";
   context.fillText(
-    truncateText(context, match.team2_name, teamTextWidth),
-    slot.x + 30,
-    slot.y + 55,
+    truncateText(context, match.team2_name.length < 12 ? match.team2_name : match.team2_short_name, teamTextWidth),
+    slot.x + flagMaxWidth + 10, // 10 px padding
+    slot.y + 2 * flagMaxHeight + 5,
+  );
+
+  context.fillText(match.team2_score?.toString() ?? "-",
+    slot.x + flagMaxWidth + 10 + teamTextWidth + 15, // 20 px padding
+    slot.y + 2 * flagMaxHeight + 5,
   );
 
   context.font =
@@ -504,15 +572,15 @@ const drawSlot = async (
   context.fillStyle = "#71717a";
   context.fillText(
     truncateText(context, formatDateTime(match.match_datetime), teamTextWidth),
-    slot.x + 30,
-    slot.y + 75,
+    slot.x + flagMaxWidth + 10,
+    slot.y + 2 * flagMaxHeight + 22,
   );
 
   if (match.match_stage === "F") {
     const trophySrc = await loadImage("/images/trophy.png")
     if (trophySrc) {
       const scale = Math.min(150 / trophySrc.width, 150 / trophySrc.height, 1);
-      context.drawImage(trophySrc, slot.x + 160, slot.y - 45, trophySrc.width * scale, trophySrc.height * scale);
+      context.drawImage(trophySrc, slot.x + 0.5 * CARD_WIDTH, slot.y - 0.5 * CARD_HEIGHT + 3, trophySrc.width * scale, trophySrc.height * scale);
     }
   }
 };
@@ -550,12 +618,19 @@ const drawBracket = async (
     "700 12px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
   context.fillStyle = "#475569";
   STAGES.forEach((stage, roundIndex) => {
+    let loadedCount = rounds[roundIndex]?.matches.length ?? 0;
+    if (stage.queryStage === 'F') return;
+    if (stage.queryStage === '3P') {
+      stage.label = "Final and 3rd place";
+      stage.expectedMatches = 2;
+      loadedCount = 2;
+    }
     const x = CANVAS_PADDING_X + roundIndex * (CARD_WIDTH + COLUMN_GAP);
     context.fillText(stage.label.toUpperCase(), x, 34);
     context.fillStyle = "#94a3b8";
     context.font =
       "500 11px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-    const loadedCount = rounds[roundIndex]?.matches.length ?? 0;
+
     context.fillText(`${loadedCount}/${stage.expectedMatches} matches`, x, 54);
     context.font =
       "700 12px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
@@ -596,7 +671,7 @@ const hitTestSlot = (
   );
 };
 
-export function BracketCanvas() {
+export const BracketCanvas = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const layoutRef = useRef<BracketLayout | null>(null);
   const [hoveredSlotId, setHoveredSlotId] = useState<string | null>(null);
@@ -768,7 +843,7 @@ export function BracketCanvas() {
                 <p className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
                   {selectedRound?.config.label ?? "Knockout"}
                 </p>
-                <div className="flex w-[30%] my-4">{getMatchLabelWithFlag(selectedMatch, "w-auto")}</div>
+                <div className="flex my-4">{getMatchLabelWithFlag(selectedMatch, "w-auto")}</div>
                 <p className="mt-1 text-zinc-500">
                   {formatDateTime(selectedMatch.match_datetime)}
                 </p>
@@ -803,4 +878,4 @@ export function BracketCanvas() {
       </section>
     </div>
   );
-}
+};

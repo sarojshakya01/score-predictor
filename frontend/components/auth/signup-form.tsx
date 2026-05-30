@@ -44,7 +44,7 @@ export const SignupForm = () => {
     setIsSubmitting(true);
 
     try {
-      await signup({
+      const newUser = await signup({
         email: formState.email.trim().toLowerCase(),
         first_name: formState.firstName.trim(),
         last_name: formState.lastName.trim(),
@@ -52,8 +52,11 @@ export const SignupForm = () => {
         mobile_no: formState.mobileNo.trim(),
         password: formState.password,
       });
-      router.replace("/predictions");
-      router.refresh();
+      setErrorMessage(newUser.message || "Account created successfully.");
+      setTimeout(() => {
+        router.replace("/");
+        router.refresh();
+      }, 5000);
     } catch (error) {
       setErrorMessage(
         getErrorMessage(error, "Unable to create your account. Please try again."),
@@ -63,6 +66,13 @@ export const SignupForm = () => {
     }
   };
 
+  const handleMatchPassword = (value: string) => {
+    if (value && formState.password.length && (value !== formState.password)) {
+      setErrorMessage("Passwords do not match.");
+    } else {
+      setErrorMessage(null);
+    }
+  }
   return (
     <>
       <form className="mt-8 grid gap-5 sm:grid-cols-6" onSubmit={handleSubmit}>
@@ -133,6 +143,8 @@ export const SignupForm = () => {
             name="password"
             required
             type="password"
+            value={formState.password}
+            onChange={(event) => updateField("password", event.target.value)}
             className="mt-2 h-11 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
           />
         </label>
@@ -144,19 +156,20 @@ export const SignupForm = () => {
             name="confirm_password"
             required
             type="password"
-            value={formState.password}
-            onChange={(event) => updateField("password", event.target.value)}
+            onBlur={(event) => handleMatchPassword(event.target.value)}
             className="mt-2 h-11 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
           />
         </label>
 
         {errorMessage ? (
-          <p
-            aria-live="polite"
-            className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 sm:col-span-2"
-          >
-            {errorMessage}
-          </p>
+          <label className="block col-span-6">
+            <p
+              aria-live="polite"
+              className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 sm:col-span-2"
+            >
+              {errorMessage}
+            </p>
+          </label>
         ) : null}
 
         <label className="flex col-span-6 justify-center">

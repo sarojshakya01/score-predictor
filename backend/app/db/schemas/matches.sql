@@ -22,7 +22,7 @@ CREATE TABLE matches (
     match_duration ENUM('90', '120', 'PENALTY') NULL DEFAULT NULL,
 
     -- Match Stage
-    match_stage ENUM('GROUP', 'R32', 'R16', 'QF', 'SF', 'F') NULL DEFAULT NULL,
+    match_stage ENUM('GROUP', 'R32', 'R16', 'QF', 'SF', '3P', 'F') NULL DEFAULT NULL,
 
     -- Scheduling
     match_datetime TIMESTAMP NOT NULL,

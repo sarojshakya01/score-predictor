@@ -13,7 +13,7 @@ const toneClasses: Record<NonNullable<StatusPillProps["tone"]>, string> = {
   zinc: "border-zinc-200 bg-zinc-50 text-zinc-700",
 };
 
-export function StatusPill({ children, tone = "zinc" }: StatusPillProps) {
+export const StatusPill = ({ children, tone = "zinc" }: StatusPillProps) => {
   return (
     <span
       className={`inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${toneClasses[tone]}`}
@@ -21,4 +21,4 @@ export function StatusPill({ children, tone = "zinc" }: StatusPillProps) {
       {children}
     </span>
   );
-}
+};

@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
-import { MetricCard } from "@/components/ui/metric-card";
 import { StatusPill } from "@/components/ui/status-pill";
 import { ApiError } from "@/lib/api";
 import { isAuthenticated, MissingAuthTokenError } from "@/lib/auth";
@@ -15,7 +14,7 @@ import type {
   LeaderboardResponse,
 } from "@/lib/leaderboard";
 
-function getLoadErrorMessage(error: unknown): string {
+const getLoadErrorMessage = (error: unknown): string => {
   if (error instanceof ApiError) {
     return error.message;
   }
@@ -31,11 +30,7 @@ function getLoadErrorMessage(error: unknown): string {
   return "Unable to load leaderboard.";
 }
 
-function formatNumber(value: number): string {
-  return new Intl.NumberFormat("en").format(value);
-}
-
-function formatSignedNumber(value: number): string {
+const formatSignedNumber = (value: number): string => {
   if (value > 0) {
     return `+${value}`;
   }
@@ -43,7 +38,7 @@ function formatSignedNumber(value: number): string {
   return String(value);
 }
 
-function getPointsTone(points: number): "green" | "red" | "zinc" {
+const getPointsTone = (points: number): "green" | "red" | "zinc" => {
   if (points > 0) {
     return "green";
   }
@@ -55,14 +50,14 @@ function getPointsTone(points: number): "green" | "red" | "zinc" {
   return "zinc";
 }
 
-function getFrameMaxPoints(frame: LeaderboardRaceFrameResponse): number {
+const getFrameMaxPoints = (frame: LeaderboardRaceFrameResponse): number => {
   return Math.max(
     1,
     ...frame.standings.map((standing) => Math.abs(standing.total_points)),
   );
 }
 
-function LeaderboardRow({ row, completedMatches }: { row: LeaderboardEntryResponse, completedMatches: number }) {
+const LeaderboardRow = ({ row, completedMatches }: { row: LeaderboardEntryResponse, completedMatches: number }) => {
   return (
     <tr>
       <td className="px-5 py-4 font-semibold text-zinc-950">#{row.rank}</td>
@@ -89,13 +84,13 @@ function LeaderboardRow({ row, completedMatches }: { row: LeaderboardEntryRespon
   );
 }
 
-function RaceChartRow({
+const RaceChartRow = ({
   maxPoints,
   standing,
 }: {
   maxPoints: number;
   standing: LeaderboardRaceUserResponse;
-}) {
+}) => {
   const barWidth =
     standing.total_points === 0
       ? 2
@@ -131,10 +126,10 @@ function RaceChartRow({
   );
 }
 
-function RaceChart({ frames }: { frames: LeaderboardRaceFrameResponse[] }) {
+const RaceChart = ({ frames }: { frames: LeaderboardRaceFrameResponse[] }) => {
   const safeFrames = frames.length > 0 ? frames : [];
-  const [frameIndex, setFrameIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(safeFrames.length > 1);
+  const [frameIndex, setFrameIndex] = useState(safeFrames.length - 1);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     if (!isPlaying || safeFrames.length <= 1) {
@@ -167,7 +162,13 @@ function RaceChart({ frames }: { frames: LeaderboardRaceFrameResponse[] }) {
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="button"
-            onClick={() => setIsPlaying((currentValue) => !currentValue)}
+            onClick={() => {
+              if (!isPlaying) {
+                setFrameIndex(0);
+              }
+
+              setIsPlaying((currentValue) => !currentValue);
+            }}
             disabled={safeFrames.length <= 1}
             className="inline-flex h-10 items-center justify-center cursor-pointer rounded-md border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:text-zinc-400"
           >
@@ -215,7 +216,7 @@ function RaceChart({ frames }: { frames: LeaderboardRaceFrameResponse[] }) {
   );
 }
 
-export function LeaderboardDashboard() {
+export const LeaderboardDashboard = () => {
   const [authRequired, setAuthRequired] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [leaderboard, setLeaderboard] = useState<LeaderboardResponse | null>(
@@ -226,7 +227,7 @@ export function LeaderboardDashboard() {
   useEffect(() => {
     let isMounted = true;
 
-    async function loadLeaderboard() {
+    const loadLeaderboard = async () => {
       setIsLoading(true);
       setLoadError(null);
 
@@ -267,7 +268,7 @@ export function LeaderboardDashboard() {
           setIsLoading(false);
         }
       }
-    }
+    };
 
     void loadLeaderboard();
 
@@ -341,13 +342,13 @@ export function LeaderboardDashboard() {
                   <th className="px-5 py-3">Rank</th>
                   <th className="px-5 py-3">User</th>
                   <th className="px-5 py-3">Score</th>
-                  <th className="px-5 py-3">Goal Difference</th>
-                  <th className="px-5 py-3">Kick-off Team</th>
+                  <th className="px-5 py-3">Goal Diff</th>
+                  <th className="px-5 py-3">Kick-off</th>
                   <th className="px-5 py-3">Yello Card</th>
                   <th className="px-5 py-3">Red Card</th>
-                  <th className="px-5 py-3">First Scoring Team</th>
-                  <th className="px-5 py-3">Goal in First Half</th>
-                  <th className="px-5 py-3">Match Duration</th>
+                  <th className="px-5 py-3">First Score</th>
+                  <th className="px-5 py-3">Score 1H</th>
+                  <th className="px-5 py-3">Duration</th>
                   <th className="px-5 py-3 text-right">Total Points</th>
                   <th className="px-5 py-3 text-right">Predicted Matches</th>
                 </tr>
@@ -363,13 +364,13 @@ export function LeaderboardDashboard() {
       ) : (
         <section className="rounded-md border border-zinc-200 bg-white px-5 py-10 text-center shadow-sm">
           <h2 className="text-lg font-semibold text-zinc-950">
-            No ranked users yet
+            No ranked users yet.
           </h2>
           <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-500">
-            Rankings will appear after users and predictions are available from the API.
+            Rankings will appear after users and predictions are available.
           </p>
         </section>
       )}
     </>
   );
-}
+};

@@ -7,7 +7,7 @@ type ModalProps = {
   title: string;
 };
 
-export function Modal({ children, isOpen, onClose, title }: ModalProps) {
+export const Modal = ({ children, isOpen, onClose, title }: ModalProps) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -81,4 +81,4 @@ export function Modal({ children, isOpen, onClose, title }: ModalProps) {
       </div>
     </dialog>
   );
-}
+};

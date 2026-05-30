@@ -6,12 +6,13 @@ import { AuthActions } from "@/components/auth/auth-actions";
 import { PrimaryNav } from "@/components/layout/primary-nav";
 import { AdminNav } from "@/components/layout/admin-nav";
 import { useAuth } from "@/components/auth/auth-context";
+import Image from "next/image";
 
 type AppShellProps = {
   children: React.ReactNode;
 };
 
-export function AppShell({ children }: AppShellProps) {
+export const AppShell = ({ children }: AppShellProps) => {
   const { user } = useAuth();
   const isAdmin = user?.role === "ADMIN";
 
@@ -22,7 +23,7 @@ export function AppShell({ children }: AppShellProps) {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Link href={isAdmin ? "/admin" : "/"} className="flex items-center gap-3">
               <span className="grid h-10 w-10 place-items-center rounded-md bg-emerald-700 text-sm font-bold text-white">
-                <img src="/images/football.png" alt="Football Icon" />
+                <Image src="/images/football.png" width={50} height={50} alt="Football Icon" className="min-h-[25px] w-auto " />
               </span>
               <span>
                 <span className="block text-base font-semibold text-zinc-950">
@@ -49,4 +50,4 @@ export function AppShell({ children }: AppShellProps) {
       </footer>
     </div>
   );
-}
+};

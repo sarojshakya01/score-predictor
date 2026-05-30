@@ -5,12 +5,12 @@ type PageHeaderProps = {
   title: string;
 };
 
-export function PageHeader({
+export const PageHeader = ({
   actions,
   eyebrow,
   subtitle,
   title,
-}: PageHeaderProps) {
+}: PageHeaderProps) => {
   return (
     <section className="flex flex-col gap-5 border-b border-zinc-200 bg-white px-4 py-8 sm:px-6 lg:px-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
@@ -33,4 +33,5 @@ export function PageHeader({
       </div>
     </section>
   );
-}
+};
+

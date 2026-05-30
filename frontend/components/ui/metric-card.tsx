@@ -11,11 +11,11 @@ export const toneClasses: Record<Metric["tone"], string> = {
   red: "border-rose-200 bg-rose-50 text-rose-900",
 };
 
-export function MetricCard({ metric }: MetricCardProps) {
+export const MetricCard = ({ metric }: MetricCardProps) => {
   return (
     <div className={`rounded-md border p-4 ${toneClasses[metric.tone]}`}>
       <p className="text-sm font-medium">{metric.label}</p>
       <p className="mt-2 text-lg text-zinc-500">{metric.value}</p>
     </div>
   );
-}
+};

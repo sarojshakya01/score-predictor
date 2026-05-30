@@ -8,15 +8,6 @@ import { listAdminMatches, listUpcomingMatches, MatchResponse } from "@/lib/matc
 import { listAdminTeams, TeamResponse } from "@/lib/teams";
 import { listAdminUsers } from "@/lib/users";
 import { UserResponse } from "@/lib/auth";
-import { getErrorMessage } from "@/lib/forms/error-message";
-
-const adminQueues = [
-  { href: "/admin/matches", label: "Matches", status: "4 locking today" },
-  { href: "/admin/teams", label: "Teams", status: "32 active teams" },
-  { href: "/admin/users", label: "Users", status: "12 new signups" },
-  { href: "/admin/settings", label: "Settings", status: "9 scoring keys" },
-] as const;
-
 
 const AdminPage = () => {
 
@@ -25,14 +16,12 @@ const AdminPage = () => {
   const [users, setUsers] = useState<UserResponse[]>([]);
   const [upcomingMatches, setUpComingMatches] = useState<MatchResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
 
     const loadInitialPageData = async () => {
       setIsLoading(true);
-      setLoadError(null);
 
       try {
         const [userList, matchList, teamList, upcomingMatchList] = await Promise.all([
@@ -48,10 +37,7 @@ const AdminPage = () => {
           setTeams(teamList.items);
           setUpComingMatches(upcomingMatchList.items);
         }
-      } catch (error) {
-        if (isMounted) {
-          setLoadError(getErrorMessage(error, "Unable to load matches."));
-        }
+      } catch {
       } finally {
         if (isMounted) {
           setIsLoading(false);

@@ -104,12 +104,12 @@ const GroupsPage = () => {
                   <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
                     <tr>
                       <th className="px-5 py-3">Team</th>
+                      <th className="px-3 py-3 text-right">Rank (Jun)</th>
                       <th className="px-3 py-3 text-right">P</th>
                       <th className="px-3 py-3 text-right">W</th>
                       <th className="px-3 py-3 text-right">D</th>
                       <th className="px-3 py-3 text-right">L</th>
                       <th className="px-3 py-3 text-right">GD</th>
-                      <th className="px-3 py-3 text-right">FIFA Rank</th>
                       <th className="px-5 py-3 text-right">Pts</th>
                     </tr>
                   </thead>
@@ -118,17 +118,19 @@ const GroupsPage = () => {
                       <tr key={team.team_id}>
                         <td className="px-5 py-4 font-medium text-zinc-950">
                           <span className="flex min-w-48 items-center gap-3">
-                            <span className="inline-flex h-7 min-w-10 items-center justify-center rounded border border-zinc-200 bg-zinc-50 px-2 text-xs font-semibold text-zinc-600 relative w-[30px] h-[20px]">
+                            <span className="inline-flex items-center justify-center rounded border border-zinc-200 bg-zinc-50 text-xs font-semibold text-zinc-600 relative">
                               <Image
+                                width={30} height={30}
                                 alt={team.fifa_code}
-                                className="object-cover rounded"
-                                fill
-                                sizes="30px"
+                                className="object-cover rounded min-h-[25px] w-auto "
                                 src={team.flag_url}
                               />
                             </span>
                             <span>{team.team}</span>
                           </span>
+                        </td>
+                        <td className="px-3 py-4 text-right text-zinc-700">
+                          {team.fifa_rank}
                         </td>
                         <td className="px-3 py-4 text-right text-zinc-700">
                           {team.played}
@@ -144,9 +146,6 @@ const GroupsPage = () => {
                         </td>
                         <td className="px-3 py-4 text-right text-zinc-700">
                           {formatGoalDifference(team.goal_difference)}
-                        </td>
-                        <td className="px-3 py-4 text-right text-zinc-700">
-                          {team.fifa_rank}
                         </td>
                         <td className="px-5 py-4 text-right font-semibold text-zinc-950">
                           {team.points}

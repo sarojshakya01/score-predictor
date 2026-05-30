@@ -5,6 +5,7 @@ export const match_stages = [
   "R16",
   "QF",
   "SF",
+  "3P",
   "F",
 ] as const;
 
@@ -27,11 +28,13 @@ export type MatchResponse = {
   team1_id: number;
   team1_group: string;
   team1_name: string;
+  team1_short_name: string;
   team1_score: number | null;
   team1_flag_url: string;
   team2_id: number;
   team2_group: string;
   team2_name: string;
+  team2_short_name: string;
   team2_score: number | null;
   team2_flag_url: string;
   updated_at: string;

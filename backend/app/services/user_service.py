@@ -115,7 +115,7 @@ class UserService:
             mobile_no=data.mobile_no,
             password=hash_password(data.password),
             role=data.role,
-            is_active=data.is_active,
+            is_active=False, # do not activate by default
         )
 
         try:

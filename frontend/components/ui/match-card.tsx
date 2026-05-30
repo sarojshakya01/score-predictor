@@ -3,12 +3,9 @@ import { StatusPill } from "./status-pill";
 import { JSX } from "react";
 import { PillTone, PredictionStatus } from "@/lib/matches/types";
 import Link from "next/link";
+import Image from "next/image";
 
-type MatchCardProps = {
-  match: MatchResponse;
-};
-
-export function getStatusTone(status: PredictionStatus): PillTone {
+export const getStatusTone = (status: PredictionStatus): PillTone => {
   if (status === "Open") {
     return "green";
   }
@@ -18,11 +15,11 @@ export function getStatusTone(status: PredictionStatus): PillTone {
   }
 
   return "red";
-}
+};
 
-export function getPredictionStatus(
+export const getPredictionStatus = (
   match: MatchResponse,
-): "Locked" | "Locking soon" | "Open" {
+): "Locked" | "Locking soon" | "Open" => {
   if (match.match_locked) {
     return "Locked";
   }
@@ -40,9 +37,9 @@ export function getPredictionStatus(
   }
 
   return "Open";
-}
+};
 
-export function formatDateTime(value: string): string {
+export const formatDateTime = (value: string): string => {
   const date = new Date(`${value}Z`);
 
   if (Number.isNaN(date.getTime())) {
@@ -56,9 +53,9 @@ export function formatDateTime(value: string): string {
     month: "short",
     timeZone: "Asia/Kathmandu"
   }).format(date);
-}
+};
 
-function formatGroupLabel(group: string): string {
+const formatGroupLabel = (group: string): string => {
   const normalizedGroup = group.trim();
 
   if (!normalizedGroup) {
@@ -70,9 +67,9 @@ function formatGroupLabel(group: string): string {
   }
 
   return `Group ${normalizedGroup}`;
-}
+};
 
-function formatMatchGroup(match: MatchResponse): string {
+const formatMatchGroup = (match: MatchResponse): string => {
   if (match.team1_group === match.team2_group) {
     return formatGroupLabel(match.team1_group);
   }
@@ -80,8 +77,7 @@ function formatMatchGroup(match: MatchResponse): string {
   return `${formatGroupLabel(match.team1_group)} / ${formatGroupLabel(
     match.team2_group,
   )}`;
-}
-
+};
 
 const MatchDayNStatus = (match: MatchResponse) => {
   const status = getPredictionStatus(match);
@@ -93,27 +89,27 @@ const MatchDayNStatus = (match: MatchResponse) => {
       <StatusPill tone={getStatusTone(status)}>{status}</StatusPill>
     </div>
   </dl>
-}
+};
 
-export function getMatchLabelWithFlag(match: MatchResponse, width: string = "w-full"): JSX.Element {
+export const getMatchLabelWithFlag = (match: MatchResponse, width: string = "w-full"): JSX.Element => {
   return (
     <div className={`flex ${width} items-center gap-3`}>
       <div className="flex w-[47%] items-center justify-end gap-2 pr-2">
         <span>{match.team1_name}</span>
         {match.team1_flag_url ? (
-          <img className="h-5 w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={match.team1_flag_url} alt="flag" />
+          <Image width={30} height={30} className="min-h-[25px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={match.team1_flag_url} alt="flag" />
         ) : null}
       </div>
       <span className="w-[6%] text-sm text-center text-zinc-400">vs</span>
       <div className="flex w-[47%] items-center justify-start gap-2 pl-2">
         {match.team2_flag_url ? (
-          <img className="h-5 w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={match.team2_flag_url} alt="flag" />
+          <Image width={30} height={30} className="min-h-[25px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={match.team2_flag_url} alt="flag" />
         ) : null}
         <span>{match.team2_name}</span>
       </div>
     </div>
   );
-}
+};
 
 const MatchTitle = (match: MatchResponse) => {
   return <dl className="items-start justify-between gap-3 min-h-[60px] content-center">
@@ -123,21 +119,21 @@ const MatchTitle = (match: MatchResponse) => {
       </h2>
     </div>
   </dl>
-}
+};
 
 export const MatchVenue = (match: MatchResponse) => {
   return <dl>
     <div className="flex w-full flex-col items-center justify-center">
-      <button className="flex items-center justify-cente cursor-pointer r p-3 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+      <Link href={`https://google.com/search?q=${match.venue_name?.trim()}`} target="_blank" className="flex items-center justify-cente cursor-pointer r p-3 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
         <svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
           <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
         </svg>
-      </button>
+      </Link>
       <dd className="mt-1 font-medium text-zinc-950">{match.venue_name ? <Link target="_blank" href={`https://google.com/search?q=${match.venue_name?.trim()}`} className="text-blue-600 hover:text-blue-800">{match.venue_name?.trim()}</Link> : "TBA"}</dd>
     </div>
   </dl>
-}
+};
 
 export const SelectableMatchCard = (props: { match: MatchResponse; isSelected: boolean; isSaved: boolean; handleCardClick: (match: MatchResponse) => void }) => {
   const { match, isSelected, isSaved, handleCardClick } = props;
@@ -172,7 +168,7 @@ export const SelectableMatchCard = (props: { match: MatchResponse; isSelected: b
       </div>
     </dl>
   </article>
-}
+};
 
 export const MatchCard = (props: { match: MatchResponse; }) => {
   const { match } = props;
@@ -205,4 +201,4 @@ export const MatchCard = (props: { match: MatchResponse; }) => {
 
     </article>
   );
-}
+};

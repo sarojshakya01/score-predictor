@@ -5,15 +5,15 @@ import { usePathname } from "next/navigation";
 
 import { primaryNavigation } from "@/lib/navigation";
 
-function isActivePath(pathname: string, href: string): boolean {
+const isActivePath = (pathname: string, href: string): boolean => {
   if (href === "/") {
     return pathname === "/";
   }
 
   return pathname === href || pathname.startsWith(`${href}/`);
-}
+};
 
-export function PrimaryNav() {
+export const PrimaryNav = () => {
   const pathname = usePathname();
 
   return (
@@ -39,4 +39,4 @@ export function PrimaryNav() {
       })}
     </nav>
   );
-}
+};

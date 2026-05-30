@@ -28,7 +28,7 @@ const RulesPage = () => {
         bands.sort((a, b) => (a.id - b.id));
 
         setRuleBands(bands);
-      } catch (err) {
+      } catch {
         if (isMounted) setError("Failed to load rules.");
       } finally {
         if (isMounted) setIsLoading(false);

@@ -11,6 +11,7 @@ import {
   updateTeam,
 } from "@/lib/teams";
 import type { TeamCreate, TeamResponse } from "@/lib/teams";
+import Image from "next/image";
 
 const emptyFormState: TeamCreate = {
   name: "",
@@ -174,7 +175,7 @@ const AdminTeamsPage = () => {
                   <tr key={team.id}>
                     <td className="px-5 py-4 font-medium text-zinc-950">
                       <div className="flex items-center gap-2">
-                        <img className="h-5 w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={team.flag_url} alt="flag" />
+                        <Image width={30} height={30} className="min-h-[25px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={team.flag_url} alt="flag" />
                         <span className="ml-2">{team.name}</span>
                       </div>
                     </td>

@@ -39,13 +39,16 @@ const requireToken = (token: string | null | undefined): string => {
 };
 
 export const signup = async (data: SignupRequest): Promise<TokenResponse> => {
-  const tokens = await apiFetch<TokenResponse, SignupRequest>("/auth/signup", {
+  const token = await apiFetch<TokenResponse, SignupRequest>("/auth/signup", {
     body: data,
     method: "POST",
   });
 
-  setAuthTokens(tokens);
-  return tokens;
+  if (token.access_token) {
+    setAuthTokens(token);
+  }
+
+  return token;
 };
 
 export const login = async (data: LoginRequest): Promise<TokenResponse> => {

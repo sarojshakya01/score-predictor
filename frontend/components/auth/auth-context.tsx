@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import { getCurrentUser, isAuthenticated, login as apiLogin, logout as apiLogout, signup as apiSignup } from "@/lib/auth";
 import type { LoginRequest, SignupRequest, TokenResponse, UserResponse } from "@/lib/auth";
 
@@ -38,6 +38,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void refreshUser();
   }, []);
 

@@ -29,6 +29,7 @@ import {
   getStatusTone,
   SelectableMatchCard,
 } from "../ui/match-card";
+import Image from "next/image";
 
 type PredictionFormState = {
   firstScoringTeamId: string;
@@ -58,14 +59,14 @@ const durationLabels: Record<GameDuration, string> = {
   PENALTY: "Penalty",
 };
 
-function getMatchLabelText(match: MatchResponse): string {
+const getMatchLabelText = (match: MatchResponse): string => {
   return `${match.team1_name} vs ${match.team2_name}`;
-}
+};
 
-function getTeamNameById(
+const getTeamNameById = (
   match: MatchResponse | undefined,
   teamId: number | null,
-): string {
+): string => {
   if (teamId === null) {
     return "No goal";
   }
@@ -83,13 +84,13 @@ function getTeamNameById(
   }
 
   return `Team #${teamId}`;
-}
+};
 
-function parseNonNegativeInteger(value: string, label: string): number {
-  const normalizedValue = value.trim();
+const parseNonNegativeInteger = (value: string, label: string): number => {
+  let normalizedValue = value.trim();
 
   if (!normalizedValue) {
-    throw new Error(`${label} is required.`);
+    normalizedValue = "0";
   }
 
   const parsedValue = Number(normalizedValue);
@@ -99,9 +100,9 @@ function parseNonNegativeInteger(value: string, label: string): number {
   }
 
   return parsedValue;
-}
+};
 
-function parsePositiveInteger(value: string, label: string): number {
+const parsePositiveInteger = (value: string, label: string): number => {
   const parsedValue = parseNonNegativeInteger(value, label);
 
   if (parsedValue <= 0) {
@@ -109,9 +110,9 @@ function parsePositiveInteger(value: string, label: string): number {
   }
 
   return parsedValue;
-}
+};
 
-function parseRequiredBoolean(value: string, label: string): boolean {
+const parseRequiredBoolean = (value: string, label: string): boolean => {
   if (value === "true") {
     return true;
   }
@@ -121,11 +122,11 @@ function parseRequiredBoolean(value: string, label: string): boolean {
   }
 
   throw new Error(`${label} is required.`);
-}
+};
 
-function hasGoalPrediction(
+const hasGoalPrediction = (
   state: Pick<PredictionFormState, "team1Score" | "team2Score">,
-): boolean {
+): boolean => {
   const team1Score = Number(state.team1Score);
   const team2Score = Number(state.team2Score);
 
@@ -133,16 +134,16 @@ function hasGoalPrediction(
     (Number.isFinite(team1Score) && team1Score > 0) ||
     (Number.isFinite(team2Score) && team2Score > 0)
   );
-}
+};
 
-function isGameDuration(value: string): value is GameDuration {
+const isGameDuration = (value: string): value is GameDuration => {
   return match_durations.includes(value as GameDuration);
-}
+};
 
-function buildFormState(
+const buildFormState = (
   match: MatchResponse,
   prediction?: PredictionResponse,
-): PredictionFormState {
+): PredictionFormState => {
   if (prediction) {
     return {
       firstScoringTeamId:
@@ -166,13 +167,13 @@ function buildFormState(
     ...emptyFormState,
     openingTeamId: String(match.team1_id),
   };
-}
+};
 
-function getReferenceMatchDay(matches: MatchResponse[]): number | null {
+const getReferenceMatchDay = (matches: MatchResponse[]): number | null => {
   return matches[0]?.match_day ?? null;
-}
+};
 
-export function PredictionsDashboard() {
+export const PredictionsDashboard = () => {
   const [authRequired, setAuthRequired] = useState(false);
   const [currentMatchDay, setCurrentMatchDay] = useState<number | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -220,7 +221,7 @@ export function PredictionsDashboard() {
   useEffect(() => {
     let isMounted = true;
 
-    async function loadPageData() {
+    const loadPageData = async () => {
       setIsLoading(true);
       setLoadError(null);
       const hasAuthToken = isAuthenticated();
@@ -228,7 +229,7 @@ export function PredictionsDashboard() {
 
       try {
         const matchList = await listUpcomingMatches({
-          includeLocked: false,
+          includeLocked: true,
           limit: 50,
         });
 
@@ -284,7 +285,7 @@ export function PredictionsDashboard() {
     };
   }, [applyMatchSelection]);
 
-  function updateField(field: keyof PredictionFormState, value: string) {
+  const updateField = (field: keyof PredictionFormState, value: string) => {
     setFormState((current) => {
       const nextState = {
         ...current,
@@ -304,9 +305,9 @@ export function PredictionsDashboard() {
 
       return nextState;
     });
-  }
+  };
 
-  function buildPredictionFields(): PredictionFields {
+  const buildPredictionFields = (): PredictionFields => {
     if (!isGameDuration(formState.gameDuration)) {
       throw new Error("Game duration is required.");
     }
@@ -344,9 +345,9 @@ export function PredictionsDashboard() {
         "Yellow cards",
       ),
     };
-  }
+  };
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
     setSuccessMessage(null);
@@ -408,9 +409,9 @@ export function PredictionsDashboard() {
     } finally {
       setIsSubmitting(false);
     }
-  }
+  };
 
-  function handleCardClick(match: MatchResponse) {
+  const handleCardClick = (match: MatchResponse) => {
     const clickedPrediction = predictions.find(
       (prediction) => prediction.match_id === match.id,
     );
@@ -418,9 +419,9 @@ export function PredictionsDashboard() {
     setFormState(buildFormState(match, clickedPrediction));
     setFormError(null);
     setSuccessMessage(null);
-  }
+  };
 
-  async function handleMatchDayChange(matchDay: number) {
+  const handleMatchDayChange = async (matchDay: number) => {
     setIsLoading(true);
     setLoadError(null);
     setFormError(null);
@@ -429,8 +430,13 @@ export function PredictionsDashboard() {
     try {
       const matchList = await listMatches({ matchDay });
 
-      applyMatchSelection(matchList.items, predictions);
-      setCurrentMatchDay(matchDay);
+      if (matchList.items.length === 0) {
+        setLoadError(`No matches found for match day ${matchDay}.`);
+        setCurrentMatchDay(null);
+      } else {
+        setCurrentMatchDay(matchDay);
+        applyMatchSelection(matchList.items, predictions);
+      }
     } catch (error) {
       setLoadError(
         getErrorMessage(error, `Unable to load match day ${matchDay}.`),
@@ -438,7 +444,7 @@ export function PredictionsDashboard() {
     } finally {
       setIsLoading(false);
     }
-  }
+  };
 
   const selectedStatus = selectedMatch
     ? getPredictionStatus(selectedMatch)
@@ -451,15 +457,13 @@ export function PredictionsDashboard() {
       : null;
   const nextMatchDay =
     referenceMatchDay !== null ? referenceMatchDay + 1 : null;
-  const matchListTitle =
-    currentMatchDay === null
-      ? "Upcoming matches"
-      : `Match day ${currentMatchDay}`;
+  const matchListTitle = "Upcoming Matches" + (currentMatchDay ? ` - Match Day ${currentMatchDay}` : "");
 
   const isFormDisabled =
     isSubmitting || authRequired || !selectedMatch || selectedStatus === "Locked";
   const hasPredictedGoals = hasGoalPrediction(formState);
-  const areGoalTimelineFieldsDisabled = isFormDisabled || !hasPredictedGoals;
+
+  const areGoalTimelineFieldsDisabled = !hasPredictedGoals;
 
   return (
     <>
@@ -590,7 +594,7 @@ export function PredictionsDashboard() {
                   <>
                     <span>{selectedMatch.team1_name}</span>
                     {selectedMatch.team1_flag_url ? (
-                      <img className="h-4 w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team1_flag_url} alt={selectedMatch.team1_name} />
+                      <Image width={30} height={30} className="min-h-[25px] w-auto  rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team1_flag_url} alt={selectedMatch.team1_name} />
                     ) : null}
                   </>
                 ) : "Team 1"}
@@ -619,7 +623,7 @@ export function PredictionsDashboard() {
                 {selectedMatch ? (
                   <>
                     {selectedMatch.team2_flag_url ? (
-                      <img className="h-4 w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team2_flag_url} alt={selectedMatch.team2_name} />
+                      <Image width={30} height={30} className="min-h-[25px] w-auto  rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team2_flag_url} alt={selectedMatch.team2_name} />
                     ) : null}
                     <span>{selectedMatch.team2_name}</span>
                   </>
@@ -628,7 +632,7 @@ export function PredictionsDashboard() {
             </div>
             <div className="flex flex-row gap-4 justify-end">
               <span className="flex items-center gap-2 mt-2 text-sm font-medium text-zinc-700">
-                First scoring team
+                First Scoring Team
               </span>
               <select
                 disabled={areGoalTimelineFieldsDisabled}
@@ -641,16 +645,16 @@ export function PredictionsDashboard() {
                 className="mt-2 h-11 w-auto min-w-1/4 rounded-md border border-zinc-300 bg-white px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100 disabled:bg-zinc-100 disabled:text-zinc-400"
               >
                 <option value="">
-                  {hasPredictedGoals ? "Select team" : "No predicted goal"}
+                  {hasPredictedGoals ? "Select Team" : "Score is 0"}
                 </option>
                 {selectedMatch ? (
                   <>
-                    <option value={selectedMatch.team1_id}>
+                    {Number(formState.team1Score || 0) > 0 && (<option value={selectedMatch.team1_id}>
                       {selectedMatch.team1_name}
-                    </option>
-                    <option value={selectedMatch.team2_id}>
+                    </option>)}
+                    {Number(formState.team2Score || 0) > 0 && <option value={selectedMatch.team2_id}>
                       {selectedMatch.team2_name}
-                    </option>
+                    </option>}
                   </>
                 ) : null}
               </select>
@@ -667,18 +671,18 @@ export function PredictionsDashboard() {
                 className="mt-2 h-11 w-auto min-w-1/4 rounded-md border border-zinc-300 bg-white px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100 disabled:bg-zinc-100 disabled:text-zinc-400"
               >
                 <option value="">
-                  {hasPredictedGoals ? "Select" : "No predicted goal"}
+                  {hasPredictedGoals ? "Select Option" : "Score is 0"}
                 </option>
                 <option value="true">Yes</option>
                 <option value="false">No</option>
               </select>
               <span className="flex items-center gap-2 mt-2 text-sm font-medium text-zinc-700">
-                Goal in first half
+                Goal in First Half ?
               </span>
             </div>
             <div className="flex flex-row gap-4 justify-end">
               <span className="flex items-center gap-2 mt-2 text-sm font-medium text-zinc-700">
-                Total Yellow cards
+                Total Yellow Cards
               </span>
               <input
                 min="0"
@@ -736,8 +740,8 @@ export function PredictionsDashboard() {
             <div className="flex flex-row gap-4">
               <select
                 name="match_duration"
-                disabled={selectedMatch && selectedMatch.id < 73 ? true : false}
-                value={selectedMatch && selectedMatch.id < 73 ? match_durations[0] : formState.gameDuration}
+                disabled={selectedMatch && selectedMatch.match_stage === "GROUP" ? true : false}
+                value={selectedMatch && selectedMatch.match_stage === "GROUP" ? match_durations[0] : formState.gameDuration}
                 onChange={(event) => updateField("gameDuration", event.target.value)}
                 className={"mt-2 h-11 w-auto min-w-1/4 rounded-md border border-zinc-300 bg-white px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100 disabled:bg-zinc-100 disabled:text-zinc-400"}
               >
@@ -754,20 +758,22 @@ export function PredictionsDashboard() {
           </div>
 
           {formError ? (
-            <p
-              aria-live="polite"
-              className="mt-5 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800"
-            >
-              {formError}
-            </p>
+            <label className="block col-span-2">
+              <p
+                aria-live="polite"
+                className="mt-5 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800"
+              >
+                {formError}
+              </p></label>
           ) : null}
           {successMessage ? (
-            <p
-              aria-live="polite"
-              className="mt-5 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800"
-            >
-              {successMessage}
-            </p>
+            <label className="block col-span-2">
+              <p
+                aria-live="polite"
+                className="mt-5 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800"
+              >
+                {successMessage}
+              </p></label>
           ) : null}
 
           <div className="grid place-items-center w-full">
@@ -789,17 +795,20 @@ export function PredictionsDashboard() {
       <section className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm grid gap-6">
         <div className="border-b border-zinc-200 px-5 py-4">
           <h2 className="text-lg font-semibold text-zinc-950">
-            Prediction history
+            Prediction History
           </h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-zinc-200 text-sm">
+          <table className="min-w-[1280px] divide-y divide-zinc-200 text-sm">
             <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
               <tr>
                 <th className="px-5 py-3">Match</th>
                 <th className="px-5 py-3">Score</th>
-                <th className="px-5 py-3">First scorer</th>
-                <th className="px-5 py-3">First half goal</th>
+                <th className="px-5 py-3">First Score</th>
+                <th className="px-5 py-3">Score 1H</th>
+                <th className="px-5 py-3">Yellow Card</th>
+                <th className="px-5 py-3">Red Card</th>
+                <th className="px-5 py-3">Kick-off</th>
                 <th className="px-5 py-3">Duration</th>
                 <th className="px-5 py-3 text-right">Submitted</th>
               </tr>
@@ -835,6 +844,18 @@ export function PredictionsDashboard() {
                             : "No"}
                       </td>
                       <td className="px-5 py-4 text-zinc-700">
+                        {prediction.yellow_card_count}
+                      </td>
+                      <td className="px-5 py-4 text-zinc-700">
+                        {prediction.red_card_count}
+                      </td>
+                      <td className="px-5 py-4 text-zinc-700">
+                        {getTeamNameById(
+                          predictionMatch,
+                          prediction.kick_off_team_id,
+                        )}
+                      </td>
+                      <td className="px-5 py-4 text-zinc-700">
                         {durationLabels[prediction.match_duration]}
                       </td>
                       <td className="px-5 py-4 text-right text-zinc-700">
@@ -861,4 +882,4 @@ export function PredictionsDashboard() {
       </section >
     </>
   );
-}
+};

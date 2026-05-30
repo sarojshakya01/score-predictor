@@ -141,6 +141,7 @@ class UserResponse(BaseModel):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+    message: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -68,7 +68,8 @@ const stageLabels: Record<MatchStage, string> = {
   "R16": "Round of 16",
   "QF": "Quarter Final",
   "SF": "Semi Final",
-  "F": "F",
+  "3P": "Third Place",
+  "F": "Final",
 };
 
 const formatScore = (match: MatchResponse): string => {
@@ -217,16 +218,16 @@ const buildMatchPayload = (state: MatchFormState): MatchCreate => {
 
   return {
     first_scoring_team_id: matchHasGoals
-      ? parseRequiredInteger(state.firstScoringTeamId, "First scoring team")
+      ? parseRequiredInteger(state.firstScoringTeamId, "First Scoring Team")
       : null,
     match_duration: isGameDuration(state.gameDuration)
       ? state.gameDuration
       : null,
     is_goal_in_first_half: matchHasGoals
-      ? parseRequiredBoolean(state.isGoalInFirstHalf, "Goal in First half")
+      ? parseRequiredBoolean(state.isGoalInFirstHalf, "Goal in First Half")
       : null,
     match_datetime: state.matchDatetime,
-    match_day: parseRequiredInteger(state.matchDay, "Match day"),
+    match_day: parseRequiredInteger(state.matchDay, "Match Day"),
     match_locked: state.matchLocked,
     match_reminder_sent: state.matchReminderSent,
     match_stage: state.matchStage,
@@ -257,7 +258,6 @@ const AdminMatchesPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [matches, setMatches] = useState<MatchResponse[]>([]);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [teams, setTeams] = useState<TeamResponse[]>([]);
 
   const selectedTeams = useMemo(
@@ -333,7 +333,6 @@ const AdminMatchesPage = () => {
     setEditingMatchId(null);
     setFormState(emptyFormState);
     setFormError(null);
-    setSuccessMessage(null);
     setIsModalOpen(true);
   };
 
@@ -341,7 +340,6 @@ const AdminMatchesPage = () => {
     setEditingMatchId(match.id);
     setFormState(toFormState(match));
     setFormError(null);
-    setSuccessMessage(null);
     setIsModalOpen(true);
   };
 
@@ -352,7 +350,6 @@ const AdminMatchesPage = () => {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
-    setSuccessMessage(null);
     setIsSubmitting(true);
 
     try {
@@ -391,7 +388,6 @@ const AdminMatchesPage = () => {
 
     setIsDeletingId(match.id);
     setFormError(null);
-    setSuccessMessage(null);
 
     try {
       await deleteMatch(match.id);
@@ -436,8 +432,8 @@ const AdminMatchesPage = () => {
                 <th className="px-5 py-3">Day</th>
                 <th className="px-5 py-3">Kickoff</th>
                 <th className="px-5 py-3">Score</th>
-                <th className="px-5 py-3">First scorer</th>
-                <th className="px-5 py-3">First Half goal</th>
+                <th className="px-5 py-3">First Scorer</th>
+                <th className="px-5 py-3">Goal in First Half</th>
                 <th className="px-5 py-3">Status</th>
                 <th className="px-5 py-3 text-right">Actions</th>
               </tr>
@@ -638,7 +634,7 @@ const AdminMatchesPage = () => {
                 min="0"
                 name="team1_score"
                 type="number"
-                value={formState.team1Score || 0}
+                value={formState.team1Score || ""}
                 onChange={(event) => updateField("team1Score", event.target.value)}
                 className="mt-2 h-11 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
               />
@@ -653,7 +649,7 @@ const AdminMatchesPage = () => {
                 min="0"
                 name="team2_score"
                 type="number"
-                value={formState.team2Score || 0}
+                value={formState.team2Score || ""}
                 onChange={(event) => updateField("team2Score", event.target.value)}
                 className="mt-2 h-11 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
               />
@@ -767,7 +763,7 @@ const AdminMatchesPage = () => {
                 ))}
               </select>
             </label>
-            <label className="flex items-center gap-3 rounded-md border border-zinc-200 px-3 py-3 text-sm font-medium text-zinc-700">
+            <label className="flex items-center gap-3 cursor-pointer rounded-md border border-zinc-200 px-3 py-3 text-sm font-medium text-zinc-700">
               <input
                 checked={formState.matchLocked}
                 name="match_locked"
@@ -779,7 +775,7 @@ const AdminMatchesPage = () => {
               />
               <p>Locked</p>
             </label>
-            <label className="flex items-center gap-3 rounded-md border border-zinc-200 px-3 py-3 text-sm font-medium text-zinc-700">
+            <label className="flex items-center gap-3 cursor-pointer rounded-md border border-zinc-200 px-3 py-3 text-sm font-medium text-zinc-700">
               <input
                 checked={formState.matchReminderSent}
                 name="match_reminder_sent"
@@ -794,12 +790,14 @@ const AdminMatchesPage = () => {
           </div>
 
           {formError ? (
-            <p
-              aria-live="polite"
-              className="mt-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800"
-            >
-              {formError}
-            </p>
+            <label className="block col-span-2">
+              <p
+                aria-live="polite"
+                className="mt-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800"
+              >
+                {formError}
+              </p>
+            </label>
           ) : null}
 
           <div className="mt-4 flex justify-end gap-3">
@@ -818,8 +816,8 @@ const AdminMatchesPage = () => {
               {isSubmitting
                 ? "Saving..."
                 : editingMatchId
-                  ? "Update match"
-                  : "Save match"}
+                  ? "Update Match"
+                  : "Save Match"}
             </button>
           </div>
         </form>

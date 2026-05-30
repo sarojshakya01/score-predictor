@@ -32,14 +32,20 @@ class MatchStage(str, enum.Enum):
     GROUP = "GROUP"
     R32 = "R32"
     R16 = "R16"
-    QUARTER_FINAL = "QF"
+    QF = "QF"
     SF = "SF"
+    TP = "3P"
     F = "F"
 
 
 def match_duration_values(enum_type: type[GameDuration]) -> list[str]:
     """Persist the public enum values instead of Python enum member names."""
     return [duration.value for duration in enum_type]
+
+
+def match_stage_values(enum_type: type[MatchStage]) -> list[str]:
+    """Persist the public enum values instead of Python enum member names."""
+    return [stage.value for stage in enum_type]
 
 
 class Match(TimestampMixin, Base):
@@ -137,7 +143,7 @@ class Match(TimestampMixin, Base):
             name="match_stage",
             native_enum=False,
             length=20,
-            values_callable=match_duration_values,
+            values_callable=match_stage_values,
             validate_strings=True,
         ),
         nullable=True,
