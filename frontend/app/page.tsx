@@ -1,14 +1,13 @@
 import Link from "next/link";
 
-import { MetricCard } from "@/components/ui/metric-card";
+import { MetricCard, Metrics } from "@/components/ui/metric-card";
 import { PageShell } from "@/components/ui/page-shell";
-import { StatusPill } from "@/components/ui/status-pill";
+import { StatusPill, toneClasses } from "@/components/ui/status-pill";
 import { ApiError } from "@/lib/api";
 import { getHomeSummary } from "@/lib/home";
 import type { HomeSummaryResponse } from "@/lib/home";
 import { listUpcomingMatches } from "@/lib/matches";
 import type { MatchResponse } from "@/lib/matches";
-import type { Metric } from "@/lib/view-data";
 import { MatchCard } from "@/components/ui/match-card";
 
 type HomePageData = {
@@ -71,26 +70,26 @@ const formatNumber = (value: number | undefined): string => {
   return new Intl.NumberFormat("en").format(value);
 };
 
-const buildDashboardMetrics = (summary: HomeSummaryResponse | null): Metric[] => {
+const buildDashboardMetrics = (summary: HomeSummaryResponse | null): Metrics[] => {
   return [
     {
       label: "Open matches",
-      tone: "green",
+      tone: toneClasses.zinc,
       value: formatNumber(summary?.open_matches),
     },
     {
       label: "Predictions made",
-      tone: "blue",
+      tone: toneClasses.primary,
       value: formatNumber(summary?.predictions_made),
     },
     {
       label: "Locking soon",
-      tone: "amber",
+      tone: toneClasses.accent,
       value: formatNumber(summary?.locking_soon),
     },
     {
       label: "Completed matches",
-      tone: "red",
+      tone: toneClasses.secondary,
       value: formatNumber(summary?.completed_matches),
     },
   ];
@@ -127,13 +126,13 @@ const Home = async () => {
         <>
           <Link
             href="/predictions"
-            className="inline-flex h-10 items-center rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800"
+            className="inline-flex h-10 items-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary"
           >
             Make prediction
           </Link>
           <Link
             href="/leaderboard"
-            className="inline-flex h-10 items-center rounded-md border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50"
+            className="inline-flex h-10 items-center rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
           >
             View ranks
           </Link>
@@ -145,7 +144,7 @@ const Home = async () => {
     >
       {errors.length > 0 ? (
         <section
-          className="rounded-md border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900"
+          className="rounded-md border border-amber-200 dark:bg-amber-50 px-5 py-4 text-sm dark:text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-300"
           role="alert"
         >
           {errors.join(" ")}
@@ -189,16 +188,16 @@ const Home = async () => {
       <section>
         <div className="mb-4 flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-zinc-950">
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               Upcoming matches
             </h2>
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
               Open fixtures for score and match detail predictions.
             </p>
           </div>
           <Link
             href="/predictions"
-            className="hidden text-sm font-semibold text-emerald-700 hover:text-emerald-900 sm:inline"
+            className="hidden text-sm font-semibold text-emerald-700 hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-300 sm:inline"
           >
             All predictions
           </Link>
@@ -210,11 +209,11 @@ const Home = async () => {
             ))}
           </div>
         ) : (
-          <div className="rounded-md border border-zinc-200 bg-white px-5 py-10 text-center shadow-sm">
-            <h2 className="text-lg font-semibold text-zinc-950">
+          <div className="rounded-md border border-zinc-200 bg-white px-5 py-10 text-center shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+            <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
               No upcoming matches
             </h2>
-            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-500">
+            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-500 dark:text-zinc-400">
               Fixtures will appear here as soon as the API has open upcoming
               matches.
             </p>

@@ -1,5 +1,8 @@
 """Prediction SQLAlchemy model."""
 
+from app.models.user import User
+from app.models.match import Match
+from app.models.team import Team
 from datetime import datetime
 
 from sqlalchemy import (
@@ -16,7 +19,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin
-from app.models.match import GameDuration, match_duration_values
+from app.models.match import MatchDuration, match_duration_values
 
 
 class Prediction(TimestampMixin, Base):
@@ -69,9 +72,9 @@ class Prediction(TimestampMixin, Base):
         nullable=True,
         default=None,
     )
-    match_duration: Mapped[GameDuration] = mapped_column(
+    match_duration: Mapped[MatchDuration] = mapped_column(
         Enum(
-            GameDuration,
+            MatchDuration,
             name="match_duration",
             native_enum=False,
             length=10,
@@ -88,22 +91,22 @@ class Prediction(TimestampMixin, Base):
         nullable=False,
     )
 
-    user: Mapped["User"] = relationship(  # noqa: F821
+    user: Mapped["User"] = relationship(
         "User",
         foreign_keys=[user_id],
         lazy="selectin",
     )
-    match: Mapped["Match"] = relationship(  # noqa: F821
+    match: Mapped["Match"] = relationship(
         "Match",
         foreign_keys=[match_id],
         lazy="selectin",
     )
-    kick_off_team: Mapped["Team"] = relationship(  # noqa: F821
+    kick_off_team: Mapped["Team"] = relationship(
         "Team",
         foreign_keys=[kick_off_team_id],
         lazy="selectin",
     )
-    first_scoring_team: Mapped["Team | None"] = relationship(  # noqa: F821
+    first_scoring_team: Mapped["Team | None"] = relationship(
         "Team",
         foreign_keys=[first_scoring_team_id],
         lazy="selectin",

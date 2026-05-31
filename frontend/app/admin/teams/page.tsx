@@ -12,6 +12,8 @@ import {
 } from "@/lib/teams";
 import type { TeamCreate, TeamResponse } from "@/lib/teams";
 import Image from "next/image";
+import { IconCancel, IconPencil, IconPlus, IconSave, IconTrash } from "@/components/ui/icons";
+import { Pagination } from "@/components/ui/pagination";
 
 const emptyFormState: TeamCreate = {
   name: "",
@@ -20,10 +22,16 @@ const emptyFormState: TeamCreate = {
   fifa_rank: 0,
 };
 
+const PAGE_SIZE = 20;
+
+const inputCls = "mt-2 h-11 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-emerald-900";
+const labelCls = "text-sm font-medium text-zinc-700 dark:text-zinc-300";
+
 const AdminTeamsPage = () => {
   const [teams, setTeams] = useState<TeamResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTeamId, setEditingTeamId] = useState<number | null>(null);
@@ -135,26 +143,33 @@ const AdminTeamsPage = () => {
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
       <section className="flex flex-wrap items-center justify-between gap-3">
-        <div><h2>Tournament Teams</h2></div>
+        <div><h2 className="text-zinc-950 dark:text-zinc-50">Tournament Teams</h2></div>
         <button
-          className="inline-flex h-10 items-center cursor-pointer rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800"
+          className="inline-flex h-10 items-center gap-2 cursor-pointer rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary"
           type="button"
           onClick={handleOpenCreateModal}
         >
+          <IconPlus className="h-4 w-4" />
           New Team
         </button>
       </section>
 
       {loadError ? (
-        <section className="rounded-md border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-800">
+        <section className="rounded-md border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-800 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-300">
           {loadError}
         </section>
       ) : null}
 
-      <section className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm">
+      <Pagination
+        page={page}
+        pageSize={PAGE_SIZE}
+        total={teams.length}
+        onChange={setPage}
+      />
+      <section className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-zinc-200 text-sm">
-            <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+          <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
+            <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
               <tr>
                 <th className="px-5 py-3">Team</th>
                 <th className="px-5 py-3">FIFA code</th>
@@ -163,49 +178,55 @@ const AdminTeamsPage = () => {
                 <th className="px-5 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {isLoading ? (
                 <tr>
-                  <td colSpan={4} className="px-5 py-8 text-center text-zinc-500">
+                  <td colSpan={4} className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400">
                     Loading teams...
                   </td>
                 </tr>
               ) : teams.length > 0 ? (
-                teams.map((team) => (
-                  <tr key={team.id}>
-                    <td className="px-5 py-4 font-medium text-zinc-950">
-                      <div className="flex items-center gap-2">
-                        <Image width={30} height={30} className="min-h-[25px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={team.flag_url} alt="flag" />
-                        <span className="ml-2">{team.name}</span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-4 text-zinc-700">{team.fifa_code}</td>
-                    <td className="px-5 py-4 text-zinc-700">{team.group}</td>
-                    <td className="px-5 py-4 text-zinc-700">{team.fifa_rank}</td>
-                    <td className="px-5 py-4 text-right">
-                      <div className="flex justify-end gap-3">
-                        <button
-                          type="button"
-                          className="font-semibold cursor-pointer text-emerald-700 hover:text-emerald-900"
-                          onClick={() => handleOpenEditModal(team)}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          className="font-semibold cursor-pointer text-rose-700 hover:text-rose-900 disabled:text-zinc-400"
-                          disabled={isDeletingId === team.id}
-                          onClick={() => void handleDelete(team)}
-                        >
-                          {isDeletingId === team.id ? "Deleting" : "Delete"}
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                teams
+                  .slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+                  .map((team) => (
+                    <tr key={team.id}>
+                      <td className="px-5 py-4 font-medium text-zinc-950 dark:text-zinc-50">
+                        <div className="flex items-center gap-2">
+                          <Image width={30} height={30} className="min-h-[25px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={team.flag_url} alt="flag" />
+                          <span className="ml-2">{team.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{team.fifa_code}</td>
+                      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{team.group}</td>
+                      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{team.fifa_rank}</td>
+                      <td className="px-5 py-4 text-right">
+                        <div className="flex justify-end gap-1">
+                          <button
+                            type="button"
+                            title="Edit"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-50 cursor-pointer transition dark:text-emerald-400 dark:hover:bg-emerald-950"
+                            onClick={() => handleOpenEditModal(team)}
+                          >
+                            <IconPencil className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                          </button>
+                          <button
+                            type="button"
+                            title="Delete"
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-700 hover:bg-rose-50 cursor-pointer transition disabled:opacity-40 dark:text-rose-400 dark:hover:bg-rose-950"
+                            disabled={isDeletingId === team.id}
+                            onClick={() => void handleDelete(team)}
+                          >
+                            <IconTrash className="h-4 w-4" />
+                            <span className="sr-only">Delete</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="px-5 py-8 text-center text-zinc-500">
+                  <td colSpan={4} className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400">
                     No teams found.
                   </td>
                 </tr>
@@ -222,27 +243,27 @@ const AdminTeamsPage = () => {
       >
         <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">
           <label className="block">
-            <span className="text-sm font-medium text-zinc-700">Name</span>
+            <span className={labelCls}>Name</span>
             <input
               type="text"
               required
               value={formState.name}
               onChange={(e) => updateField("name", e.target.value)}
-              className="mt-2 h-11 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
+              className={inputCls}
             />
           </label>
           <label className="block">
-            <span className="text-sm font-medium text-zinc-700">Group</span>
+            <span className={labelCls}>Group</span>
             <input
               type="text"
               required
               value={formState.group}
               onChange={(e) => updateField("group", e.target.value)}
-              className="mt-2 h-11 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
+              className={inputCls}
             />
           </label>
           <label className="block">
-            <span className="text-sm font-medium text-zinc-700">FIFA code</span>
+            <span className={labelCls}>FIFA code</span>
             <input
               type="text"
               required
@@ -250,24 +271,24 @@ const AdminTeamsPage = () => {
               minLength={2}
               value={formState.fifa_code}
               onChange={(e) => updateField("fifa_code", e.target.value)}
-              className="mt-2 h-11 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100 uppercase"
+              className={inputCls + " uppercase"}
             />
           </label>
 
           <label className="block">
-            <span className="text-sm font-medium text-zinc-700">FIFA rank</span>
+            <span className={labelCls}>FIFA rank</span>
             <input
               min={0}
               type="number"
               required
               value={formState.fifa_rank}
               onChange={(e) => updateField("fifa_rank", e.target.value)}
-              className="mt-2 h-11 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100 uppercase"
+              className={inputCls + " uppercase"}
             />
           </label>
 
           {formError ? (
-            <p className="mt-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+            <p className="mt-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-300">
               {formError}
             </p>
           ) : null}
@@ -276,16 +297,18 @@ const AdminTeamsPage = () => {
             <button
               type="button"
               onClick={handleCloseModal}
-              className="inline-flex h-11 items-center cursor-pointer justify-center rounded-md border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50"
+              className="inline-flex h-11 px-4 items-center gap-2 justify-center rounded-md border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
             >
+              <IconCancel className="h-4 w-4" />
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex h-11 items-center cursor-pointer justify-center rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400"
+              className="inline-flex h-11 px-4 items-center gap-2 justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400"
             >
-              {isSubmitting ? "Saving..." : "Save team"}
+              <IconSave className="h-4 w-4" />
+              {isSubmitting ? "Saving..." : "Save Team"}
             </button>
           </div>
         </form>

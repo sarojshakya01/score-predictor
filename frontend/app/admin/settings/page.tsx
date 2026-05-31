@@ -11,6 +11,7 @@ import {
   updateSetting,
 } from "@/lib/settings";
 import type { SettingCreate, SettingResponse } from "@/lib/settings";
+import { IconCancel, IconPencil, IconPlus, IconSave, IconTrash } from "@/components/ui/icons";
 
 const emptyFormState: SettingCreate = {
   name: "",
@@ -134,24 +135,25 @@ const AdminSettingsPage = () => {
       <section className="flex flex-wrap items-center justify-between gap-3">
         <div><h2>App Configurations</h2></div>
         <button
-          className="inline-flex h-10 items-center cursor-pointer rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800"
+          className="inline-flex h-10 items-center gap-2 rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition cursor-pointer hover:bg-tournament-primary"
           type="button"
           onClick={handleOpenCreateModal}
         >
+          <IconPlus className="h-4 w-4" />
           New Setting
         </button>
       </section>
 
       {loadError ? (
-        <section className="rounded-md border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-800">
+        <section className="rounded-md border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-400">
           {loadError}
         </section>
       ) : null}
 
-      <section className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm">
+      <section className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-zinc-200 text-sm">
-            <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+          <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
+            <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800/70 dark:text-zinc-400">
               <tr>
                 <th className="px-5 py-3">Name</th>
                 <th className="px-5 py-3">Friendly Name</th>
@@ -159,37 +161,41 @@ const AdminSettingsPage = () => {
                 <th className="px-5 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {isLoading ? (
                 <tr>
-                  <td colSpan={3} className="px-5 py-8 text-center text-zinc-500">
+                  <td colSpan={3} className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400">
                     Loading settings...
                   </td>
                 </tr>
               ) : settings.length > 0 ? (
                 settings.map((setting) => (
-                  <tr key={setting.id}>
-                    <td className="px-5 py-4 font-medium text-zinc-950">
+                  <tr key={setting.id} className="transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40">
+                    <td className="px-5 py-4 font-medium text-zinc-950 dark:text-zinc-100">
                       {setting.name}
                     </td>
-                    <td className="px-5 py-4 text-zinc-700">{setting.friendly_name}</td>
-                    <td className="px-5 py-4 text-zinc-700">{setting.value}</td>
+                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{setting.friendly_name}</td>
+                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{setting.value}</td>
                     <td className="px-5 py-4 text-right">
                       <div className="flex justify-end gap-3">
                         <button
+                          title="Edit"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-50 cursor-pointer transition dark:text-emerald-400 dark:hover:bg-emerald-950"
                           type="button"
-                          className="font-semibold text-emerald-700 cursor-pointer hover:text-emerald-900"
                           onClick={() => handleOpenEditModal(setting)}
                         >
-                          Edit
+                          <IconPencil className="h-4 w-4" />
+                          <span className="sr-only">Edit</span>
                         </button>
                         <button
-                          type="button"
-                          className="font-semibold text-rose-700 cursor-pointer hover:text-rose-900 disabled:text-zinc-400"
+                          title="Delete"
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-700 hover:bg-rose-50 cursor-pointer transition disabled:opacity-40 dark:text-rose-400 dark:hover:bg-rose-950"
                           disabled={isDeletingId === setting.id}
+                          type="button"
                           onClick={() => void handleDelete(setting)}
                         >
-                          {isDeletingId === setting.id ? "Deleting" : "Delete"}
+                          <IconTrash className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
                         </button>
                       </div>
                     </td>
@@ -197,7 +203,7 @@ const AdminSettingsPage = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="px-5 py-8 text-center text-zinc-500">
+                  <td colSpan={4} className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400">
                     No settings found.
                   </td>
                 </tr>
@@ -214,38 +220,38 @@ const AdminSettingsPage = () => {
       >
         <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">
           <label className="block">
-            <span className="text-sm font-medium text-zinc-700">Name</span>
+            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Name</span>
             <input
               type="text"
               required
               value={formState.name}
               onChange={(e) => updateField("name", e.target.value)}
-              className="mt-2 h-11 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
+              className="mt-2 h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-400 dark:focus:ring-zinc-700"
             />
           </label>
           <label className="block">
-            <span className="text-sm font-medium text-zinc-700">Friendly Name</span>
+            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Friendly Name</span>
             <input
               type="text"
               required
               value={formState.friendly_name}
               onChange={(e) => updateField("friendly_name", e.target.value)}
-              className="mt-2 h-11 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
+              className="mt-2 h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-400 dark:focus:ring-zinc-700"
             />
           </label>
           <label className="block">
-            <span className="text-sm font-medium text-zinc-700">Value</span>
+            <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300">Value</span>
             <textarea
               rows={4}
               required
               value={formState.value}
               onChange={(e) => updateField("value", e.target.value)}
-              className="mt-2 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
+              className="mt-2 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-400 dark:focus:ring-zinc-700"
             />
           </label>
 
           {formError ? (
-            <p className="mt-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
+            <p className="mt-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-400">
               {formError}
             </p>
           ) : null}
@@ -254,16 +260,18 @@ const AdminSettingsPage = () => {
             <button
               type="button"
               onClick={handleCloseModal}
-              className="inline-flex h-11 items-center justify-center rounded-md border cursor-pointer border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50"
+              className="inline-flex h-11 px-4 items-center gap-2 justify-center rounded-md border cursor-pointer border-zinc-200 bg-white text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:bg-zinc-700"
             >
+              <IconCancel className="h-4 w-4" />
               Cancel
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex h-11 items-center justify-center cursor-pointer rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400"
+              className="inline-flex h-11 px-4 items-center gap-2 cursor-pointer rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400"
             >
-              {isSubmitting ? "Saving..." : "Save setting"}
+              <IconSave className="h-4 w-4" />
+              {isSubmitting ? "Saving..." : "Save Setting"}
             </button>
           </div>
         </form>

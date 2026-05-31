@@ -105,6 +105,26 @@ class PredictionRepository:
         result = await self._db.execute(statement)
         return int(result.scalar_one())
 
+    async def list_points_from_predictions_of_user(self, user_id: int) -> list[Prediction]:
+        """Fetch scored predictions for a specific user where the match has a final score."""
+        statement = (
+            select(Prediction)
+            .join(Prediction.match)
+            .join(Prediction.user)
+            .options(
+                selectinload(Prediction.match),
+                selectinload(Prediction.user),
+            )
+            .where(Prediction.user_id == user_id)
+            .where(User.is_active.is_(True))
+            .where(Match.team1_score.is_not(None))
+            .where(Match.team2_score.is_not(None))
+            .order_by(Prediction.match_id.asc())
+        )
+
+        result = await self._db.execute(statement)
+        return list(result.scalars().all())
+
     async def list_scored_predictions(self) -> list[Prediction]:
         """Fetch predictions for active users where the match has a final score."""
         statement = (

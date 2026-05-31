@@ -10,9 +10,9 @@ import { getErrorMessage } from "@/lib/forms/error-message";
 import {
   listMatches,
   listUpcomingMatches,
-  match_durations,
+  matchDurations,
 } from "@/lib/matches";
-import type { GameDuration, MatchResponse } from "@/lib/matches";
+import type { MatchDuration, MatchResponse } from "@/lib/matches";
 import {
   createPrediction,
   listCurrentUserPredictions,
@@ -30,10 +30,11 @@ import {
   SelectableMatchCard,
 } from "../ui/match-card";
 import Image from "next/image";
+import { IconSave } from "../ui/icons";
 
 type PredictionFormState = {
   firstScoringTeamId: string;
-  gameDuration: string;
+  matchDuration: string;
   isGoalInFirstHalf: string;
   openingTeamId: string;
   redCardCount: string;
@@ -44,7 +45,7 @@ type PredictionFormState = {
 
 const emptyFormState: PredictionFormState = {
   firstScoringTeamId: "",
-  gameDuration: "90",
+  matchDuration: "90",
   isGoalInFirstHalf: "",
   openingTeamId: "",
   redCardCount: "",
@@ -53,7 +54,7 @@ const emptyFormState: PredictionFormState = {
   yellowCardCount: "",
 };
 
-const durationLabels: Record<GameDuration, string> = {
+const durationLabels: Record<MatchDuration, string> = {
   "90": "90 minutes",
   "120": "120 minutes",
   PENALTY: "Penalty",
@@ -136,8 +137,8 @@ const hasGoalPrediction = (
   );
 };
 
-const isGameDuration = (value: string): value is GameDuration => {
-  return match_durations.includes(value as GameDuration);
+const isMatchDuration = (value: string): value is MatchDuration => {
+  return matchDurations.includes(value as MatchDuration);
 };
 
 const buildFormState = (
@@ -150,7 +151,7 @@ const buildFormState = (
         prediction.first_scoring_team_id === null
           ? ""
           : String(prediction.first_scoring_team_id),
-      gameDuration: prediction.match_duration,
+      matchDuration: prediction.match_duration,
       isGoalInFirstHalf:
         prediction.is_goal_in_first_half === null
           ? ""
@@ -308,8 +309,8 @@ export const PredictionsDashboard = () => {
   };
 
   const buildPredictionFields = (): PredictionFields => {
-    if (!isGameDuration(formState.gameDuration)) {
-      throw new Error("Game duration is required.");
+    if (!isMatchDuration(formState.matchDuration)) {
+      throw new Error("Match duration is required.");
     }
 
     const team1Score = parseNonNegativeInteger(
@@ -326,7 +327,7 @@ export const PredictionsDashboard = () => {
       first_scoring_team_id: hasPredictedGoals
         ? parsePositiveInteger(formState.firstScoringTeamId, "first scoring team")
         : null,
-      match_duration: formState.gameDuration,
+      match_duration: formState.matchDuration,
       is_goal_in_first_half: hasPredictedGoals
         ? parseRequiredBoolean(formState.isGoalInFirstHalf, "Goal in first half")
         : null,
@@ -465,23 +466,27 @@ export const PredictionsDashboard = () => {
 
   const areGoalTimelineFieldsDisabled = !hasPredictedGoals;
 
+  const inputCls = "mt-2 h-11 w-auto min-w-1/4 rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-emerald-900";
+  const selectCls = "mt-2 h-11 w-auto min-w-1/4 rounded-md border border-zinc-300 dark:bg-zinc-900 dark:shadow-zinc-950 px-3 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:disabled:bg-zinc-700 dark:disabled:text-zinc-500 dark:focus:ring-emerald-900";
+  const labelTextCls = "flex items-center gap-2 mt-2 text-sm font-medium text-zinc-700 dark:text-zinc-300";
+
   return (
     <>
       {loadError ? (
-        <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+        <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-300">
           {loadError}
         </div>
       ) : null}
 
       {authRequired ? (
-        <div className="flex flex-col gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-md border border-amber-200 px-4 py-4 text-sm dark:text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-zinc-300 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold">Login required</h2>
             <p className="mt-1 text-sm">Log in to submit predictions and view your prediction history.</p>
           </div>
           <Link
             href="/login"
-            className="inline-flex h-10 items-center justify-center rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800"
+            className="inline-flex h-10 items-center justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold dark:text-zinc-300 transition hover:bg-tournament-primary"
           >
             Login
           </Link>
@@ -490,7 +495,7 @@ export const PredictionsDashboard = () => {
 
       <section className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-semibold text-zinc-950">
+          <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
             {matchListTitle}
           </h2>
         </div>
@@ -504,11 +509,11 @@ export const PredictionsDashboard = () => {
                 void handleMatchDayChange(previousMatchDay);
               }
             }}
-            className="grid h-10 w-10 place-items-center cursor-pointer rounded-md border border-zinc-300 bg-white text-lg font-semibold text-zinc-700 transition hover:border-emerald-700 hover:text-emerald-800 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-400"
+            className="grid h-10 w-10 place-items-center cursor-pointer rounded-md border border-zinc-300 dark:bg-zinc-900 dark:shadow-zinc-950 text-lg font-semibold text-zinc-700 transition hover:border-tournament-primary hover:text-emerald-800 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-tournament-primary dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-600"
           >
             &lt;
           </button>
-          <span className="min-w-28 text-center text-sm font-medium text-zinc-600">
+          <span className="min-w-28 text-center text-sm font-medium text-zinc-600 dark:text-zinc-400">
             {referenceMatchDay === null
               ? "Match day"
               : `Day ${referenceMatchDay}`}
@@ -522,7 +527,7 @@ export const PredictionsDashboard = () => {
                 void handleMatchDayChange(nextMatchDay);
               }
             }}
-            className="grid h-10 w-10 place-items-center cursor-pointer rounded-md border border-zinc-300 bg-white text-lg font-semibold text-zinc-700 transition hover:border-emerald-700 hover:text-emerald-800 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-400"
+            className="grid h-10 w-10 place-items-center cursor-pointer rounded-md border border-zinc-300 dark:bg-zinc-900 dark:shadow-zinc-950 text-lg font-semibold text-zinc-700 transition hover:border-tournament-primary hover:text-emerald-800 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-tournament-primary dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-600"
           >
             &gt;
           </button>
@@ -534,7 +539,7 @@ export const PredictionsDashboard = () => {
           Array.from({ length: 3 }, (_, index) => (
             <div
               key={index}
-              className="h-64 animate-pulse rounded-md border border-zinc-200 bg-white shadow-sm"
+              className="h-64 animate-pulse rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 shadow-sm dark:border-zinc-700 dark:bg-zinc-800"
             />
           ))
         ) : matches.length > 0 ? (
@@ -555,24 +560,24 @@ export const PredictionsDashboard = () => {
             );
           })
         ) : (
-          <div className="rounded-md border border-zinc-200 bg-white p-5 text-sm text-zinc-600 lg:col-span-3">
+          <div className="rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 lg:col-span-3">
             No upcoming matches are available.
           </div>
         )}
       </section >
 
       <section className="flex justify-center">
-        <div className="w-[20%] mr-5 flex flex-col gap-2 justify-center text-center bg-red-100">Player1 Image</div>
+        <div className="w-[20%] mr-5 flex flex-col gap-2 justify-center text-center bg-red-100 dark:bg-red-950">Player1 Image</div>
         <form
-          className="relative w-[60%] rounded-md border border-zinc-200 bg-white p-5 shadow-sm"
+          className="relative w-[60%] rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
           onSubmit={handleSubmit}
         >
           <div className="flex flex-wrap items-center justify-center gap-3">
             <div className="text-center">
-              <h2 className="text-lg font-semibold text-zinc-950">
+              <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
                 Match Prediction
               </h2>
-              <p className="mt-1 text-sm text-zinc-500">
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
                 {selectedMatch
                   ? `${getMatchLabelText(selectedMatch)} - ${formatDateTime(
                     selectedMatch.match_datetime,
@@ -589,7 +594,7 @@ export const PredictionsDashboard = () => {
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="flex flex-row gap-4 justify-end">
-              <span className="flex items-center gap-2 text-sm font-medium text-zinc-700">
+              <span className={labelTextCls}>
                 {selectedMatch ? (
                   <>
                     <span>{selectedMatch.team1_name}</span>
@@ -606,7 +611,7 @@ export const PredictionsDashboard = () => {
                 type="number"
                 value={formState.team1Score || 0}
                 onChange={(event) => updateField("team1Score", event.target.value)}
-                className="mt-2 h-11 w-auto min-w-1/4 rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
+                className={inputCls}
               />
             </div>
             <div className="flex flex-row gap-4">
@@ -617,9 +622,9 @@ export const PredictionsDashboard = () => {
                 type="number"
                 value={formState.team2Score || 0}
                 onChange={(event) => updateField("team2Score", event.target.value)}
-                className="mt-2 h-11 w-auto min-w-1/4 rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
+                className={inputCls}
               />
-              <span className="flex items-center gap-2 mt-2 text-sm font-medium text-zinc-700">
+              <span className={labelTextCls}>
                 {selectedMatch ? (
                   <>
                     {selectedMatch.team2_flag_url ? (
@@ -631,7 +636,7 @@ export const PredictionsDashboard = () => {
               </span>
             </div>
             <div className="flex flex-row gap-4 justify-end">
-              <span className="flex items-center gap-2 mt-2 text-sm font-medium text-zinc-700">
+              <span className={labelTextCls}>
                 First Scoring Team
               </span>
               <select
@@ -642,7 +647,7 @@ export const PredictionsDashboard = () => {
                 onChange={(event) =>
                   updateField("firstScoringTeamId", event.target.value)
                 }
-                className="mt-2 h-11 w-auto min-w-1/4 rounded-md border border-zinc-300 bg-white px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100 disabled:bg-zinc-100 disabled:text-zinc-400"
+                className={selectCls}
               >
                 <option value="">
                   {hasPredictedGoals ? "Select Team" : "Score is 0"}
@@ -668,7 +673,7 @@ export const PredictionsDashboard = () => {
                 onChange={(event) =>
                   updateField("isGoalInFirstHalf", event.target.value)
                 }
-                className="mt-2 h-11 w-auto min-w-1/4 rounded-md border border-zinc-300 bg-white px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100 disabled:bg-zinc-100 disabled:text-zinc-400"
+                className={selectCls}
               >
                 <option value="">
                   {hasPredictedGoals ? "Select Option" : "Score is 0"}
@@ -676,12 +681,12 @@ export const PredictionsDashboard = () => {
                 <option value="true">Yes</option>
                 <option value="false">No</option>
               </select>
-              <span className="flex items-center gap-2 mt-2 text-sm font-medium text-zinc-700">
+              <span className={labelTextCls}>
                 Goal in First Half ?
               </span>
             </div>
             <div className="flex flex-row gap-4 justify-end">
-              <span className="flex items-center gap-2 mt-2 text-sm font-medium text-zinc-700">
+              <span className={labelTextCls}>
                 Total Yellow Cards
               </span>
               <input
@@ -693,7 +698,7 @@ export const PredictionsDashboard = () => {
                 onChange={(event) =>
                   updateField("yellowCardCount", event.target.value)
                 }
-                className="mt-2 h-11 w-auto min-w-1/4 rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
+                className={inputCls}
               />
             </div>
             <div className="flex flex-row gap-4">
@@ -704,21 +709,21 @@ export const PredictionsDashboard = () => {
                 type="number"
                 value={formState.redCardCount || 0}
                 onChange={(event) => updateField("redCardCount", event.target.value)}
-                className="mt-2 h-11 w-auto min-w-1/4 rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
+                className={inputCls}
               />
-              <span className="flex items-center gap-2 mt-2 text-sm font-medium text-zinc-700">
+              <span className={labelTextCls}>
                 Total Red cards
               </span>
             </div>
             <div className="flex flex-row gap-4 justify-end">
-              <span className="flex items-center gap-2 mt-2 text-sm font-medium text-zinc-700">
+              <span className={labelTextCls}>
                 <p>Kick-off team</p>
               </span>
               <select
                 name="kick_off_team_id"
                 value={formState.openingTeamId}
                 onChange={(event) => updateField("openingTeamId", event.target.value)}
-                className="mt-2 h-11 w-auto min-w-1/4 rounded-md border border-zinc-300 bg-white px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
+                className={selectCls}
               >
                 {selectedMatch ? (
                   <>
@@ -741,18 +746,18 @@ export const PredictionsDashboard = () => {
               <select
                 name="match_duration"
                 disabled={selectedMatch && selectedMatch.match_stage === "GROUP" ? true : false}
-                value={selectedMatch && selectedMatch.match_stage === "GROUP" ? match_durations[0] : formState.gameDuration}
-                onChange={(event) => updateField("gameDuration", event.target.value)}
-                className={"mt-2 h-11 w-auto min-w-1/4 rounded-md border border-zinc-300 bg-white px-3 text-zinc-950 outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100 disabled:bg-zinc-100 disabled:text-zinc-400"}
+                value={selectedMatch && selectedMatch.match_stage === "GROUP" ? matchDurations[0] : formState.matchDuration}
+                onChange={(event) => updateField("matchDuration", event.target.value)}
+                className={selectCls}
               >
-                {match_durations.map((duration) => (
+                {matchDurations.map((duration) => (
                   <option key={duration} value={duration}>
                     {durationLabels[duration]}
                   </option>
                 ))}
               </select>
-              <span className="flex items-center gap-2 mt-2 text-sm font-medium text-zinc-700">
-                <p>Game duration</p>
+              <span className={labelTextCls}>
+                <p>Match duration</p>
               </span>
             </div>
           </div>
@@ -761,7 +766,7 @@ export const PredictionsDashboard = () => {
             <label className="block col-span-2">
               <p
                 aria-live="polite"
-                className="mt-5 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800"
+                className="mt-5 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-300"
               >
                 {formError}
               </p></label>
@@ -770,7 +775,7 @@ export const PredictionsDashboard = () => {
             <label className="block col-span-2">
               <p
                 aria-live="polite"
-                className="mt-5 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800"
+                className="mt-5 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
               >
                 {successMessage}
               </p></label>
@@ -780,8 +785,9 @@ export const PredictionsDashboard = () => {
             <button
               type="submit"
               disabled={isFormDisabled}
-              className="mt-6 inline-flex h-11 w-full items-center cursor-pointer justify-center rounded-md bg-zinc-950 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400 sm:w-auto"
+              className="inline-flex h-11 px-4 items-center gap-2 mt-6 cursor-pointer justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400 sm:w-auto"
             >
+              <IconSave className="h-4 w-4" />
               {isSubmitting
                 ? "Saving..."
                 : selectedPrediction
@@ -790,17 +796,17 @@ export const PredictionsDashboard = () => {
             </button>
           </div>
         </form>
-        <div className="w-[20%] ml-5 flex flex-col gap-2 justify-center text-center bg-red-100">Player2 Image</div>
+        <div className="w-[20%] ml-5 flex flex-col gap-2 justify-center text-center bg-red-100 dark:bg-red-950">Player2 Image</div>
       </section >
-      <section className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm grid gap-6">
-        <div className="border-b border-zinc-200 px-5 py-4">
-          <h2 className="text-lg font-semibold text-zinc-950">
+      <section className="overflow-hidden rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 shadow-sm grid gap-6 dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="border-b border-zinc-200 px-5 py-4 dark:border-zinc-700">
+          <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
             Prediction History
           </h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="min-w-[1280px] divide-y divide-zinc-200 text-sm">
-            <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500">
+          <table className="min-w-[1280px] divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
+            <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
               <tr>
                 <th className="px-5 py-3">Match</th>
                 <th className="px-5 py-3">Score</th>
@@ -813,7 +819,7 @@ export const PredictionsDashboard = () => {
                 <th className="px-5 py-3 text-right">Submitted</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-zinc-100">
+            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {predictions.length > 0 ? (
                 predictions.map((prediction) => {
                   const predictionMatch = matches.find(
@@ -822,43 +828,43 @@ export const PredictionsDashboard = () => {
 
                   return (
                     <tr key={prediction.id}>
-                      <td className="px-5 py-4 font-medium text-zinc-950">
+                      <td className="px-5 py-4 font-medium text-zinc-950 dark:text-zinc-50">
                         {predictionMatch
                           ? getMatchLabelWithFlag(predictionMatch)
                           : `Match #${prediction.match_id}`}
                       </td>
-                      <td className="px-5 py-4 text-zinc-700">
+                      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
                         {prediction.team1_score} - {prediction.team2_score}
                       </td>
-                      <td className="px-5 py-4 text-zinc-700">
+                      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
                         {getTeamNameById(
                           predictionMatch,
                           prediction.first_scoring_team_id,
                         )}
                       </td>
-                      <td className="px-5 py-4 text-zinc-700">
+                      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
                         {prediction.is_goal_in_first_half === null
                           ? "No goal"
                           : prediction.is_goal_in_first_half
                             ? "Yes"
                             : "No"}
                       </td>
-                      <td className="px-5 py-4 text-zinc-700">
+                      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
                         {prediction.yellow_card_count}
                       </td>
-                      <td className="px-5 py-4 text-zinc-700">
+                      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
                         {prediction.red_card_count}
                       </td>
-                      <td className="px-5 py-4 text-zinc-700">
+                      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
                         {getTeamNameById(
                           predictionMatch,
                           prediction.kick_off_team_id,
                         )}
                       </td>
-                      <td className="px-5 py-4 text-zinc-700">
+                      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
                         {durationLabels[prediction.match_duration]}
                       </td>
-                      <td className="px-5 py-4 text-right text-zinc-700">
+                      <td className="px-5 py-4 text-right text-zinc-700 dark:text-zinc-300">
                         {formatDateTime(prediction.predicted_datetime)}
                       </td>
                     </tr>
@@ -868,7 +874,7 @@ export const PredictionsDashboard = () => {
                 <tr>
                   <td
                     colSpan={6}
-                    className="px-5 py-8 text-center text-zinc-500"
+                    className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400"
                   >
                     {authRequired
                       ? "Login to load your prediction history."

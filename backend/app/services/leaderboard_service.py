@@ -7,7 +7,7 @@ from fastapi import HTTPException, status
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.match import GameDuration, Match
+from app.models.match import MatchDuration, Match
 from app.models.prediction import Prediction
 from app.models.user import User
 from app.repositories.match_repository import MatchRepository
@@ -18,6 +18,10 @@ from app.schemas.leaderboard import (
     LeaderboardRaceFrameResponse,
     LeaderboardRaceUserResponse,
     LeaderboardResponse,
+)
+from app.schemas.prediction import (
+    UserPointsDetailsListResponse,
+    UserPointsDetailsResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -126,6 +130,90 @@ class LeaderboardService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An unexpected error occurred: could not read leaderbord",
+            )
+
+    async def get_user_points_details(
+        self,
+        *,
+        user_id: int,
+    ) -> UserPointsDetailsListResponse:
+        """Return scored points details for a user across all completed matches."""
+        try:
+            user = await self._user_repository.get_by_id(user_id)
+            if user is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="User not found",
+                )
+
+            points_from_predictions = await self._prediction_repository.list_points_from_predictions_of_user(
+                user_id=user_id,
+            )
+
+            items: list[UserPointsDetailsResponse] = []
+            running_total = 0
+
+            for point_from_prediction in points_from_predictions:
+                match = point_from_prediction.match
+                score = self._score_prediction(point_from_prediction)
+                running_total += score.total_points
+                team1_name = match.team1.name
+                team2_name = match.team2.name
+                items.append(
+                    UserPointsDetailsResponse(
+                        match_id=match.id,
+                        match_label=self._format_match_label(match),
+                        match_day=match.match_day,
+                        team1_name=team1_name,
+                        team2_name=team2_name,
+                        team1_score=match.team1_score,
+                        team2_score=match.team2_score,
+                        predicted_team1_score=point_from_prediction.team1_score,
+                        predicted_team2_score=point_from_prediction.team2_score,
+                        # Yellow cards
+                        yellow_card_count=match.yellow_card_count,
+                        predicted_yellow_card_count=point_from_prediction.yellow_card_count,
+                        yellow_card_points=score.yellow_card_points,
+                        # Red cards
+                        red_card_count=match.red_card_count,
+                        predicted_red_card_count=point_from_prediction.red_card_count,
+                        red_card_points=score.red_card_points,
+                        # Kick-off team
+                        kick_off_team=match.kick_off_team.name if match.kick_off_team else None,
+                        predicted_kick_off_team=point_from_prediction.kick_off_team.name,
+                        kick_off_team_points=score.kick_off_team_points,
+                        # First scoring team
+                        first_scoring_team=match.first_scoring_team.name if match.first_scoring_team else None,
+                        predicted_first_scoring_team=point_from_prediction.first_scoring_team.name if point_from_prediction.first_scoring_team else None,
+                        first_scoring_team_points=score.first_scoring_team_points,
+                        # Scored in first half
+                        is_goal_in_first_half=match.is_goal_in_first_half,
+                        predicted_is_goal_in_first_half=point_from_prediction.is_goal_in_first_half,
+                        scored_in_first_half_points=score.scored_in_first_half_points,
+                        # Match duration
+                        match_duration=match.match_duration.value if match.match_duration else None,
+                        predicted_match_duration=point_from_prediction.match_duration.value,
+                        match_duration_points=score.match_duration_points,
+                        # Summary
+                        score_points=score.score_points,
+                        goal_difference_points=score.goal_difference_points,
+                        total_points=score.total_points,
+                    )
+                )
+
+            return UserPointsDetailsListResponse(
+                user_id=user_id,
+                user_name=self._format_user_name(user),
+                items=items,
+                total_points=running_total,
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.exception("Unexpected error during get_user_points_details", e)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected error occurred: could not read user points details",
             )
 
     async def _get_prediction_data(
@@ -368,7 +456,7 @@ class LeaderboardService:
         if (
             match.team1_score is None
             or match.team2_score is None
-            or match.match_duration == GameDuration.PENALTY
+            or match.match_duration == MatchDuration.PENALTY
         ):
             return 0
 
@@ -392,14 +480,14 @@ class LeaderboardService:
 
     @staticmethod
     def _score_duration(prediction: Prediction, match: Match) -> int:
-        """Score game duration when the actual duration is available."""
+        """Score match duration when the actual duration is available."""
         if match.match_duration is None or prediction.match_duration != match.match_duration:
             return 0
 
-        if match.match_duration == GameDuration.REGULAR:
+        if match.match_duration == MatchDuration.REGULAR:
             return 5
 
-        if match.match_duration == GameDuration.EXTRA_TIME:
+        if match.match_duration == MatchDuration.EXTRA_TIME:
             return 10
 
         return 15

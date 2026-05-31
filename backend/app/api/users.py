@@ -9,6 +9,7 @@ from app.api.deps import CurrentAdminUser, CurrentUser
 from app.db.session import get_db
 from app.models.user import UserRole
 from app.schemas.leaderboard import LeaderboardResponse
+from app.schemas.prediction import UserPointsDetailsListResponse
 from app.schemas.user import (
     UserCreate,
     UserListResponse,
@@ -67,6 +68,21 @@ async def get_leaderboard(
     """Return leaderboard standings for authenticated users."""
     service = LeaderboardService(db)
     return await service.get_leaderboard(offset=offset, limit=limit)
+
+
+@leaderboard_router.get(
+    "/users/{user_id}/points-details",
+    response_model=UserPointsDetailsListResponse,
+    summary="Get user points details",
+)
+async def get_user_points_details(
+    user_id: Annotated[int, Path(gt=0)],
+    _current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> UserPointsDetailsListResponse:
+    """Return scored prediction details for a specific user across completed matches."""
+    service = LeaderboardService(db)
+    return await service.get_user_points_details(user_id=user_id)
 
 
 @admin_router.get(

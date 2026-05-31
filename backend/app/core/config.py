@@ -18,17 +18,21 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_EXPIRE_MINUTES: int = 30
     JWT_REFRESH_EXPIRE_MINUTES: int = 10080  # 7 days
+    EMAIL_FROM: str = "worldcupfantasy.tk@gmail.com"
+    EMAIL_PASS: str = "jaypzuquozvfptlk"
+    EMAIL_SMTP: str = "smtp.gmail.com"
+    EMAIL_PORT: int = 587
+    SITE_URL: str = "https://worldcup202.javra.com/"
 
     API_BASE_PATH: str = "/api/v1"
 
     # ── CORS ─────────────────────────────────────────────────────
-    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+    CORS_ORIGINS: list[str] = ["http://localhost:3000", "https://worldcup.javra.com"]
 
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
     )
-
 
 settings = Settings()

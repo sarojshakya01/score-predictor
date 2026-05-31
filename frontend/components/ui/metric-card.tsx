@@ -1,21 +1,17 @@
-import type { Metric } from "@/lib/view-data";
-
+export type Metrics = {
+  label: string;
+  value: string;
+  tone: string;
+}
 type MetricCardProps = {
-  metric: Metric;
-};
-
-export const toneClasses: Record<Metric["tone"], string> = {
-  amber: "border-amber-200 bg-amber-50 text-amber-900",
-  blue: "border-sky-200 bg-sky-50 text-sky-900",
-  green: "border-emerald-200 bg-emerald-50 text-emerald-900",
-  red: "border-rose-200 bg-rose-50 text-rose-900",
+  metric: Metrics;
 };
 
 export const MetricCard = ({ metric }: MetricCardProps) => {
   return (
-    <div className={`rounded-md border p-4 ${toneClasses[metric.tone]}`}>
+    <div className={`rounded-md border p-4 ${metric.tone}`}>
       <p className="text-sm font-medium">{metric.label}</p>
-      <p className="mt-2 text-lg text-zinc-500">{metric.value}</p>
+      <p className="mt-2 text-lg">{metric.value}</p>
     </div>
   );
 };

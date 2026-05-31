@@ -19,7 +19,7 @@ from app.db.base import Base, TimestampMixin
 from app.models.team import Team
 
 
-class GameDuration(str, enum.Enum):
+class MatchDuration(str, enum.Enum):
     """Possible durations / outcomes of a match."""
 
     REGULAR = "90"
@@ -38,7 +38,7 @@ class MatchStage(str, enum.Enum):
     F = "F"
 
 
-def match_duration_values(enum_type: type[GameDuration]) -> list[str]:
+def match_duration_values(enum_type: type[MatchDuration]) -> list[str]:
     """Persist the public enum values instead of Python enum member names."""
     return [duration.value for duration in enum_type]
 
@@ -122,10 +122,10 @@ class Match(TimestampMixin, Base):
         default=None,
     )
 
-    # ── Game Duration ────────────────────────────────────────────
-    match_duration: Mapped[GameDuration | None] = mapped_column(
+    # ── Match Duration ────────────────────────────────────────────
+    match_duration: Mapped[MatchDuration | None] = mapped_column(
         Enum(
-            GameDuration,
+            MatchDuration,
             name="match_duration",
             native_enum=False,
             length=10,

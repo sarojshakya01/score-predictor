@@ -5,9 +5,10 @@ type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
   title: string;
+  isLarge?: boolean;
 };
 
-export const Modal = ({ children, isOpen, onClose, title }: ModalProps) => {
+export const Modal = ({ children, isOpen, onClose, title, isLarge = false }: ModalProps) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -47,16 +48,16 @@ export const Modal = ({ children, isOpen, onClose, title }: ModalProps) => {
   return (
     <dialog
       ref={dialogRef}
-      className="backdrop:bg-zinc-950/50 backdrop:backdrop-blur-sm open:animate-in open:fade-in-0 open:zoom-in-95 rounded-lg p-0 shadow-xl m-auto max-w-lg w-full bg-white border border-zinc-200"
+      className={"backdrop:bg-tournament-primary/50 backdrop:backdrop-blur-sm open:animate-in open:fade-in-0 open:zoom-in-95 rounded-lg p-0 shadow-xl m-auto bg-white border border-zinc-200 dark:bg-zinc-900 dark:border-zinc-700" + (isLarge ? " " : " max-w-2xl ") + "w-full"}
       onClick={handleBackdropClick}
       onKeyDown={handleKeyDown}
     >
       <div className="flex flex-col max-h-[90vh]">
-        <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-4">
-          <h2 className="text-lg font-semibold text-zinc-950">{title}</h2>
+        <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-4 dark:border-zinc-700">
+          <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">{title}</h2>
           <button
             type="button"
-            className="rounded-md p-1 cursor-pointer text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 transition"
+            className="rounded-md p-1 cursor-pointer text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 transition dark:hover:bg-zinc-800 dark:hover:text-zinc-300"
             onClick={onClose}
             aria-label="Close"
           >

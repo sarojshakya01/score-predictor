@@ -1,4 +1,5 @@
 export {
+  getUserPredictionDetails,
   leaderboardService,
   listLeaderboard,
 } from "@/lib/leaderboard/leaderboard-service";
@@ -8,4 +9,6 @@ export type {
   LeaderboardRaceUserResponse,
   LeaderboardResponse,
   ListLeaderboardParams,
+  UserPointsDetailsListResponse,
+  UserPointsDetailsResponse,
 } from "@/lib/leaderboard/types";

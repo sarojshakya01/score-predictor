@@ -43,3 +43,49 @@ export type ListLeaderboardParams = {
   limit?: number;
   offset?: number;
 };
+
+export type UserPointsDetailsResponse = {
+  match_id: number;
+  match_label: string;
+  match_day: number;
+  team1_name: string;
+  team2_name: string;
+  team1_score: number;
+  team2_score: number;
+  predicted_team1_score: number;
+  predicted_team2_score: number;
+  score_points: number;
+  goal_difference_points: number;
+  // Yellow cards
+  yellow_card_count: number | null;
+  predicted_yellow_card_count: number;
+  yellow_card_points: number;
+  // Red cards
+  red_card_count: number | null;
+  predicted_red_card_count: number;
+  red_card_points: number;
+  // Kick-off team
+  kick_off_team: string | null;
+  predicted_kick_off_team: string;
+  kick_off_team_points: number;
+  // First scoring team
+  first_scoring_team: string | null;
+  predicted_first_scoring_team: string | null;
+  first_scoring_team_points: number;
+  // Scored in first half
+  is_goal_in_first_half: boolean | null;
+  predicted_is_goal_in_first_half: boolean | null;
+  scored_in_first_half_points: number;
+  // Match duration
+  match_duration: string | null;
+  predicted_match_duration: string;
+  match_duration_points: number;
+  total_points: number;
+};
+
+export type UserPointsDetailsListResponse = {
+  user_id: number;
+  user_name: string;
+  items: UserPointsDetailsResponse[];
+  total_points: number;
+};

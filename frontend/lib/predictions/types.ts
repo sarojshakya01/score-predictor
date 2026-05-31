@@ -1,8 +1,8 @@
-import type { GameDuration } from "@/lib/matches";
+import type { MatchDuration } from "@/lib/matches";
 
 export type PredictionFields = {
   first_scoring_team_id: number | null;
-  match_duration: GameDuration;
+  match_duration: MatchDuration;
   is_goal_in_first_half: boolean | null;
   kick_off_team_id: number;
   red_card_count: number;

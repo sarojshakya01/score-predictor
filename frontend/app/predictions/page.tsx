@@ -5,7 +5,7 @@ const PredictionsPage = () => {
   return (
     <PageShell
       eyebrow="Predictions"
-      subtitle="Submit scores, cards, kickoff team, and game duration before the lock window closes."
+      subtitle="Submit scores, cards, kickoff team, and match duration before the lock window closes."
       title="Prediction Board"
     >
       <PredictionsDashboard />

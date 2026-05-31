@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 
-import { MetricCard, toneClasses } from "@/components/ui/metric-card";
+import { MetricCard } from "@/components/ui/metric-card";
 import { useEffect, useState } from "react";
 import { listAdminMatches, listUpcomingMatches, MatchResponse } from "@/lib/matches";
 import { listAdminTeams, TeamResponse } from "@/lib/teams";
 import { listAdminUsers } from "@/lib/users";
 import { UserResponse } from "@/lib/auth";
+import { toneClasses, toneClassesLight } from "@/components/ui/status-pill";
 
 const AdminPage = () => {
 
@@ -56,25 +57,25 @@ const AdminPage = () => {
     {
       label: "Total Matches",
       value: isLoading ? "..." : `${upcomingMatches.length.toString()} matches locking today`,
-      tone: "blue",
+      tone: toneClassesLight.primary,
     },
     {
       label: "Total Users",
       value: isLoading ? "..." : `${users.length.toString()} users are competing for the title`,
-      tone: "green",
+      tone: toneClassesLight.secondary,
     },
     {
       label: "Total Teams",
       value: isLoading ? "..." : `${teams.length.toString()} teams left in the tournament`,
-      tone: "amber",
+      tone: toneClassesLight.accent,
     },
-  ] as const;
+  ];
 
   const adminQueues = [
-    { href: "/admin/matches", tone: toneClasses.blue, label: "Matches", value: isLoading ? "..." : matches.length },
-    { href: "/admin/users", tone: toneClasses.green, label: "Users", value: isLoading ? "..." : users.length },
-    { href: "/admin/teams", tone: toneClasses.amber, label: "Teams", value: isLoading ? "..." : teams.length },
-  ] as const;
+    { href: "/admin/matches", tone: toneClasses.primary, label: "Matches", value: isLoading ? "..." : matches.length },
+    { href: "/admin/users", tone: toneClasses.secondary, label: "Users", value: isLoading ? "..." : users.length },
+    { href: "/admin/teams", tone: toneClasses.accent, label: "Teams", value: isLoading ? "..." : teams.length },
+  ];
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
@@ -92,7 +93,7 @@ const AdminPage = () => {
               href={item.href}
               className={`rounded-md border p-5 shadow-sm transition hover:border-zinc-300 hover:bg-zinc-50 ${item.tone}`}
             >
-              <p className="text-lg font-semibold text-zinc-950">{item.label}</p>
+              <p className="text-lg font-semibold text-white">{item.label}</p>
               <p className="mt-2 text-3xl font-semibold tracking-normal">{item.value}</p>
             </Link>
           ))}

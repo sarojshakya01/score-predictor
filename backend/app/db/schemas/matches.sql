@@ -18,7 +18,7 @@ CREATE TABLE matches (
     first_scoring_team_id INT NULL DEFAULT NULL,
     is_goal_in_first_half BOOLEAN NULL DEFAULT NULL,
 
-    -- Game Duration
+    -- Match Duration
     match_duration ENUM('90', '120', 'PENALTY') NULL DEFAULT NULL,
 
     -- Match Stage

@@ -4,7 +4,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.models.match import GameDuration
+from app.models.match import MatchDuration
 
 
 class PredictionFields(BaseModel):
@@ -17,7 +17,7 @@ class PredictionFields(BaseModel):
     kick_off_team_id: int = Field(..., gt=0)
     first_scoring_team_id: int | None = Field(default=None, gt=0)
     is_goal_in_first_half: bool | None = None
-    match_duration: GameDuration
+    match_duration: MatchDuration
 
     @model_validator(mode="after")
     def validate_goal_timeline_fields(self) -> "PredictionFields":
@@ -55,7 +55,7 @@ class PredictionUpdate(BaseModel):
     kick_off_team_id: int | None = Field(default=None, gt=0)
     first_scoring_team_id: int | None = Field(default=None, gt=0)
     is_goal_in_first_half: bool | None = None
-    match_duration: GameDuration | None = None
+    match_duration: MatchDuration | None = None
 
 
 class PredictionResponse(PredictionFields):
@@ -78,3 +78,55 @@ class PredictionListResponse(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+class UserPointsDetailsResponse(BaseModel):
+    """Scored prediction detail for a single completed match."""
+
+    match_id: int
+    match_label: str
+    match_day: int
+    team1_name: str
+    team2_name: str
+    team1_score: int
+    team2_score: int
+    predicted_team1_score: int
+    predicted_team2_score: int
+    # Yellow cards
+    yellow_card_count: int | None
+    predicted_yellow_card_count: int
+    yellow_card_points: int
+    # Red cards
+    red_card_count: int | None
+    predicted_red_card_count: int
+    red_card_points: int
+    # Kick-off team
+    kick_off_team: str | None
+    predicted_kick_off_team: str
+    kick_off_team_points: int
+    # First scoring team
+    first_scoring_team: str | None
+    predicted_first_scoring_team: str | None
+    first_scoring_team_points: int
+    # Scored in first half
+    is_goal_in_first_half: bool | None
+    predicted_is_goal_in_first_half: bool | None
+    scored_in_first_half_points: int
+    # Match duration
+    match_duration: str | None
+    predicted_match_duration: str
+    match_duration_points: int
+    # Summary
+    score_points: int
+    goal_difference_points: int
+    total_points: int
+
+
+class UserPointsDetailsListResponse(BaseModel):
+    """List of points details from predictions of a user."""
+
+    user_id: int
+    user_name: str
+    items: list[UserPointsDetailsResponse]
+    total_points: int
+

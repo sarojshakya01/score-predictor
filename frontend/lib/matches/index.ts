@@ -7,9 +7,9 @@ export {
   matchService,
   updateMatch,
 } from "@/lib/matches/match-service";
-export { match_durations, match_stages } from "@/lib/matches/types";
+export { matchDurations, matchStages } from "@/lib/matches/types";
 export type {
-  GameDuration,
+  MatchDuration,
   MatchStage,
   ListMatchesParams,
   ListUpcomingMatchesParams,

@@ -2,6 +2,7 @@ import { authenticatedApiFetch } from "@/lib/auth";
 import type {
   LeaderboardResponse,
   ListLeaderboardParams,
+  UserPointsDetailsListResponse,
 } from "@/lib/leaderboard/types";
 
 const toQueryString = (params: ListLeaderboardParams): string => {
@@ -29,6 +30,16 @@ export const listLeaderboard = async (
   });
 };
 
+export const getUserPredictionDetails = async (
+  userId: number,
+): Promise<UserPointsDetailsListResponse> => {
+  return authenticatedApiFetch<UserPointsDetailsListResponse>(
+    `/leaderboard/users/${userId}/points-details`,
+    { method: "GET" },
+  );
+};
+
 export const leaderboardService = {
   listLeaderboard,
+  getUserPredictionDetails,
 };

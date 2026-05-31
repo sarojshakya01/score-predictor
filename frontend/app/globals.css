@@ -1,8 +1,50 @@
 @import "tailwindcss";
 
+/* Tell Tailwind v4 to use the .dark class for dark mode */
+@variant dark (&:where(.dark, .dark *));
+
 :root {
   --background: #f7f8f5;
   --foreground: #18181b;
+  --color-tournament-light: #F4F5F7;
+  /* Tournament Theme Colors */
+  /* USA */
+  --color-tournament-primary: #1E293B;
+  --color-tournament-primary-hover: #2f415d;
+  --color-tournament-primary-light: #4a5c7b;
+  --color-tournament-primary-faint: #7486a8;
+  /* Mexico */
+  --color-tournament-secondary: #15803D;
+  --color-tournament-secondary-hover: #1fbd59;
+  --color-tournament-secondary-light: #73c787;
+  --color-tournament-secondary-faint: #b6e8c2;
+  /* Canada */
+  --color-tournament-accent: #DC2626;
+  --color-tournament-accent-hover: #f43f3f;
+  --color-tournament-accent-light: #ec8989;
+  --color-tournament-accent-faint: #f69d9d;
+}
+
+/* Dark mode overrides */
+.dark {
+  --background: #0f1117;
+  --foreground: #f4f4f5;
+  --color-tournament-light: #1e2130;
+  /* USA — lightened for dark bg */
+  --color-tournament-primary: #93a8c8;
+  --color-tournament-primary-hover: #b0c2db;
+  --color-tournament-primary-light: #6b82a6;
+  --color-tournament-primary-faint: #3a4e6b;
+  /* Mexico */
+  --color-tournament-secondary: #4ade80;
+  --color-tournament-secondary-hover: #86efac;
+  --color-tournament-secondary-light: #22c55e;
+  --color-tournament-secondary-faint: #14532d;
+  /* Canada */
+  --color-tournament-accent: #f87171;
+  --color-tournament-accent-hover: #fca5a5;
+  --color-tournament-accent-light: #ef4444;
+  --color-tournament-accent-faint: #7f1d1d;
 }
 
 @theme inline {
@@ -44,4 +86,137 @@ textarea {
   background-position: center;
   background-size: cover;
   opacity: 0.8;
+}
+
+.bg-tournament-light {
+  background-color: var(--color-tournament-light);
+}
+
+.bg-grad-tournament-light {
+  background: linear-gradient(135deg, rgb(239, 235, 235), var(--color-tournament-light));
+}
+
+.dark .bg-grad-tournament-light {
+  background: linear-gradient(135deg, #1a1f2e, var(--color-tournament-light));
+}
+
+.bg-tournament-light-boarder {
+  border-color: var(--color-tournament-light);
+}
+
+.hover\:bg-tournament-light:hover {
+  background-color: var(--color-tournament-light-hover);
+}
+
+.border-tournament-light {
+  border-color: var(--color-tournament-light);
+}
+
+/* Primary Colors */
+.text-tournament-primary {
+  color: var(--color-tournament-primary);
+  font-weight: bold;
+}
+
+.hover\:text-tournament-primary:hover {
+  color: var(--color-tournament-primary-hover);
+  font-weight: bold;
+}
+
+.bg-tournament-primary {
+  background: var(--color-tournament-primary);
+}
+
+.bg-grad-tournament-primary {
+  background: linear-gradient(135deg, var(--color-tournament-primary-light), var(--color-tournament-primary));
+}
+
+.bg-tournament-primary-light {
+  background-color: var(--color-tournament-primary-light);
+}
+
+.bg-grad-tournament-primary-light {
+  background: linear-gradient(135deg, var(--color-tournament-primary-faint), var(--color-tournament-primary-light));
+}
+
+.hover\:bg-tournament-primary:hover {
+  background-color: var(--color-tournament-primary-hover);
+}
+
+.border-tournament-primary {
+  border-color: var(--color-tournament-primary-light);
+}
+
+.focus\:border-tournament-primary:focus {
+  border-color: var(--color-tournament-primary-hover);
+}
+
+/* Secondary colors */
+.text-tournament-secondary {
+  color: var(--color-tournament-secondary);
+  font-weight: bold;
+}
+
+.hover\:text-tournament-secondary:hover {
+  color: var(--color-tournament-secondary-hover);
+  font-weight: bold;
+}
+
+.bg-tournament-secondary {
+  background-color: var(--color-tournament-secondary);
+}
+
+.bg-grad-tournament-secondary {
+  background: linear-gradient(135deg, var(--color-tournament-secondary-light), var(--color-tournament-secondary));
+}
+
+.bg-tournament-secondary-light {
+  background-color: var(--color-tournament-secondary-light);
+}
+
+.bg-grad-tournament-secondary-light {
+  background: linear-gradient(135deg, var(--color-tournament-secondary-faint), var(--color-tournament-secondary-light));
+}
+
+.hover\:bg-tournament-secondary:hover {
+  background-color: var(--color-tournament-secondary-hover);
+}
+
+.border-tournament-secondary {
+  border-color: var(--color-tournament-secondary-light);
+}
+
+/* Accent Colors */
+.text-tournament-accent {
+  color: var(--color-tournament-accent);
+  font-weight: bold;
+}
+
+.hover\:text-tournament-accent:hover {
+  color: var(--color-tournament-accent-hover);
+  font-weight: bold;
+}
+
+.bg-tournament-accent {
+  background-color: var(--color-tournament-accent);
+}
+
+.bg-grad-tournament-accent {
+  background: linear-gradient(135deg, var(--color-tournament-accent-light), var(--color-tournament-accent));
+}
+
+.bg-tournament-accent-light {
+  background-color: var(--color-tournament-accent-light);
+}
+
+.bg-grad-tournament-accent-light {
+  background: linear-gradient(135deg, var(--color-tournament-accent-faint), var(--color-tournament-accent-light));
+}
+
+.hover\:bg-tournament-accent:hover {
+  background-color: var(--color-tournament-accent-hover);
+}
+
+.border-tournament-accent {
+  border-color: var(--color-tournament-accent-light);
 }
