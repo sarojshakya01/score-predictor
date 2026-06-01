@@ -4,6 +4,7 @@ import { JSX } from "react";
 import { PredictionStatus } from "@/lib/matches/types";
 import Link from "next/link";
 import Image from "next/image";
+import { DEFAULT_TIMEZONE } from "@/lib/api/config";
 
 export const getStatusTone = (status: PredictionStatus): PillTone => {
   if (status === "Open") {
@@ -53,7 +54,7 @@ export const getPredictionStatus = (
 };
 
 export const formatDateTime = (value: string, isUTC: boolean = true): string => {
-  // match datetime is in UTC, so we need to convert it to local time using Asia/Kathmandu
+  // match datetime is in UTC, so we need to convert it to DEFAULT_TIMEZONE
   const date = isUTC ? new Date(`${value}Z`) : new Date(value);
 
   if (Number.isNaN(date.getTime())) {
@@ -65,7 +66,7 @@ export const formatDateTime = (value: string, isUTC: boolean = true): string => 
     hour: "numeric",
     minute: "2-digit",
     month: "short",
-    timeZone: "Asia/Kathmandu"
+    timeZone: DEFAULT_TIMEZONE
   }).format(date);
 };
 

@@ -25,6 +25,7 @@ import { IconCancel, IconPencil, IconPlus, IconSave, IconSearch, IconTrash, Icon
 import { Pagination } from "@/components/ui/pagination";
 import Link from "next/link";
 import { FirstGoalIn } from "@/lib/matches/types";
+import { DEFAULT_TIMEZONE } from "@/lib/api/config";
 
 type MatchFormState = {
   firstScoringTeamId: string;
@@ -63,6 +64,33 @@ const emptyFormState: MatchFormState = {
   venueName: "",
   yellowCardCount: "",
 };
+
+function convertTimeZone(isoString: string, fromZone: string, toZone: string) {
+  if (!isoString) return "";
+  // 1. Parse the string as a date in the source time zone
+  const formatterFrom = new Intl.DateTimeFormat('en-US', {
+    timeZone: fromZone,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+  });
+
+  // Create a temporary date and shift it based on the source zone offset
+  const date = new Date(isoString + 'Z');
+
+  const parts = formatterFrom.formatToParts(date);
+  const map = Object.fromEntries(parts.map(p => [p.type, p.value]));
+  const utcFrom = Date.UTC(Number(map.year), Number(map.month) - 1, Number(map.day), Number(map.hour), Number(map.minute), Number(map.second));
+  const correctedDate = new Date(date.getTime() + (date.getTime() - utcFrom));
+
+  // Format the corrected date into the target time zone
+  const formatterTo = new Intl.DateTimeFormat('sv-SE', { // 'sv-SE' uses ISO format naturally
+    timeZone: toZone,
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+  });
+
+  return formatterTo.format(correctedDate).replace(' ', 'T');
+}
 
 const formatScore = (match: MatchResponse): string => {
   if (match.team1_score === null || match.team2_score === null) {
@@ -168,12 +196,12 @@ const buildMatchPayload = (state: MatchFormState): MatchCreate => {
   const matchHasGoalsFromBothTeam = (team1Score ?? 0) > 0 && (team2Score ?? 0) > 0;
   const matchHasGoals = (team1Score ?? 0) > 0 || (team2Score ?? 0) > 0;
 
-  if (!state.matchDatetime) throw new Error("Kickoff is required.");
+  if (!state.matchDatetime) throw new Error("Kickoff time is required.");
 
   return {
     first_goal_in: matchHasGoals && isFirstGoalIn(state.firstGoalIn) ? state.firstGoalIn : null,
     first_scoring_team_id: matchHasGoalsFromBothTeam ? parseRequiredInteger(state.firstScoringTeamId, "First Scoring Team") : null,
-    match_duration: isMatchDuration(state.matchDuration) ? state.matchDuration : null,
+    match_duration: isMatchDuration(state.matchDuration) ? state.matchDuration : null, // change to UTC TZ
     match_datetime: state.matchDatetime,
     match_day: parseRequiredInteger(state.matchDay, "Match Day"),
     match_locked: state.matchLocked,
@@ -274,6 +302,9 @@ const AdminMatchesPage = () => {
     setFormState((current) => {
       const nextState = { ...current, [field]: value };
       const validTeamIds = new Set([nextState.team1Id, nextState.team2Id]);
+      if (field === "matchDatetime") {
+        nextState.matchDatetime = convertTimeZone(value as string, DEFAULT_TIMEZONE, 'UTC');
+      }
       if (!validTeamIds.has(nextState.kickoffTeamId)) nextState.kickoffTeamId = "";
       if (
         !isFirstGoalIn(nextState.firstGoalIn) ||
@@ -542,8 +573,8 @@ const AdminMatchesPage = () => {
               </select>
             </label>
             <label className="block">
-              <span className={labelCls}><p>Kickoff (UTC Time)</p></span>
-              <input name="match_datetime" required type="datetime-local" value={formState.matchDatetime} onChange={(event) => updateField("matchDatetime", event.target.value)} className={inputCls} />
+              <span className={labelCls}><p>Kickoff (Local Time)</p></span>
+              <input name="match_datetime" required type="datetime-local" value={convertTimeZone(formState.matchDatetime, 'UTC', DEFAULT_TIMEZONE)} onChange={(event) => updateField("matchDatetime", event.target.value)} className={inputCls} />
             </label>
             <label className="block">
               <span className={labelCls}><p>Match day</p></span>

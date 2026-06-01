@@ -169,11 +169,11 @@ class MatchRepository:
             return []
 
         # Convert naive datetime to local timezone-aware datetime
-        from_datetime = from_datetime.astimezone()
+        # from_datetime = from_datetime.astimezone()
 
         first_match_datetime = first_match.match_datetime.replace(
             tzinfo=timezone.utc,
-        ).astimezone()
+        )
 
         if first_match_datetime > to_datetime:
             to_datetime = first_match_datetime + timedelta(days=1)
