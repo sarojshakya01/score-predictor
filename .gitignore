@@ -2,3 +2,5 @@
 .ruff_cache
 AI_CONTEXT
 worldcup2026_backup.sql
+.env
+docker-compose.yml
