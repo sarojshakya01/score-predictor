@@ -43,13 +43,13 @@ export const AppShell = ({ children }: AppShellProps) => {
                   Match Predictor
                 </span>
                 <span className="block text-[11px] font-medium text-zinc-500 dark:text-zinc-400 leading-tight">
-                  {isAdmin ? "Admin Panel" : "Tournament picks & rankings"}
+                  {isAdmin ? "Admin Panel" : "Make predictions"}
                 </span>
               </span>
             </Link>
 
             {/* Desktop nav (hidden on mobile) */}
-            <div className="hidden md:flex flex-1 justify-center">
+            <div className="hidden lg:flex flex-1 justify-center">
               {isAdmin ? <AdminNav /> : <PrimaryNav />}
             </div>
 
@@ -63,7 +63,7 @@ export const AppShell = ({ children }: AppShellProps) => {
                 type="button"
                 aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
                 onClick={() => setMobileNavOpen((v) => !v)}
-                className="md:hidden grid h-9 w-9 place-items-center rounded-md border border-zinc-200 bg-transparent text-zinc-600 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                className="lg:hidden grid h-9 w-9 place-items-center rounded-md border border-zinc-200 bg-transparent text-zinc-600 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800"
               >
                 {mobileNavOpen ? (
                   // X icon
@@ -85,7 +85,7 @@ export const AppShell = ({ children }: AppShellProps) => {
           {/* ── Mobile nav drawer ───────────────────────────── */}
           {mobileNavOpen && (
             <div
-              className="md:hidden border-t border-zinc-200 dark:border-zinc-800 py-3"
+              className="lg:hidden border-t border-zinc-200 dark:border-zinc-800 py-3"
               onClick={() => setMobileNavOpen(false)}
             >
               {isAdmin ? <AdminNav mobile /> : <PrimaryNav mobile />}

@@ -4,7 +4,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.models.match import MatchDuration, MatchStage
+from app.models.match import FirstGoalIn, MatchDuration, MatchStage
 
 
 class MatchBase(BaseModel):
@@ -18,7 +18,7 @@ class MatchBase(BaseModel):
     red_card_count: int | None = Field(default=None, ge=0)
     kick_off_team_id: int | None = Field(default=None, gt=0)
     first_scoring_team_id: int | None = Field(default=None, gt=0)
-    is_goal_in_first_half: bool | None = None
+    first_goal_in: FirstGoalIn | None = None
     match_duration: MatchDuration | None = None
     match_stage: MatchStage | None = None
     match_datetime: datetime
@@ -63,7 +63,7 @@ class MatchUpdate(BaseModel):
     red_card_count: int | None = Field(default=None, ge=0)
     kick_off_team_id: int | None = Field(default=None, gt=0)
     first_scoring_team_id: int | None = Field(default=None, gt=0)
-    is_goal_in_first_half: bool | None = None
+    first_goal_in: FirstGoalIn | None = None
     match_duration: MatchDuration | None = None
     match_stage: MatchStage | None = None
     match_datetime: datetime | None = None

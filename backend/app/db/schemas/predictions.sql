@@ -11,7 +11,7 @@ CREATE TABLE predictions (
 
     kick_off_team_id INT NOT NULL,
     first_scoring_team_id INT NULL DEFAULT NULL,
-    is_goal_in_first_half BOOLEAN NULL DEFAULT NULL,
+    first_goal_in ENUM('1H', '2H', 'ET') NULL DEFAULT NULL,
 
     match_duration ENUM('90', '120', 'PENALTY') NOT NULL,
 

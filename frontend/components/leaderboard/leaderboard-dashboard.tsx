@@ -16,6 +16,8 @@ import type {
   UserPointsDetailsListResponse,
   UserPointsDetailsResponse,
 } from "@/lib/leaderboard";
+import { firstGoalInLabels, MatchDuration, matchDurationLabels } from "@/lib/matches";
+import { FirstGoalIn } from "@/lib/matches/types";
 
 export type LeaderboardRow = {
   name: string;
@@ -70,19 +72,12 @@ const getFrameMaxPoints = (frame: LeaderboardRaceFrameResponse): number => {
 
 
 // ── Helpers for the detail table ─────────────────────────────────────────────
-
-const DURATION_LABELS: Record<string, string> = {
-  "90": "90 min",
-  "120": "120 min",
-  PENALTY: "Penalties",
-};
-
 const fmtDuration = (v: string | null): string =>
-  v ? (DURATION_LABELS[v] ?? v) : "—";
+  v ? (matchDurationLabels[v as MatchDuration] ?? v) : "—";
 
-const fmtBool = (v: boolean | null | undefined): string => {
-  if (v === null || v === undefined) return "—";
-  return v ? "Yes" : "No";
+const fmtFirstGoalIn = (v: string | null): string => {
+  if (v === null) return "—";
+  return v ? (firstGoalInLabels[v as FirstGoalIn] ?? v) : "—";
 };
 
 const fmtVal = (v: string | number | null | undefined): string =>
@@ -161,7 +156,7 @@ const ScoreRow = ({
 
       {/* Score – actual */}
       <ActualCell>
-        <span className="font-semibold text-zinc-900">
+        <span className="font-semibold text-zinc-700 dark:text-zinc-300">
           {item.team1_score} – {item.team2_score}
         </span>
       </ActualCell>
@@ -187,7 +182,7 @@ const ScoreRow = ({
 
       {/* Red cards */}
       <ActualCell>{fmtVal(item.red_card_count)}</ActualCell>
-      <PredCell>{item.predicted_red_card_count}</PredCell>
+      <PredCell>{item.predicted_red_card_count > 0 ? fmtVal(item.predicted_red_card_count) : fmtVal(null)}</PredCell>
       <PtsCell points={item.red_card_points} />
 
       {/* Kick-off team */}
@@ -195,15 +190,15 @@ const ScoreRow = ({
       <PredCell>{item.predicted_kick_off_team}</PredCell>
       <PtsCell points={item.kick_off_team_points} />
 
+      {/* First goal in */}
+      <ActualCell>{fmtFirstGoalIn(item.first_goal_in)}</ActualCell>
+      <PredCell>{fmtFirstGoalIn(item.predicted_first_goal_in)}</PredCell>
+      <PtsCell points={item.first_goal_in_points} />
+
       {/* First scoring team */}
       <ActualCell>{fmtVal(item.first_scoring_team)}</ActualCell>
       <PredCell>{fmtVal(item.predicted_first_scoring_team)}</PredCell>
       <PtsCell points={item.first_scoring_team_points} />
-
-      {/* Scored in 1st half */}
-      <ActualCell>{fmtBool(item.is_goal_in_first_half)}</ActualCell>
-      <PredCell>{fmtBool(item.predicted_is_goal_in_first_half)}</PredCell>
-      <PtsCell points={item.scored_in_first_half_points} />
 
       {/* Duration */}
       <ActualCell>{fmtDuration(item.match_duration)}</ActualCell>
@@ -221,8 +216,8 @@ const GROUP_COLS: { label: string; colSpan: number; color: string }[] = [
   { label: "Yellow Card", colSpan: 3, color: "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400" },
   { label: "Red Card", colSpan: 3, color: "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400" },
   { label: "Kick-off", colSpan: 3, color: "bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400" },
-  { label: "First Scorer", colSpan: 3, color: "bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-400" },
-  { label: "Score in 1st Half", colSpan: 3, color: "bg-lime-50 text-lime-700 dark:bg-lime-950/50 dark:text-lime-400" },
+  { label: "First Goal in", colSpan: 3, color: "bg-lime-50 text-lime-700 dark:bg-lime-950/50 dark:text-lime-400" },
+  { label: "First Score by", colSpan: 3, color: "bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-400" },
   { label: "Duration", colSpan: 3, color: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-400" },
 ];
 
@@ -322,7 +317,7 @@ const UserPointsDetailModal = ({
                 color: "text-zinc-900",
               },
               {
-                label: "Best Match",
+                label: "Highest Point",
                 value:
                   data.items.length > 0
                     ? formatSignedNumber(
@@ -433,15 +428,15 @@ const UserPointsDetailModal = ({
                     <PtsCell
                       points={data.items.reduce((s, i) => s + i.kick_off_team_points, 0)}
                     />
-                    {/* First scorer pts */}
+                    {/* First Goal In pts */}
+                    <td colSpan={2} />
+                    <PtsCell
+                      points={data.items.reduce((s, i) => s + i.first_goal_in_points, 0)}
+                    />
+                    {/* First Score By pts */}
                     <td colSpan={2} />
                     <PtsCell
                       points={data.items.reduce((s, i) => s + i.first_scoring_team_points, 0)}
-                    />
-                    {/* 1H pts */}
-                    <td colSpan={2} />
-                    <PtsCell
-                      points={data.items.reduce((s, i) => s + i.scored_in_first_half_points, 0)}
                     />
                     {/* Duration pts */}
                     <td colSpan={2} />
@@ -490,8 +485,8 @@ const LeaderboardRow = ({
           {formatSignedNumber(row.red_card_points)}
         </StatusPill>
       </td>
+      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.first_goal_in_points}</td>
       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.first_scoring_team_points}</td>
-      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.scored_in_first_half_points}</td>
       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.match_duration_points}</td>
       <td className="px-5 py-4 text-right font-semibold text-zinc-950 dark:text-zinc-100">
         {row.total_points}
@@ -786,8 +781,8 @@ export const LeaderboardDashboard = () => {
                   <th className="px-5 py-3 dark:text-zinc-400">Kick-off</th>
                   <th className="px-5 py-3 dark:text-zinc-400">Yello Card</th>
                   <th className="px-5 py-3 dark:text-zinc-400">Red Card</th>
-                  <th className="px-5 py-3 dark:text-zinc-400">First Score</th>
-                  <th className="px-5 py-3 dark:text-zinc-400">Score 1H</th>
+                  <th className="px-5 py-3 dark:text-zinc-400">First Score In</th>
+                  <th className="px-5 py-3 dark:text-zinc-400">First Score By</th>
                   <th className="px-5 py-3 dark:text-zinc-400">Duration</th>
                   <th className="px-5 py-3 text-right dark:text-zinc-400">Total Points</th>
                   <th className="px-5 py-3 text-right dark:text-zinc-400">Predicted Matches</th>

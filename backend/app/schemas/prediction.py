@@ -4,7 +4,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.models.match import MatchDuration
+from app.models.match import FirstGoalIn, MatchDuration
 
 
 class PredictionFields(BaseModel):
@@ -16,7 +16,7 @@ class PredictionFields(BaseModel):
     red_card_count: int = Field(..., ge=0)
     kick_off_team_id: int = Field(..., gt=0)
     first_scoring_team_id: int | None = Field(default=None, gt=0)
-    is_goal_in_first_half: bool | None = None
+    first_goal_in: FirstGoalIn | None = None
     match_duration: MatchDuration
 
     @model_validator(mode="after")
@@ -24,17 +24,19 @@ class PredictionFields(BaseModel):
         """Require first-goal details only when goals are predicted."""
         has_predicted_goal = self.team1_score + self.team2_score > 0
 
-        if has_predicted_goal and self.first_scoring_team_id is None:
-            raise ValueError("first_scoring_team_id is required when goals are predicted")
+        if has_predicted_goal and self.first_goal_in is None:
+            raise ValueError("first_goal_in is required when goals are predicted")
 
-        if has_predicted_goal and self.is_goal_in_first_half is None:
-            raise ValueError("is_goal_in_first_half is required when goals are predicted")
+        has_goals_from_both_teams = self.team1_score > 0 and self.team2_score > 0
 
-        if not has_predicted_goal and self.first_scoring_team_id is not None:
-            raise ValueError("first_scoring_team_id is only allowed when goals are predicted")
+        if has_goals_from_both_teams and self.first_scoring_team_id is None:
+            raise ValueError("first_scoring_team_id is required when goals from both teams are predicted")
 
-        if not has_predicted_goal and self.is_goal_in_first_half is not None:
-            raise ValueError("is_goal_in_first_half is only allowed when goals are predicted")
+        if not has_predicted_goal and self.first_goal_in is not None:
+            raise ValueError("first_goal_in is only allowed when goals are predicted")
+
+        if not has_goals_from_both_teams and self.first_scoring_team_id is not None:
+            raise ValueError("first_scoring_team_id is only allowed when goals from both teams are predicted")
 
         return self
 
@@ -54,7 +56,7 @@ class PredictionUpdate(BaseModel):
     red_card_count: int | None = Field(default=None, ge=0)
     kick_off_team_id: int | None = Field(default=None, gt=0)
     first_scoring_team_id: int | None = Field(default=None, gt=0)
-    is_goal_in_first_half: bool | None = None
+    first_goal_in: FirstGoalIn | None = None
     match_duration: MatchDuration | None = None
 
 
@@ -108,13 +110,13 @@ class UserPointsDetailsResponse(BaseModel):
     first_scoring_team: str | None
     predicted_first_scoring_team: str | None
     first_scoring_team_points: int
-    # Scored in first half
-    is_goal_in_first_half: bool | None
-    predicted_is_goal_in_first_half: bool | None
-    scored_in_first_half_points: int
+    # First goal in
+    first_goal_in: FirstGoalIn | None
+    predicted_first_goal_in: FirstGoalIn | None
+    first_goal_in_points: int
     # Match duration
-    match_duration: str | None
-    predicted_match_duration: str
+    match_duration: MatchDuration | None
+    predicted_match_duration: MatchDuration
     match_duration_points: int
     # Summary
     score_points: int

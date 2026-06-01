@@ -7,8 +7,9 @@ export {
   matchService,
   updateMatch,
 } from "@/lib/matches/match-service";
-export { matchDurations, matchStages } from "@/lib/matches/types";
+export { firstGoalIns, firstGoalInLabels, matchDurations, matchDurationLabels, matchStages, matchStageLabels } from "@/lib/matches/constants";
 export type {
+  FirstGoalIn,
   MatchDuration,
   MatchStage,
   ListMatchesParams,

@@ -16,18 +16,7 @@ class UserRole(str, enum.Enum):
 
 
 class User(TimestampMixin, Base):
-    """SQLAlchemy model for the users table.
-
-    Fields derived from ARCHITEXTURE.md:
-        id, email, first_name, middle_name, last_name,
-        mobile_no, password
-
-    Additional fields:
-        role       – required by the system for RBAC (Admin / Normal User)
-        is_active  – supports soft-disable via admin user management
-        created_at – inherited from TimestampMixin
-        updated_at – inherited from TimestampMixin
-    """
+    """SQLAlchemy model for the users table."""
 
     __tablename__ = "users"
 

@@ -80,12 +80,16 @@ textarea {
   font: inherit;
 }
 
-.football-field {
+.countdown-container {
   background-image: url('/images/logo-tournament.avif');
   background-repeat: no-repeat;
   background-position: center;
   background-size: cover;
   opacity: 0.8;
+}
+
+.bg-player {
+  background: linear-gradient(to bottom, #721411, #d60303);
 }
 
 .bg-tournament-light {

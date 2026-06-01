@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.match import Match
+from app.models.match import Match, FirstGoalIn
 from app.models.prediction import Prediction
 from app.repositories.match_repository import MatchRepository
 from app.repositories.prediction_repository import PredictionRepository
@@ -78,14 +78,14 @@ class PredictionService:
                 team1_score=values["team1_score"],
                 team2_score=values["team2_score"],
                 first_scoring_team_id=values.get("first_scoring_team_id"),
-                is_goal_in_first_half=values.get("is_goal_in_first_half"),
+                first_goal_in=values.get("first_goal_in"),
             )
             if self._scores_have_no_goals(
                 team1_score=values["team1_score"],
                 team2_score=values["team2_score"],
             ):
                 values["first_scoring_team_id"] = None
-                values["is_goal_in_first_half"] = None
+                values["first_goal_in"] = None
 
             existing_prediction = await self._prediction_repository.get_by_user_and_match(
                 user_id=user_id,
@@ -141,23 +141,23 @@ class PredictionService:
                 "first_scoring_team_id",
                 prediction.first_scoring_team_id,
             )
-            is_goal_in_first_half = values.get(
-                "is_goal_in_first_half",
-                prediction.is_goal_in_first_half,
+            first_goal_in = values.get(
+                "first_goal_in",
+                prediction.first_goal_in,
             )
             self._validate_goal_prediction_fields(
                 match=match,
                 team1_score=team1_score,
                 team2_score=team2_score,
                 first_scoring_team_id=first_scoring_team_id,
-                is_goal_in_first_half=is_goal_in_first_half,
+                first_goal_in=first_goal_in,
             )
             if self._scores_have_no_goals(
                 team1_score=team1_score,
                 team2_score=team2_score,
             ):
                 values["first_scoring_team_id"] = None
-                values["is_goal_in_first_half"] = None
+                values["first_goal_in"] = None
 
             updated_prediction = await self._prediction_repository.update(
                 prediction,
@@ -255,28 +255,32 @@ class PredictionService:
         team1_score: int,
         team2_score: int,
         first_scoring_team_id: int | None,
-        is_goal_in_first_half: bool | None,
+        first_goal_in: FirstGoalIn | None,
     ) -> None:
         """Validate fields that only apply when goals are predicted."""
         if team1_score + team2_score == 0:
             return
 
+        if first_goal_in is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="first_goal_in is required when goals are predicted",
+            )
+
+        """Validate first_scoring_team_id when goals from both teams are predicted."""
+        if team1_score == 0 or team2_score == 0:
+            return
+
         if first_scoring_team_id is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="first_scoring_team_id is required when goals are predicted",
+                detail="first_scoring_team_id is required when goals from both teams are predicted",
             )
 
         if first_scoring_team_id not in {match.team1_id, match.team2_id}:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="first_scoring_team_id must match one of the match teams",
-            )
-
-        if is_goal_in_first_half is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="is_goal_in_first_half is required when goals are predicted",
             )
 
     @staticmethod

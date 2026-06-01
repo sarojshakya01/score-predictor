@@ -1,23 +1,16 @@
-export const matchDurations = ["90", "120", "PENALTY"] as const;
-export const matchStages = [
-  "GROUP",
-  "R32",
-  "R16",
-  "QF",
-  "SF",
-  "3P",
-  "F",
-] as const;
+import { matchDurations, matchStages } from ".";
+import { firstGoalIns } from "./constants";
 
+export type FirstGoalIn = (typeof firstGoalIns)[number];
 export type MatchDuration = (typeof matchDurations)[number];
 export type MatchStage = (typeof matchStages)[number];
 
 export type MatchResponse = {
   created_at: string;
+  first_goal_in: FirstGoalIn | null;
   first_scoring_team_id: number | null;
-  match_duration: MatchDuration | null;
   id: number;
-  is_goal_in_first_half: boolean | null;
+  match_duration: MatchDuration | null;
   match_datetime: string;
   match_day: number;
   match_locked: boolean;
@@ -43,9 +36,9 @@ export type MatchResponse = {
 };
 
 export type MatchFields = {
+  first_goal_in: FirstGoalIn | null;
   first_scoring_team_id: number | null;
   match_duration: MatchDuration | null;
-  is_goal_in_first_half: boolean | null;
   match_datetime: string;
   match_day: number;
   match_locked: boolean;

@@ -13,7 +13,7 @@ import { PillTone, StatusPill } from "@/components/ui/status-pill";
 import { getErrorMessage } from "@/lib/forms/error-message";
 import { listMatches } from "@/lib/matches";
 import type { MatchResponse } from "@/lib/matches";
-import { getMatchLabelWithFlag, MatchVenue } from "../ui/match-card";
+import { formatDateTime, getMatchLabelWithFlag, MatchVenue } from "../ui/match-card";
 
 type StageConfig = { expectedMatches: number; label: string; queryStage: string };
 type BracketRound = { config: StageConfig; matches: MatchResponse[]; queryStage: string };
@@ -163,12 +163,6 @@ const getMatchStatus = (match: MatchResponse | null): { label: string; tone: Pil
   if (match.team1_score !== null && match.team2_score !== null) return { label: "Completed", tone: "secondary" };
   if (match.match_locked) return { label: "Locked", tone: "accent" };
   return { label: "Scheduled", tone: "primary" };
-};
-
-const formatDateTime = (value: string): string => {
-  const date = new Date(`${value}Z`);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("en", { day: "numeric", hour: "numeric", minute: "2-digit", month: "short", timeZone: "Asia/Kathmandu" }).format(date);
 };
 
 const getWinnerSide = (match: MatchResponse): "team1" | "team2" | null => {

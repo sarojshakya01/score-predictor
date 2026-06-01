@@ -16,7 +16,7 @@ CREATE TABLE matches (
     -- Kick-off Team
     kick_off_team_id INT NULL DEFAULT NULL,
     first_scoring_team_id INT NULL DEFAULT NULL,
-    is_goal_in_first_half BOOLEAN NULL DEFAULT NULL,
+    first_goal_in ENUM('1H', '2H', 'ET') NULL DEFAULT NULL,
 
     -- Match Duration
     match_duration ENUM('90', '120', 'PENALTY') NULL DEFAULT NULL,

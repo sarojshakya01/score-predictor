@@ -6,7 +6,6 @@ from app.models.team import Team
 from datetime import datetime
 
 from sqlalchemy import (
-    Boolean,
     CheckConstraint,
     DateTime,
     Enum,
@@ -19,7 +18,7 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin
-from app.models.match import MatchDuration, match_duration_values
+from app.models.match import MatchDuration, match_duration_values, FirstGoalIn, first_goal_in_values
 
 
 class Prediction(TimestampMixin, Base):
@@ -67,8 +66,15 @@ class Prediction(TimestampMixin, Base):
         nullable=True,
         default=None,
     )
-    is_goal_in_first_half: Mapped[bool | None] = mapped_column(
-        Boolean,
+    first_goal_in: Mapped[FirstGoalIn | None] = mapped_column(
+        Enum(
+            FirstGoalIn,
+            name="first_goal_in",
+            native_enum=False,
+            length=20,
+            values_callable=first_goal_in_values,
+            validate_strings=True,
+        ),
         nullable=True,
         default=None,
     )

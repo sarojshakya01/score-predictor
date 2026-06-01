@@ -1,9 +1,10 @@
 import type { MatchDuration } from "@/lib/matches";
+import { FirstGoalIn } from "../matches/types";
 
 export type PredictionFields = {
   first_scoring_team_id: number | null;
   match_duration: MatchDuration;
-  is_goal_in_first_half: boolean | null;
+  first_goal_in: FirstGoalIn | null;
   kick_off_team_id: number;
   red_card_count: number;
   team1_score: number;

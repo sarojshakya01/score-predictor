@@ -8,8 +8,11 @@ import { ApiError } from "@/lib/api";
 import { isAuthenticated, MissingAuthTokenError } from "@/lib/auth";
 import { getErrorMessage } from "@/lib/forms/error-message";
 import {
+  firstGoalInLabels,
+  firstGoalIns,
   listMatches,
   listUpcomingMatches,
+  matchDurationLabels,
   matchDurations,
 } from "@/lib/matches";
 import type { MatchDuration, MatchResponse } from "@/lib/matches";
@@ -33,12 +36,13 @@ import Image from "next/image";
 import { IconChevronLeft, IconChevronRight, IconSave } from "../ui/icons";
 import { getCurrentMatchDay } from "@/lib/matches/match-service";
 import ImageWithFallback from "../ui/image-with-fallback";
+import { FirstGoalIn } from "@/lib/matches/types";
 
 type PredictionFormState = {
   firstScoringTeamId: string;
   matchDuration: string;
-  isGoalInFirstHalf: string;
-  openingTeamId: string;
+  firstGoalIn: string;
+  kickoffTeamId: string;
   redCardCount: string;
   team1Score: string;
   team2Score: string;
@@ -48,18 +52,12 @@ type PredictionFormState = {
 const emptyFormState: PredictionFormState = {
   firstScoringTeamId: "",
   matchDuration: "90",
-  isGoalInFirstHalf: "",
-  openingTeamId: "",
+  firstGoalIn: "",
+  kickoffTeamId: "",
   redCardCount: "",
   team1Score: "",
   team2Score: "",
   yellowCardCount: "",
-};
-
-const durationLabels: Record<MatchDuration, string> = {
-  "90": "90 minutes",
-  "120": "120 minutes",
-  PENALTY: "Penalty",
 };
 
 const getMatchLabelText = (match: MatchResponse): string => {
@@ -71,7 +69,7 @@ const getTeamNameById = (
   teamId: number | null,
 ): string => {
   if (teamId === null) {
-    return "No goal";
+    return "N/A";
   }
 
   if (!match) {
@@ -115,19 +113,7 @@ const parsePositiveInteger = (value: string, label: string): number => {
   return parsedValue;
 };
 
-const parseRequiredBoolean = (value: string, label: string): boolean => {
-  if (value === "true") {
-    return true;
-  }
-
-  if (value === "false") {
-    return false;
-  }
-
-  throw new Error(`${label} is required.`);
-};
-
-const hasGoalPrediction = (
+const hasAnyGoalPrediction = (
   state: Pick<PredictionFormState, "team1Score" | "team2Score">,
 ): boolean => {
   const team1Score = Number(state.team1Score);
@@ -139,8 +125,24 @@ const hasGoalPrediction = (
   );
 };
 
+const hasBothTeamGoalPrediction = (
+  state: Pick<PredictionFormState, "team1Score" | "team2Score">,
+): boolean => {
+  const team1Score = Number(state.team1Score);
+  const team2Score = Number(state.team2Score);
+
+  return (
+    (Number.isFinite(team1Score) && team1Score > 0) &&
+    (Number.isFinite(team2Score) && team2Score > 0)
+  );
+};
+
 const isMatchDuration = (value: string): value is MatchDuration => {
   return matchDurations.includes(value as MatchDuration);
+};
+
+const isFirstGoalIn = (value: string): value is FirstGoalIn => {
+  return firstGoalIns.includes(value as FirstGoalIn);
 };
 
 const buildFormState = (
@@ -149,16 +151,10 @@ const buildFormState = (
 ): PredictionFormState => {
   if (prediction) {
     return {
-      firstScoringTeamId:
-        prediction.first_scoring_team_id === null
-          ? ""
-          : String(prediction.first_scoring_team_id),
+      firstScoringTeamId: prediction.first_scoring_team_id ? String(prediction.first_scoring_team_id) : "",
+      firstGoalIn: prediction.first_goal_in || "",
       matchDuration: prediction.match_duration,
-      isGoalInFirstHalf:
-        prediction.is_goal_in_first_half === null
-          ? ""
-          : String(prediction.is_goal_in_first_half),
-      openingTeamId: String(prediction.kick_off_team_id),
+      kickoffTeamId: String(prediction.kick_off_team_id),
       redCardCount: String(prediction.red_card_count),
       team1Score: String(prediction.team1_score),
       team2Score: String(prediction.team2_score),
@@ -168,7 +164,7 @@ const buildFormState = (
 
   return {
     ...emptyFormState,
-    openingTeamId: String(match.team1_id),
+    kickoffTeamId: String(match.team1_id),
   };
 };
 
@@ -304,7 +300,7 @@ export const PredictionsDashboard = () => {
 
       if (
         (field === "team1Score" || field === "team2Score") &&
-        !hasGoalPrediction(nextState)
+        !hasAnyGoalPrediction(nextState)
       ) {
         return {
           ...nextState,
@@ -330,18 +326,19 @@ export const PredictionsDashboard = () => {
       formState.team2Score,
       "Team 2",
     );
+    const hasPredictedGoalsFromBothTeams = team1Score > 0 && team2Score > 0;
     const hasPredictedGoals = team1Score + team2Score > 0;
 
     return {
-      first_scoring_team_id: hasPredictedGoals
+      first_scoring_team_id: hasPredictedGoalsFromBothTeams
         ? parsePositiveInteger(formState.firstScoringTeamId, "first scoring team")
         : null,
-      match_duration: formState.matchDuration,
-      is_goal_in_first_half: hasPredictedGoals
-        ? parseRequiredBoolean(formState.isGoalInFirstHalf, "Goal in first half")
+      first_goal_in: hasPredictedGoals && isFirstGoalIn(formState.firstGoalIn)
+        ? formState.firstGoalIn
         : null,
+      match_duration: formState.matchDuration,
       kick_off_team_id: parsePositiveInteger(
-        formState.openingTeamId,
+        formState.kickoffTeamId,
         "Kick-off team",
       ),
       red_card_count: parseNonNegativeInteger(
@@ -471,9 +468,8 @@ export const PredictionsDashboard = () => {
 
   const isFormDisabled =
     isSubmitting || authRequired || !selectedMatch || selectedStatus === "Locked";
-  const hasPredictedGoals = hasGoalPrediction(formState);
-
-  const areGoalTimelineFieldsDisabled = !hasPredictedGoals;
+  const hasAnyPredictedGoals = hasAnyGoalPrediction(formState);
+  const hasBothTeamsPredictedGoals = hasBothTeamGoalPrediction(formState);
 
   const inputCls = "mt-1 h-11 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-emerald-900";
   const selectCls = "mt-1 h-11 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:disabled:bg-zinc-700 dark:disabled:text-zinc-500 dark:focus:ring-emerald-900";
@@ -576,7 +572,7 @@ export const PredictionsDashboard = () => {
       </section >
 
       <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
-        <div className="hidden lg:flex w-40 h-[525px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-red-100 dark:bg-red-950 rounded-md min-h-48">
+        <div className="hidden lg:flex w-40 h-[525px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48">
           <ImageWithFallback width={525} height={525} src={"/images/players/" + selectedMatch?.team1_name_short?.toLowerCase() + ".png"} alt={selectedMatch?.team1_name || "Captain Image"} />
         </div>{""}
         <form
@@ -591,7 +587,7 @@ export const PredictionsDashboard = () => {
               <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
                 {selectedMatch
                   ? `${getMatchLabelText(selectedMatch)} - ${formatDateTime(
-                    selectedMatch.match_datetime,
+                    selectedMatch.match_datetime
                   )}`
                   : "Select a match to continue"}
               </p>
@@ -634,25 +630,25 @@ export const PredictionsDashboard = () => {
               <input min="0" max="100" name="team2_score" type="number" value={formState.team2Score || 0} onChange={(e) => updateField("team2Score", e.target.value)} className={inputCls} />
             </label>
 
+            {/* First Goal in */}
+            <label className="flex flex-col gap-1">
+              <span className={labelTextCls}>First Goal in</span>
+              <select disabled={!hasAnyPredictedGoals} name="first_goal_in" required={hasAnyPredictedGoals} value={hasAnyPredictedGoals ? formState.firstGoalIn : ""} onChange={(e) => updateField("firstGoalIn", e.target.value)} className={selectCls}>
+                <option value="">{hasAnyPredictedGoals ? "Select Time" : "N/A"}</option>
+                {selectedMatch && selectedMatch.match_stage === "GROUP" && firstGoalIns.filter((fg) => fg !== "ET").map((fg) => <option key={fg} value={fg}>{firstGoalInLabels[fg]}</option>)}
+                {selectedMatch && selectedMatch.match_stage !== "GROUP" && firstGoalIns.map((fg) => <option key={fg} value={fg}>{firstGoalInLabels[fg]}</option>)}
+              </select>
+            </label>
+
             {/* First Scoring Team */}
             <label className="flex flex-col gap-1">
-              <span className={labelTextCls}>First Scoring Team</span>
-              <select disabled={areGoalTimelineFieldsDisabled} name="first_scoring_team_id" required={hasPredictedGoals} value={formState.firstScoringTeamId} onChange={(e) => updateField("firstScoringTeamId", e.target.value)} className={selectCls}>
-                <option value="">{hasPredictedGoals ? "Select Team" : "Score is 0"}</option>
+              <span className={labelTextCls}>First Score by</span>
+              <select disabled={!hasBothTeamsPredictedGoals} name="first_scoring_team_id" required={hasBothTeamsPredictedGoals} value={hasBothTeamsPredictedGoals ? formState.firstScoringTeamId : ""} onChange={(e) => updateField("firstScoringTeamId", e.target.value)} className={selectCls}>
+                <option value="">{hasBothTeamsPredictedGoals ? "Select Team" : "N/A"}</option>
                 {selectedMatch && (<>
                   {Number(formState.team1Score || 0) > 0 && <option value={selectedMatch.team1_id}>{selectedMatch.team1_name}</option>}
                   {Number(formState.team2Score || 0) > 0 && <option value={selectedMatch.team2_id}>{selectedMatch.team2_name}</option>}
                 </>)}
-              </select>
-            </label>
-
-            {/* Goal in first half */}
-            <label className="flex flex-col gap-1">
-              <span className={labelTextCls}>Goal in First Half?</span>
-              <select disabled={areGoalTimelineFieldsDisabled} name="is_goal_in_first_half" required={hasPredictedGoals} value={formState.isGoalInFirstHalf} onChange={(e) => updateField("isGoalInFirstHalf", e.target.value)} className={selectCls}>
-                <option value="">{hasPredictedGoals ? "Select Option" : "Score is 0"}</option>
-                <option value="true">Yes</option>
-                <option value="false">No</option>
               </select>
             </label>
 
@@ -671,7 +667,7 @@ export const PredictionsDashboard = () => {
             {/* Kick-off team */}
             <label className="flex flex-col gap-1">
               <span className={labelTextCls}>Kick-off Team</span>
-              <select name="kick_off_team_id" value={formState.openingTeamId} onChange={(e) => updateField("openingTeamId", e.target.value)} className={selectCls}>
+              <select name="kick_off_team_id" value={formState.kickoffTeamId} onChange={(e) => updateField("kickoffTeamId", e.target.value)} className={selectCls}>
                 {selectedMatch ? (
                   <>
                     <option value="">Select Team</option>
@@ -686,7 +682,7 @@ export const PredictionsDashboard = () => {
             <label className="flex flex-col gap-1">
               <span className={labelTextCls}>Match Duration</span>
               <select name="match_duration" disabled={!!(selectedMatch && selectedMatch.match_stage === "GROUP")} value={selectedMatch && selectedMatch.match_stage === "GROUP" ? matchDurations[0] : formState.matchDuration} onChange={(e) => updateField("matchDuration", e.target.value)} className={selectCls}>
-                {matchDurations.map((d) => <option key={d} value={d}>{durationLabels[d]}</option>)}
+                {matchDurations.map((d) => <option key={d} value={d}>{matchDurationLabels[d]}</option>)}
               </select>
             </label>
           </div>
@@ -725,7 +721,7 @@ export const PredictionsDashboard = () => {
             </button>
           </div>
         </form>
-        <div className="hidden lg:flex w-40 h-[525px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-red-100 dark:bg-red-950 rounded-md min-h-48">
+        <div className="hidden lg:flex w-40 h-[525px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48">
           <ImageWithFallback width={525} height={525} src={"/images/players/" + selectedMatch?.team2_name_short?.toLowerCase() + ".png"} alt={selectedMatch?.team2_name || "Captain Image"} />
         </div>
       </section>
@@ -741,8 +737,8 @@ export const PredictionsDashboard = () => {
               <tr>
                 <th className="px-5 py-3">Match</th>
                 <th className="px-5 py-3">Score</th>
-                <th className="px-5 py-3">First Score</th>
-                <th className="px-5 py-3">Score 1H</th>
+                <th className="px-5 py-3">First Goal in</th>
+                <th className="px-5 py-3">First Score by</th>
                 <th className="px-5 py-3">Yellow Card</th>
                 <th className="px-5 py-3">Red Card</th>
                 <th className="px-5 py-3">Kick-off</th>
@@ -768,17 +764,13 @@ export const PredictionsDashboard = () => {
                         {prediction.team1_score} - {prediction.team2_score}
                       </td>
                       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
+                        {prediction.first_goal_in ? firstGoalInLabels[prediction.first_goal_in] : "N/A"}
+                      </td>
+                      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
                         {getTeamNameById(
                           predictionMatch,
                           prediction.first_scoring_team_id,
                         )}
-                      </td>
-                      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
-                        {prediction.is_goal_in_first_half === null
-                          ? "No goal"
-                          : prediction.is_goal_in_first_half
-                            ? "Yes"
-                            : "No"}
                       </td>
                       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
                         {prediction.yellow_card_count}
@@ -793,10 +785,10 @@ export const PredictionsDashboard = () => {
                         )}
                       </td>
                       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
-                        {durationLabels[prediction.match_duration]}
+                        {matchDurationLabels[prediction.match_duration]}
                       </td>
                       <td className="px-5 py-4 text-right text-zinc-700 dark:text-zinc-300">
-                        {formatDateTime(prediction.predicted_datetime)}
+                        {formatDateTime(prediction.predicted_datetime, false)}
                       </td>
                     </tr>
                   );

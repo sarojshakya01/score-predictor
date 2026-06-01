@@ -8,29 +8,34 @@ import { getErrorMessage } from "@/lib/forms/error-message";
 import {
   createMatch,
   deleteMatch,
-  matchDurations,
+  firstGoalInLabels,
+  firstGoalIns,
   listAdminMatches,
-  updateMatch,
+  matchDurationLabels,
+  matchDurations,
+  matchStageLabels,
   matchStages,
+  updateMatch,
 } from "@/lib/matches";
-import type { MatchDuration, MatchCreate, MatchResponse, MatchStage } from "@/lib/matches";
+import type { MatchCreate, MatchDuration, MatchResponse, MatchStage } from "@/lib/matches";
 import { listAdminTeams } from "@/lib/teams";
 import type { TeamResponse } from "@/lib/teams";
 import { formatDateTime, getMatchLabelWithFlag } from "@/components/ui/match-card";
 import { IconCancel, IconPencil, IconPlus, IconSave, IconSearch, IconTrash, IconX } from "@/components/ui/icons";
 import { Pagination } from "@/components/ui/pagination";
 import Link from "next/link";
+import { FirstGoalIn } from "@/lib/matches/types";
 
 type MatchFormState = {
   firstScoringTeamId: string;
   matchDuration: string;
-  isGoalInFirstHalf: string;
+  firstGoalIn: string;
   matchDatetime: string;
   matchDay: string;
   matchLocked: boolean;
   matchReminderSent: boolean;
   matchStage: string;
-  openingTeamId: string;
+  kickoffTeamId: string;
   redCardCount: string;
   team1Id: string;
   team1Score: string;
@@ -43,13 +48,13 @@ type MatchFormState = {
 const emptyFormState: MatchFormState = {
   firstScoringTeamId: "",
   matchDuration: "",
-  isGoalInFirstHalf: "",
+  firstGoalIn: "",
   matchDatetime: "",
   matchDay: "",
   matchLocked: false,
   matchReminderSent: false,
   matchStage: "",
-  openingTeamId: "",
+  kickoffTeamId: "",
   redCardCount: "",
   team1Id: "",
   team1Score: "",
@@ -57,22 +62,6 @@ const emptyFormState: MatchFormState = {
   team2Score: "",
   venueName: "",
   yellowCardCount: "",
-};
-
-const durationLabels: Record<MatchDuration, string> = {
-  "90": "90 minutes",
-  "120": "120 minutes",
-  PENALTY: "Penalty",
-};
-
-const stageLabels: Record<MatchStage, string> = {
-  "GROUP": "Group Stage",
-  "R32": "Round of 32",
-  "R16": "Round of 16",
-  "QF": "Quarter Final",
-  "SF": "Semi Final",
-  "3P": "Third Place",
-  "F": "Final",
 };
 
 const formatScore = (match: MatchResponse): string => {
@@ -104,14 +93,14 @@ const toDateTimeInputValue = (value: string): string => {
 
 const toFormState = (match: MatchResponse): MatchFormState => ({
   firstScoringTeamId: match.first_scoring_team_id === null ? "" : String(match.first_scoring_team_id),
+  firstGoalIn: match.first_goal_in ?? "",
   matchDuration: match.match_duration ?? "",
-  isGoalInFirstHalf: match.is_goal_in_first_half === null ? "" : String(match.is_goal_in_first_half),
   matchDatetime: toDateTimeInputValue(match.match_datetime),
   matchDay: String(match.match_day),
   matchLocked: match.match_locked,
   matchReminderSent: match.match_reminder_sent,
   matchStage: match.match_stage ?? "",
-  openingTeamId: match.kick_off_team_id === null ? "" : String(match.kick_off_team_id),
+  kickoffTeamId: match.kick_off_team_id === null ? "" : String(match.kick_off_team_id),
   redCardCount: match.red_card_count === null ? "" : String(match.red_card_count),
   team1Id: String(match.team1_id),
   team1Score: match.team1_score === null ? "" : String(match.team1_score),
@@ -143,10 +132,8 @@ const parseOptionalPositiveInteger = (value: string): number | null => {
   return value ? parseRequiredInteger(value, "Team") : null;
 };
 
-const parseRequiredBoolean = (value: string, label: string): boolean => {
-  if (value === "true") return true;
-  if (value === "false") return false;
-  throw new Error(`${label} is required.`);
+const isFirstGoalIn = (value: string): value is FirstGoalIn => {
+  return firstGoalIns.includes(value as FirstGoalIn);
 };
 
 const isMatchDuration = (value: string): value is MatchDuration => {
@@ -162,6 +149,15 @@ const hasGoals = (state: Pick<MatchFormState, "team1Score" | "team2Score">): boo
   );
 };
 
+const hasGoalsFromBothTeams = (state: Pick<MatchFormState, "team1Score" | "team2Score">): boolean => {
+  const team1Score = Number(state.team1Score);
+  const team2Score = Number(state.team2Score);
+  return (
+    (Number.isFinite(team1Score) && team1Score > 0) &&
+    (Number.isFinite(team2Score) && team2Score > 0)
+  );
+};
+
 const buildMatchPayload = (state: MatchFormState): MatchCreate => {
   const team1Id = parseRequiredInteger(state.team1Id, "Team 1");
   const team2Id = parseRequiredInteger(state.team2Id, "Team 2");
@@ -169,20 +165,21 @@ const buildMatchPayload = (state: MatchFormState): MatchCreate => {
 
   const team1Score = parseOptionalNonNegativeInteger(state.team1Score, "Team 1 score");
   const team2Score = parseOptionalNonNegativeInteger(state.team2Score, "Team 2 score");
+  const matchHasGoalsFromBothTeam = (team1Score ?? 0) > 0 && (team2Score ?? 0) > 0;
   const matchHasGoals = (team1Score ?? 0) > 0 || (team2Score ?? 0) > 0;
 
   if (!state.matchDatetime) throw new Error("Kickoff is required.");
 
   return {
-    first_scoring_team_id: matchHasGoals ? parseRequiredInteger(state.firstScoringTeamId, "First Scoring Team") : null,
+    first_goal_in: matchHasGoals && isFirstGoalIn(state.firstGoalIn) ? state.firstGoalIn : null,
+    first_scoring_team_id: matchHasGoalsFromBothTeam ? parseRequiredInteger(state.firstScoringTeamId, "First Scoring Team") : null,
     match_duration: isMatchDuration(state.matchDuration) ? state.matchDuration : null,
-    is_goal_in_first_half: matchHasGoals ? parseRequiredBoolean(state.isGoalInFirstHalf, "Goal in First Half") : null,
     match_datetime: state.matchDatetime,
     match_day: parseRequiredInteger(state.matchDay, "Match Day"),
     match_locked: state.matchLocked,
     match_reminder_sent: state.matchReminderSent,
     match_stage: state.matchStage,
-    kick_off_team_id: parseOptionalPositiveInteger(state.openingTeamId),
+    kick_off_team_id: parseOptionalPositiveInteger(state.kickoffTeamId),
     red_card_count: parseOptionalNonNegativeInteger(state.redCardCount, "Red cards"),
     team1_id: team1Id,
     team1_score: team1Score,
@@ -220,6 +217,8 @@ const AdminMatchesPage = () => {
         .filter((team): team is TeamResponse => Boolean(team)),
     [formState.team1Id, formState.team2Id, teams],
   );
+
+  const matchHasGoalsFromBothTeams = hasGoalsFromBothTeams(formState);
   const matchHasGoals = hasGoals(formState);
 
   useEffect(() => {
@@ -260,7 +259,7 @@ const AdminMatchesPage = () => {
       (m.venue_name ?? "").toLowerCase().includes(q) ||
       String(m.match_day).includes(q) ||
       (m.match_stage ?? "").toLowerCase().includes(q) ||
-      (stageLabels[m.match_stage as MatchStage] ?? "").toLowerCase().includes(q) ||
+      (matchStageLabels[m.match_stage as MatchStage] ?? "").toLowerCase().includes(q) ||
       formatDateTime(m.match_datetime).toLowerCase().includes(q) ||
       (m.match_locked ? "locked" : "open").includes(q)
     );
@@ -275,13 +274,19 @@ const AdminMatchesPage = () => {
     setFormState((current) => {
       const nextState = { ...current, [field]: value };
       const validTeamIds = new Set([nextState.team1Id, nextState.team2Id]);
-      if (!validTeamIds.has(nextState.openingTeamId)) nextState.openingTeamId = "";
+      if (!validTeamIds.has(nextState.kickoffTeamId)) nextState.kickoffTeamId = "";
       if (
-        !validTeamIds.has(nextState.firstScoringTeamId) ||
+        !isFirstGoalIn(nextState.firstGoalIn) ||
         ((field === "team1Score" || field === "team2Score") && !hasGoals(nextState))
       ) {
+        nextState.firstGoalIn = "";
+      }
+
+      if (
+        !validTeamIds.has(nextState.firstScoringTeamId) ||
+        ((field === "team1Score" || field === "team2Score") && !hasGoalsFromBothTeams(nextState))
+      ) {
         nextState.firstScoringTeamId = "";
-        nextState.isGoalInFirstHalf = "";
       }
       return nextState;
     });
@@ -456,15 +461,13 @@ const AdminMatchesPage = () => {
                     <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
                       <Link href={`https://google.com/search?q=${match.venue_name}`} target="_blank" className="text-tournament-primary-light hover:text-tournament-primary">{match.venue_name}</Link>
                     </td>
-                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{match.match_stage ? stageLabels[match.match_stage] : "--"}</td>
+                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{match.match_stage ? matchStageLabels[match.match_stage] : "--"}</td>
                     <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{formatDateTime(match.match_datetime)}</td>
                     <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{formatScore(match)}</td>
                     <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{getTeamNameById(teams, match.kick_off_team_id) || "--"}</td>
                     <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{getTeamNameById(teams, match.first_scoring_team_id) || "--"}</td>
-                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
-                      {match.is_goal_in_first_half === null ? "None" : match.is_goal_in_first_half ? "Yes" : "No"}
-                    </td>
-                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{match.match_duration ? durationLabels[match.match_duration as MatchDuration] : "--"}</td>
+                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{match.first_goal_in ? firstGoalInLabels[match.first_goal_in as FirstGoalIn] : "--"}</td>
+                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{match.match_duration ? matchDurationLabels[match.match_duration as MatchDuration] : "--"}</td>
                     <td className="px-5 py-4">
                       <StatusPill tone={match.match_locked ? "accent" : "secondary"}>
                         {getMatchStatus(match)}
@@ -554,7 +557,7 @@ const AdminMatchesPage = () => {
               <span className={labelCls}><p>Game Stage</p></span>
               <select name="match_stage" value={formState.matchStage} onChange={(event) => updateField("matchStage", event.target.value)} className={selectCls}>
                 <option value="">Not set</option>
-                {matchStages.map((stage) => (<option key={stage} value={stage}>{stageLabels[stage]}</option>))}
+                {matchStages.map((stage) => (<option key={stage} value={stage}>{matchStageLabels[stage]}</option>))}
               </select>
             </label>
             <label className="block">
@@ -567,17 +570,17 @@ const AdminMatchesPage = () => {
             </label>
             <label className="block">
               <span className={labelCls}><p>First scoring team</p></span>
-              <select disabled={!matchHasGoals} name="first_scoring_team_id" required={matchHasGoals} value={formState.firstScoringTeamId} onChange={(event) => updateField("firstScoringTeamId", event.target.value)} className={selectCls}>
-                <option value="">{matchHasGoals ? "Select team" : "No goals"}</option>
+              <select disabled={!matchHasGoalsFromBothTeams} name="first_scoring_team_id" required={matchHasGoalsFromBothTeams} value={formState.firstScoringTeamId} onChange={(event) => updateField("firstScoringTeamId", event.target.value)} className={selectCls}>
+                <option value="">{matchHasGoalsFromBothTeams ? "Not Set" : "N/A"}</option>
                 {selectedTeams.map((team) => (<option key={team.id} value={team.id}>{team.name}</option>))}
               </select>
             </label>
             <label className="block">
-              <span className={labelCls}><p>Goal in first half</p></span>
-              <select disabled={!matchHasGoals} name="is_goal_in_first_half" required={matchHasGoals} value={formState.isGoalInFirstHalf} onChange={(event) => updateField("isGoalInFirstHalf", event.target.value)} className={selectCls}>
-                <option value="">{matchHasGoals ? "Select" : "No goals"}</option>
-                <option value="true">Yes</option>
-                <option value="false">No</option>
+              <span className={labelCls}><p>First goal in</p></span>
+              <select disabled={!matchHasGoals} name="first_goal_in" required={matchHasGoals} value={formState.firstGoalIn} onChange={(event) => updateField("firstGoalIn", event.target.value)} className={selectCls}>
+                <option value="">{matchHasGoals ? "Not Set" : "N/A"}</option>
+                {formState.matchStage === "GROUP" && firstGoalIns.filter((slot) => slot !== "ET").map((slot) => (<option key={slot} value={slot}>{firstGoalInLabels[slot]}</option>))}
+                {formState.matchStage !== "GROUP" && firstGoalIns.map((slot) => (<option key={slot} value={slot}>{firstGoalInLabels[slot]}</option>))}
               </select>
             </label>
             <label className="block">
@@ -590,16 +593,16 @@ const AdminMatchesPage = () => {
             </label>
             <label className="block">
               <span className={labelCls}><p>Kick-off team</p></span>
-              <select name="kick_off_team_id" value={formState.openingTeamId} onChange={(event) => updateField("openingTeamId", event.target.value)} className={selectCls}>
+              <select name="kick_off_team_id" value={formState.kickoffTeamId} onChange={(event) => updateField("kickoffTeamId", event.target.value)} className={selectCls}>
                 <option value="">Not set</option>
                 {selectedTeams.map((team) => (<option key={team.id} value={team.id}>{team.name}</option>))}
               </select>
             </label>
             <label className="block">
               <span className={labelCls}><p>Match duration</p></span>
-              <select name="match_duration" value={formState.matchDuration} onChange={(event) => updateField("matchDuration", event.target.value)} className={selectCls}>
-                <option value="">Not set</option>
-                {matchDurations.map((duration) => (<option key={duration} value={duration}>{durationLabels[duration]}</option>))}
+              <select name="match_duration" value={formState.matchStage === "GROUP" ? "90" : formState.matchDuration} disabled={formState.matchStage === "GROUP"} onChange={(event) => updateField("matchDuration", event.target.value)} className={selectCls}>
+                <option value="">{formState.matchStage === "GROUP" ? matchDurationLabels["90"] : "Not set"}</option>
+                {matchDurations.map((duration) => (<option key={duration} value={duration}>{matchDurationLabels[duration]}</option>))}
               </select>
             </label>
             <label className="flex items-center gap-3 cursor-pointer rounded-md border border-zinc-200 px-3 py-3 text-sm font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">

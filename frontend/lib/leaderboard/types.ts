@@ -1,4 +1,5 @@
 export type LeaderboardEntryResponse = {
+  first_goal_in_points: number;
   first_scoring_team_points: number;
   goal_difference_points: number;
   match_duration_points: number;
@@ -8,7 +9,6 @@ export type LeaderboardEntryResponse = {
   rank: number;
   red_card_points: number;
   score_points: number;
-  scored_in_first_half_points: number;
   total_points: number;
   user_id: number;
   yellow_card_points: number;
@@ -72,10 +72,10 @@ export type UserPointsDetailsResponse = {
   first_scoring_team: string | null;
   predicted_first_scoring_team: string | null;
   first_scoring_team_points: number;
-  // Scored in first half
-  is_goal_in_first_half: boolean | null;
-  predicted_is_goal_in_first_half: boolean | null;
-  scored_in_first_half_points: number;
+  // First goal in
+  first_goal_in: string | null;
+  predicted_first_goal_in: string | null;
+  first_goal_in_points: number;
   // Match duration
   match_duration: string | null;
   predicted_match_duration: string;

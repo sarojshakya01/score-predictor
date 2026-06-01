@@ -15,7 +15,7 @@ class LeaderboardEntryResponse(BaseModel):
     red_card_points: int
     kick_off_team_points: int
     first_scoring_team_points: int
-    scored_in_first_half_points: int
+    first_goal_in_points: int
     match_duration_points: int
     total_points: int
     predicted_matches: int = Field(..., ge=0)

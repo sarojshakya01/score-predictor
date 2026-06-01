@@ -158,7 +158,7 @@ const Home = async () => {
           ))}
         </div>
 
-        <div className="football-field relative min-h-64 overflow-hidden rounded-md border border-emerald-900/20 p-5 text-white shadow-sm">
+        <div className="countdown-container relative min-h-64 overflow-hidden rounded-md border border-emerald-900/20 p-5 text-white shadow-sm">
           <div className="relative z-10 flex h-full flex-col justify-between">
             <div className="flex items-center justify-between">
               <StatusPill tone={nextLock ? "secondary" : "accent"}>

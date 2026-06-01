@@ -135,14 +135,14 @@ class MatchService:
                 team1_score=values.get("team1_score"),
                 team2_score=values.get("team2_score"),
                 first_scoring_team_id=values.get("first_scoring_team_id"),
-                is_goal_in_first_half=values.get("is_goal_in_first_half"),
+                first_goal_in=values.get("first_goal_in"),
             )
             if self._scores_have_no_goals(
                 team1_score=values.get("team1_score"),
                 team2_score=values.get("team2_score"),
             ):
                 values["first_scoring_team_id"] = None
-                values["is_goal_in_first_half"] = None
+                values["first_goal_in"] = None
 
             await self._validate_team_references(
                 team1_id=data.team1_id,
@@ -190,15 +190,15 @@ class MatchService:
             team1_score = values.get("team1_score", match.team1_score)
             team2_score = values.get("team2_score", match.team2_score)
             is_goal_in_first_half = values.get(
-                "is_goal_in_first_half",
-                match.is_goal_in_first_half,
+                "first_goal_in",
+                match.first_goal_in,
             )
 
             self._validate_goal_timeline_fields(
                 team1_score=team1_score,
                 team2_score=team2_score,
                 first_scoring_team_id=first_scoring_team_id,
-                is_goal_in_first_half=is_goal_in_first_half,
+                first_goal_in=is_goal_in_first_half,
             )
             if self._scores_have_no_goals(
                 team1_score=team1_score,
@@ -207,7 +207,7 @@ class MatchService:
                 first_scoring_team_id = None
                 is_goal_in_first_half = None
                 values["first_scoring_team_id"] = None
-                values["is_goal_in_first_half"] = None
+                values["first_goal_in"] = None
 
             await self._validate_team_references(
                 team1_id=team1_id,
@@ -315,7 +315,7 @@ class MatchService:
         team1_score: Any,
         team2_score: Any,
         first_scoring_team_id: Any,
-        is_goal_in_first_half: Any,
+        first_goal_in: Any,
     ) -> None:
         """Validate fields that only apply when a match has goals."""
         if team1_score is None or team2_score is None:
@@ -325,16 +325,17 @@ class MatchService:
         if not has_goals:
             return
 
-        if first_scoring_team_id is None:
+        if first_goal_in is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="first_goal_in is required when match scores include goals",
+            )
+
+        has_goals_from_both_teams = team1_score > 0 and team2_score > 0
+        if has_goals_from_both_teams and first_scoring_team_id is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="first_scoring_team_id is required when match scores include goals",
-            )
-
-        if is_goal_in_first_half is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="is_goal_in_first_half is required when match scores include goals",
             )
 
     @staticmethod

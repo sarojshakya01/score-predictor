@@ -1,10 +1,10 @@
 """Match SQLAlchemy model."""
 
+from sqlalchemy import Boolean
 import enum
 from datetime import datetime
 
 from sqlalchemy import (
-    Boolean,
     CheckConstraint,
     DateTime,
     Enum,
@@ -17,6 +17,14 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin
 from app.models.team import Team
+
+
+class FirstGoalIn(str, enum.Enum):
+    """When the first goal of the match was scored."""
+
+    FIRST_HALF = "1H"
+    SECOND_HALF = "2H"
+    EXTRA_TIME = "ET"
 
 
 class MatchDuration(str, enum.Enum):
@@ -48,20 +56,13 @@ def match_stage_values(enum_type: type[MatchStage]) -> list[str]:
     return [stage.value for stage in enum_type]
 
 
+def first_goal_in_values(enum_type: type[FirstGoalIn]) -> list[str]:
+    """Persist the public enum values instead of Python enum member names."""
+    return [v.value for v in enum_type]
+
+
 class Match(TimestampMixin, Base):
-    """SQLAlchemy model for the matches table.
-
-    Fields derived from ARCHITEXTURE.md:
-        id, team1_score, team2_score, yellow_card_count, red_card_count,
-        kick_off_team_id, match_duration, match_datetime, match_locked,
-        match_reminder_sent, match_day, venue
-
-    Additional fields:
-        team1_id     – FK to teams (implied by team1_score)
-        team2_id     – FK to teams (implied by team2_score)
-        created_at   – inherited from TimestampMixin
-        updated_at   – inherited from TimestampMixin
-    """
+    """SQLAlchemy model for the matches table."""
 
     __tablename__ = "matches"
 
@@ -116,8 +117,15 @@ class Match(TimestampMixin, Base):
         nullable=True,
         default=None,
     )
-    is_goal_in_first_half: Mapped[bool | None] = mapped_column(
-        Boolean,
+    first_goal_in: Mapped[FirstGoalIn | None] = mapped_column(
+        Enum(
+            FirstGoalIn,
+            name="first_goal_in",
+            native_enum=False,
+            length=20,
+            values_callable=first_goal_in_values,
+            validate_strings=True,
+        ),
         nullable=True,
         default=None,
     )

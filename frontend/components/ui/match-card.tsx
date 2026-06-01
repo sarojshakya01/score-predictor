@@ -52,8 +52,9 @@ export const getPredictionStatus = (
   return "Open";
 };
 
-export const formatDateTime = (value: string): string => {
-  const date = new Date(`${value}Z`);
+export const formatDateTime = (value: string, isUTC: boolean = true): string => {
+  // match datetime is in UTC, so we need to convert it to local time using Asia/Kathmandu
+  const date = isUTC ? new Date(`${value}Z`) : new Date(value);
 
   if (Number.isNaN(date.getTime())) {
     return value;

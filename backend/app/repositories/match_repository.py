@@ -83,6 +83,7 @@ class MatchRepository:
         statement = (
             select(Match)
             .options(selectinload(Match.team1), selectinload(Match.team2))
+            .where(Match.match_locked.is_(True))
             .where(Match.team1_score.is_not(None))
             .where(Match.team2_score.is_not(None))
             .order_by(Match.match_datetime.asc(), Match.id.asc())
@@ -96,6 +97,7 @@ class MatchRepository:
         statement = (
             select(func.count())
             .select_from(Match)
+            .where(Match.match_locked.is_(True))
             .where(Match.team1_score.is_not(None))
             .where(Match.team2_score.is_not(None))
         )

@@ -48,6 +48,12 @@ logger = logging.getLogger(__name__)
 UEFA_LIVESCORE_URL = "https://match.uefa.com/v5/livescore?competitionId=3"
 UEFA_STATS_BASE_URL = "https://matchstats.uefa.com/v1/team-statistics/"
 
+_FIRST_GOAL_IN_LABELS: dict[str, str] = {
+    "1H": "1st Half",
+    "2H": "2nd Half",
+    "ET": "Extra Time",
+}
+
 _DURATION_LABELS: dict[str, str] = {
     "90": "90 min",
     "120": "120 min",
@@ -56,6 +62,10 @@ _DURATION_LABELS: dict[str, str] = {
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+def _fmt_first_goal_in(value: str | None) -> str:
+    if value is None:
+        return "—"
+    return _FIRST_GOAL_IN_LABELS.get(value, value)
 
 def _fmt_duration(value: str | None) -> str:
     if value is None:
@@ -368,7 +378,7 @@ async def send_autolock_email() -> None:
                     f"<td>{pred.yellow_card_count}</td>"
                     f"<td>{pred.red_card_count}</td>"
                     f"<td>{fs_team}</td>"
-                    f"<td>{_fmt_bool(pred.is_goal_in_first_half)}</td>"
+                    f"<td>{_fmt_first_goal_in(pred.first_goal_in)}</td>"
                     f"</tr>"
                 )
 

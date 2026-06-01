@@ -40,7 +40,7 @@ class UserLeaderboardTotals:
     red_card_points: int = 0
     kick_off_team_points: int = 0
     first_scoring_team_points: int = 0
-    scored_in_first_half_points: int = 0
+    first_goal_in_points: int = 0
     match_duration_points: int = 0
     total_points: int = 0
 
@@ -57,7 +57,7 @@ class UserLeaderboardTotals:
             red_card_points=self.red_card_points,
             kick_off_team_points=self.kick_off_team_points,
             first_scoring_team_points=self.first_scoring_team_points,
-            scored_in_first_half_points=self.scored_in_first_half_points,
+            first_goal_in_points=self.first_goal_in_points,
             match_duration_points=self.match_duration_points,
             total_points=self.total_points,
         )
@@ -73,7 +73,7 @@ class PredictionScore:
     red_card_points: int
     kick_off_team_points: int
     first_scoring_team_points: int
-    scored_in_first_half_points: int
+    first_goal_in_points: int
     match_duration_points: int
     total_points: int
 
@@ -186,10 +186,10 @@ class LeaderboardService:
                         first_scoring_team=match.first_scoring_team.name if match.first_scoring_team else None,
                         predicted_first_scoring_team=point_from_prediction.first_scoring_team.name if point_from_prediction.first_scoring_team else None,
                         first_scoring_team_points=score.first_scoring_team_points,
-                        # Scored in first half
-                        is_goal_in_first_half=match.is_goal_in_first_half,
-                        predicted_is_goal_in_first_half=point_from_prediction.is_goal_in_first_half,
-                        scored_in_first_half_points=score.scored_in_first_half_points,
+                        # First goal in
+                        first_goal_in=match.first_goal_in,
+                        predicted_first_goal_in=point_from_prediction.first_goal_in,
+                        first_goal_in_points=score.first_goal_in_points,
                         # Match duration
                         match_duration=match.match_duration.value if match.match_duration else None,
                         predicted_match_duration=point_from_prediction.match_duration.value,
@@ -290,7 +290,7 @@ class LeaderboardService:
             user_totals.yellow_card_points += score.yellow_card_points
             user_totals.red_card_points += score.red_card_points
             user_totals.first_scoring_team_points += score.first_scoring_team_points
-            user_totals.scored_in_first_half_points += score.scored_in_first_half_points
+            user_totals.first_goal_in_points += score.first_goal_in_points
             user_totals.match_duration_points += score.match_duration_points
             user_totals.total_points += score.total_points
 
@@ -409,7 +409,7 @@ class LeaderboardService:
         yellow_card_points, red_card_points = LeaderboardService._score_cards(prediction, match)
         match_duration_points = LeaderboardService._score_duration(prediction, match)
         first_scoring_team_points = 5 if prediction.first_scoring_team_id == match.first_scoring_team_id else 0
-        scored_in_first_half_points = 5 if prediction.is_goal_in_first_half == match.is_goal_in_first_half else 0
+        first_goal_in_points = 5 if prediction.first_goal_in == match.first_goal_in else 0
 
         return PredictionScore(
             score_points=score_points,
@@ -418,7 +418,7 @@ class LeaderboardService:
             yellow_card_points=yellow_card_points,
             red_card_points=red_card_points,
             first_scoring_team_points=first_scoring_team_points,
-            scored_in_first_half_points=scored_in_first_half_points,
+            first_goal_in_points=first_goal_in_points,
             match_duration_points=match_duration_points,
             total_points=(
                 score_points
@@ -427,7 +427,7 @@ class LeaderboardService:
                 + yellow_card_points
                 + red_card_points
                 + first_scoring_team_points
-                + scored_in_first_half_points
+                + first_goal_in_points
                 + match_duration_points
             )
         )
@@ -540,16 +540,14 @@ class LeaderboardService:
     @staticmethod
     def _score_red_cards(*, predicted: int, actual: int | None) -> int:
         """Score red cards, including the penalty for false positives."""
-        if predicted == 0 or actual is None:
-            return 0
-
-        if predicted == actual:
-            return 10
-
-        if actual > 0:
-            return 5
-
-        return -2
+        if predicted > 0:
+            if actual is not None and predicted == actual:
+                return 10
+            elif actual is not None and actual > 0:
+                return 5
+            else:
+                return -2
+        return 0
 
     @staticmethod
     def _leaderboard_sort_key(
