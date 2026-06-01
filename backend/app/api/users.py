@@ -55,7 +55,7 @@ async def update_current_user_profile(
 
 
 @leaderboard_router.get(
-    "/",
+    "",
     response_model=LeaderboardResponse,
     summary="Get leaderboard",
 )
