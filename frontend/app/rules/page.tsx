@@ -49,7 +49,7 @@ const RulesPage = () => {
       ) : groups.length === 0 && !error ? (
         <div className="text-sm text-zinc-500 dark:text-zinc-400">No rules configured yet.</div>
       ) : (
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
           {groups.map((group) => (
             <article
               key={group.name}
@@ -82,11 +82,10 @@ const RulesPage = () => {
                           <>
                             {/* points badge */}
                             <span
-                              className={`mt-0.5 shrink-0 inline-flex min-w-[2.5rem] items-center justify-center rounded-full px-1.5 py-0.5 text-xs font-bold tabular-nums ${
-                                entry.points > 0
+                              className={`mt-0.5 shrink-0 inline-flex min-w-[2.5rem] items-center justify-center rounded-full px-1.5 py-0.5 text-xs font-bold tabular-nums ${entry.points > 0
                                   ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
                                   : "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300"
-                              }`}
+                                }`}
                             >
                               {entry.points > 0 ? `+${entry.points}` : entry.points}
                             </span>

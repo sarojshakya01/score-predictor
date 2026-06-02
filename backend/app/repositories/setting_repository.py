@@ -23,7 +23,6 @@ class SettingRepository:
 
     async def get_by_name(self, name: str) -> Setting | None:
         """Fetch a setting by unique name."""
-        print(111, name, select(Setting).where(Setting.name == name))
         result = await self._db.execute(
             select(Setting).where(Setting.name == name),
         )

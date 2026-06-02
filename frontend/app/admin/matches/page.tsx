@@ -178,15 +178,6 @@ const hasGoals = (state: Pick<MatchFormState, "team1Score" | "team2Score">): boo
   );
 };
 
-const hasGoalsFromBothTeams = (state: Pick<MatchFormState, "team1Score" | "team2Score">): boolean => {
-  const team1Score = Number(state.team1Score);
-  const team2Score = Number(state.team2Score);
-  return (
-    (Number.isFinite(team1Score) && team1Score > 0) &&
-    (Number.isFinite(team2Score) && team2Score > 0)
-  );
-};
-
 const buildMatchPayload = (state: MatchFormState): MatchCreate => {
   const team1Id = parseRequiredInteger(state.team1Id, "Team 1");
   const team2Id = parseRequiredInteger(state.team2Id, "Team 2");
@@ -194,14 +185,13 @@ const buildMatchPayload = (state: MatchFormState): MatchCreate => {
 
   const team1Score = parseOptionalNonNegativeInteger(state.team1Score, "Team 1 score");
   const team2Score = parseOptionalNonNegativeInteger(state.team2Score, "Team 2 score");
-  const matchHasGoalsFromBothTeam = (team1Score ?? 0) > 0 && (team2Score ?? 0) > 0;
   const matchHasGoals = (team1Score ?? 0) > 0 || (team2Score ?? 0) > 0;
 
   if (!state.matchDatetime) throw new Error("Kickoff time is required.");
 
   return {
     first_goal_in: matchHasGoals && isFirstGoalIn(state.firstGoalIn) ? state.firstGoalIn : null,
-    first_scoring_team_id: matchHasGoalsFromBothTeam ? parseRequiredInteger(state.firstScoringTeamId, "First Scoring Team") : null,
+    first_scoring_team_id: matchHasGoals ? parseRequiredInteger(state.firstScoringTeamId, "First Scoring Team") : null,
     match_duration: isMatchDuration(state.matchDuration) ? state.matchDuration : null, // change to UTC TZ
     match_datetime: state.matchDatetime,
     match_day: parseRequiredInteger(state.matchDay, "Match Day"),
@@ -248,7 +238,6 @@ const AdminMatchesPage = () => {
     [formState.team1Id, formState.team2Id, teams],
   );
 
-  const matchHasGoalsFromBothTeams = hasGoalsFromBothTeams(formState);
   const matchHasGoals = hasGoals(formState);
 
   useEffect(() => {
@@ -317,7 +306,7 @@ const AdminMatchesPage = () => {
 
       if (
         !validTeamIds.has(nextState.firstScoringTeamId) ||
-        ((field === "team1Score" || field === "team2Score") && !hasGoalsFromBothTeams(nextState))
+        ((field === "team1Score" || field === "team2Score") && !hasGoals(nextState))
       ) {
         nextState.firstScoringTeamId = "";
       }
@@ -616,18 +605,21 @@ const AdminMatchesPage = () => {
               <input min="0" name="team2_score" type="number" value={formState.team2Score || ""} onChange={(event) => updateField("team2Score", event.target.value)} className={inputCls} />
             </label>
             <label className="block">
-              <span className={labelCls}><p>First scoring team</p></span>
-              <select disabled={!matchHasGoalsFromBothTeams} name="first_scoring_team_id" required={matchHasGoalsFromBothTeams} value={formState.firstScoringTeamId} onChange={(event) => updateField("firstScoringTeamId", event.target.value)} className={selectCls}>
-                <option value="">{matchHasGoalsFromBothTeams ? "Not Set" : "N/A"}</option>
-                {selectedTeams.map((team) => (<option key={team.id} value={team.id}>{team.name}</option>))}
-              </select>
-            </label>
-            <label className="block">
               <span className={labelCls}><p>First goal in</p></span>
               <select disabled={!matchHasGoals} name="first_goal_in" required={matchHasGoals} value={formState.firstGoalIn} onChange={(event) => updateField("firstGoalIn", event.target.value)} className={selectCls}>
                 <option value="">{matchHasGoals ? "Not Set" : "N/A"}</option>
                 {formState.matchStage === "GROUP" && firstGoalIns.filter((slot) => slot !== "ET").map((slot) => (<option key={slot} value={slot}>{firstGoalInLabels[slot]}</option>))}
                 {formState.matchStage !== "GROUP" && firstGoalIns.map((slot) => (<option key={slot} value={slot}>{firstGoalInLabels[slot]}</option>))}
+              </select>
+            </label>
+            <label className="block">
+              <span className={labelCls}><p>First score by</p></span>
+              <select disabled={!matchHasGoals} name="first_scoring_team_id" required={matchHasGoals} value={formState.firstScoringTeamId} onChange={(event) => updateField("firstScoringTeamId", event.target.value)} className={selectCls}>
+                <option value="">{matchHasGoals ? "Not Set" : "N/A"}</option>
+                <>
+                  {Number(formState.team1Score || 0) > 0 && <option value={formState.team1Id}>{teams.find((team) => team.id.toString() === formState.team1Id)?.name}</option>}
+                  {Number(formState.team2Score || 0) > 0 && <option value={formState.team2Id}>{teams.find((team) => team.id.toString() === formState.team2Id)?.name}</option>}
+                </>
               </select>
             </label>
             <label className="block">
