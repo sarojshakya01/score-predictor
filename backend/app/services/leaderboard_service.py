@@ -408,8 +408,8 @@ class LeaderboardService:
         kick_off_team_points = LeaderboardService._score_kick_off_team(prediction, match)
         yellow_card_points, red_card_points = LeaderboardService._score_cards(prediction, match)
         match_duration_points = LeaderboardService._score_duration(prediction, match)
-        first_scoring_team_points = 5 if prediction.first_scoring_team_id == match.first_scoring_team_id else 0
-        first_goal_in_points = 5 if prediction.first_goal_in == match.first_goal_in else 0
+        first_scoring_team_points = 3 if prediction.first_scoring_team_id == match.first_scoring_team_id else 0
+        first_goal_in_points = 3 if prediction.first_goal_in == match.first_goal_in else 0
 
         return PredictionScore(
             score_points=score_points,
