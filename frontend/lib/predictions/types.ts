@@ -3,13 +3,13 @@ import { FirstGoalIn } from "../matches/types";
 
 export type PredictionFields = {
   first_scoring_team_id: number | null;
-  match_duration: MatchDuration;
+  match_duration: MatchDuration | null;
   first_goal_in: FirstGoalIn | null;
-  kick_off_team_id: number;
-  red_card_count: number;
+  kick_off_team_id: number | null;
+  red_card_count: number | null;
   team1_score: number;
   team2_score: number;
-  yellow_card_count: number;
+  yellow_card_count: number | null;
 };
 
 export type PredictionCreate = PredictionFields & {

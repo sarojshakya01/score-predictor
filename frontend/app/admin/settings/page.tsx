@@ -275,7 +275,7 @@ const AdminSettingsPage = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        title={editingSettingId ? "Edit setting" : "New setting"}
+        title={editingSettingId ? "Edit Setting" : "New Setting"}
       >
         <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">
           <label className="block">

@@ -1,5 +1,6 @@
 """User business logic."""
 
+import asyncio
 import logging
 
 from fastapi import HTTPException, status
@@ -137,6 +138,7 @@ class UserService:
     ) -> UserResponse:
         """Update a user from the admin user management screen."""
         user = await self._get_user_or_404(user_id)
+        is_user_active = user.is_active
         values = data.model_dump(exclude_unset=True)
 
         if not values:
@@ -177,6 +179,21 @@ class UserService:
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Email already registered",
             )
+
+        # Fire activation/deactivation email when is_active changes.
+        new_is_active = values.get("is_active")
+        if isinstance(new_is_active, bool) and is_user_active != updated_user.is_active:
+            try:
+                from app.services.email_service import send_user_activation_email  # noqa: PLC0415
+                asyncio.create_task(send_user_activation_email(
+                    email=updated_user.email,
+                    first_name=updated_user.first_name,
+                    activated=new_is_active,
+                ))
+            except Exception:
+                logger.exception(
+                    "Failed to send activation email to user %s", updated_user.id
+                )
 
         return UserResponse.model_validate(updated_user)
 

@@ -564,7 +564,7 @@ const AdminMatchesPage = () => {
         onCancel={() => setDeleteTarget(null)}
       />
 
-      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingMatchId ? "Edit match" : "New match"}>
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingMatchId ? "Edit Match" : "New Match"}>
         <form className="flex flex-col gap-4" onSubmit={(e) => void handleSubmit(e)}>
           <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
             <p className="text-sm text-zinc-500 dark:text-zinc-400">Schedule and result details.</p>

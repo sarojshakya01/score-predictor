@@ -6,7 +6,7 @@
 :root {
   --background: #f7f8f5;
   --foreground: #18181b;
-  --color-tournament-light: #F4F5F7;
+  --color-tournament-border: #2a374a;
   /* Tournament Theme Colors */
   /* USA */
   --color-tournament-primary: #1E293B;
@@ -19,8 +19,8 @@
   --color-tournament-secondary-light: #73c787;
   --color-tournament-secondary-faint: #b6e8c2;
   /* Canada */
-  --color-tournament-accent: #DC2626;
-  --color-tournament-accent-hover: #f43f3f;
+  --color-tournament-accent: #ef4132;
+  --color-tournament-accent-hover: #b41111;
   --color-tournament-accent-light: #ec8989;
   --color-tournament-accent-faint: #f69d9d;
 }
@@ -29,20 +29,20 @@
 .dark {
   --background: #0f1117;
   --foreground: #f4f4f5;
-  --color-tournament-light: #1e2130;
+  --color-tournament-border: #9ea1b3;
   /* USA */
-  --color-tournament-primary: #1E293B;
-  --color-tournament-primary-hover: #2f415d;
+  --color-tournament-primary: #0a3161;
+  --color-tournament-primary-hover: #26558e;
   --color-tournament-primary-light: #4a5c7b;
   --color-tournament-primary-faint: #7486a8;
   /* Mexico */
-  --color-tournament-secondary: #15803D;
-  --color-tournament-secondary-hover: #1fbd59;
+  --color-tournament-secondary: #006341;
+  --color-tournament-secondary-hover: #059d68;
   --color-tournament-secondary-light: #73c787;
   --color-tournament-secondary-faint: #b6e8c2;
   /* Canada */
-  --color-tournament-accent: #DC2626;
-  --color-tournament-accent-hover: #f43f3f;
+  --color-tournament-accent: #e82042;
+  --color-tournament-accent-hover: #e74d67;
   --color-tournament-accent-light: #ec8989;
   --color-tournament-accent-faint: #f69d9d;
 }
@@ -88,25 +88,26 @@ textarea {
   opacity: 0.8;
 }
 
+.border-tournament {
+  border-color: var(--color-tournament-border);
+}
+
 .bg-player {
   background: linear-gradient(to bottom, #721411, #d60303);
 }
 
 .bg-tournament-light {
-  background-color: var(--color-tournament-light);
+  background-color: rgb(239, 235, 235)
 }
 
 .bg-grad-tournament-light {
-  background: linear-gradient(135deg, rgb(239, 235, 235), var(--color-tournament-light));
+  background: linear-gradient(135deg, rgb(239, 235, 235), var(--color-tournament-primary));
 }
 
 .dark .bg-grad-tournament-light {
-  background: linear-gradient(135deg, #1a1f2e, var(--color-tournament-light));
+  background: linear-gradient(135deg, var(--color-tournament-primary), rgb(239, 235, 235));
 }
 
-.bg-tournament-light-boarder {
-  border-color: var(--color-tournament-light);
-}
 
 .hover\:bg-tournament-light:hover {
   background-color: var(--color-tournament-light-hover);

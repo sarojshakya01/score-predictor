@@ -313,7 +313,7 @@ const AdminTeamsPage = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        title={editingTeamId ? "Edit team" : "New team"}
+        title={editingTeamId ? "Edit Team" : "New Team"}
       >
         <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">
           <label className="block">

@@ -242,7 +242,7 @@ class PredictionService:
     @staticmethod
     def _validate_kick_off_team(match: Match, kick_off_team_id: int) -> None:
         """Ensure kickoff team is one of the match participants."""
-        if kick_off_team_id not in {match.team1_id, match.team2_id}:
+        if kick_off_team_id is not None and kick_off_team_id not in {match.team1_id, match.team2_id}:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="kick_off_team_id must match one of the match teams",
@@ -261,23 +261,20 @@ class PredictionService:
         if team1_score + team2_score == 0:
             return
 
-        if first_goal_in is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="first_goal_in is required when goals are predicted",
-            )
+        # commented as null/empty values can be sent from frontend by dump users
+        # if first_goal_in is None:
+        #     raise HTTPException(
+        #         status_code=status.HTTP_400_BAD_REQUEST,
+        #         detail="first_goal_in is required when goals are predicted",
+        #     )
 
-        """Validate first_scoring_team_id when goals from both teams are predicted."""
-        if team1_score == 0 or team2_score == 0:
-            return
+        # if first_scoring_team_id is None:
+        #     raise HTTPException(
+        #         status_code=status.HTTP_400_BAD_REQUEST,
+        #         detail="first_scoring_team_id is required when goals are predicted",
+        #     )
 
-        if first_scoring_team_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="first_scoring_team_id is required when goals from both teams are predicted",
-            )
-
-        if first_scoring_team_id not in {match.team1_id, match.team2_id}:
+        if first_scoring_team_id is not None and first_scoring_team_id not in {match.team1_id, match.team2_id}:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="first_scoring_team_id must match one of the match teams",

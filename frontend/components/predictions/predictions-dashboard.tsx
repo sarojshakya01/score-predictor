@@ -127,7 +127,7 @@ const hasAnyGoalPrediction = (
 };
 
 const isMatchDuration = (value: string): value is MatchDuration => {
-  return matchDurations.includes(value as MatchDuration);
+  return value ? matchDurations.includes(value as MatchDuration) : false;
 };
 
 const isFirstGoalIn = (value: string): value is FirstGoalIn => {
@@ -142,7 +142,7 @@ const buildFormState = (
     return {
       firstScoringTeamId: prediction.first_scoring_team_id ? String(prediction.first_scoring_team_id) : "",
       firstGoalIn: prediction.first_goal_in || "",
-      matchDuration: prediction.match_duration,
+      matchDuration: prediction.match_duration || "",
       kickoffTeamId: String(prediction.kick_off_team_id),
       redCardCount: String(prediction.red_card_count),
       team1Score: String(prediction.team1_score),
@@ -305,10 +305,6 @@ export const PredictionsDashboard = () => {
   };
 
   const buildPredictionFields = (): PredictionFields => {
-    if (!isMatchDuration(formState.matchDuration)) {
-      throw new Error("Match duration is required.");
-    }
-
     const team1Score = parseNonNegativeInteger(
       formState.team1Score,
       "Team 1",
@@ -327,11 +323,11 @@ export const PredictionsDashboard = () => {
       first_goal_in: hasPredictedGoals && isFirstGoalIn(formState.firstGoalIn)
         ? formState.firstGoalIn
         : null,
-      match_duration: formState.matchDuration,
-      kick_off_team_id: parsePositiveInteger(
+      kick_off_team_id: formState.kickoffTeamId ? parsePositiveInteger(
         formState.kickoffTeamId,
         "Kick-off team",
-      ),
+      ) : null,
+      match_duration: isMatchDuration(formState.matchDuration) ? formState.matchDuration : null,
       red_card_count: parseNonNegativeInteger(
         formState.redCardCount,
         "Red cards",
@@ -496,14 +492,14 @@ export const PredictionsDashboard = () => {
       ) : null}
 
       {authRequired ? (
-        <div className="flex flex-col gap-3 rounded-md border border-amber-200 px-4 py-4 text-sm dark:text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-zinc-300 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 rounded-md border border-yellow-200 px-4 py-4 text-sm text-yellow-900 dark:text-zinc-400 dark:border-yellow-700 bg-yellow-50 dark:bg-amber-950 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold">Login required</h2>
             <p className="mt-1 text-sm">Log in to submit your predictions.</p>
           </div>
           <Link
             href="/login"
-            className="inline-flex h-10 items-center justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold dark:text-zinc-300 transition hover:bg-tournament-primary"
+            className="inline-flex h-10 items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
           >
             Login
           </Link>
@@ -588,7 +584,7 @@ export const PredictionsDashboard = () => {
           <ImageWithFallback width={525} height={525} src={"/images/players/" + selectedMatch?.team1_name_short?.toLowerCase() + ".png"} alt={selectedMatch?.team1_name || "Captain Image"} />
         </div>{""}
         <form
-          className={(selectedStatus === "Locked" ? "opacity-50 " : "") + "relative w-full lg:max-w-2xl rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 p-4 sm:p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"}
+          className={(selectedStatus === "Locked" ? "opacity-50 pointer-events-none " : "") + "relative w-full lg:max-w-2xl rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 p-4 sm:p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"}
           onSubmit={handleSubmit}
         >
           <div className="flex flex-wrap items-center justify-center gap-3">
@@ -606,7 +602,7 @@ export const PredictionsDashboard = () => {
             </div>
           </div>
           <div className="absolute right-[20px] top-[20px]">
-            <StatusPill tone={getStatusTone(selectedStatus)}>
+            <StatusPill tone={getStatusTone(selectedStatus)} urgency={selectedMatch ? getPredictionStatus(selectedMatch) === "Locking soon" ? "alarm" : "warn" : "none"}>
               {selectedStatus}
             </StatusPill>
           </div>
@@ -747,8 +743,8 @@ export const PredictionsDashboard = () => {
           <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
             <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
               <tr>
-                <th className="px-5 py-3">S.N.</th>
-                <th className="px-5 py-3 text-center min-w-[300px]">Match</th>
+                <th className="pl-5 pr-3 py-3">S.N.</th>
+                <th className="pl-2 pr-5 py-3 text-center min-w-[300px]">Match</th>
                 <th className="px-5 py-3">Score</th>
                 <th className="px-5 py-3 min-w-[170px]">First Goal in</th>
                 <th className="px-5 py-3 min-w-[170px]">First Score by</th>
@@ -768,8 +764,8 @@ export const PredictionsDashboard = () => {
 
                   return (
                     <tr key={prediction.id}>
-                      <td className="px-5 py-4">{idx + 1}</td>
-                      <td className="px-5 py-4 font-medium text-zinc-950 dark:text-zinc-50">
+                      <td className="pl-5 pr-3 py-4">{idx + 1}</td>
+                      <td className="pl-2 pr-5 py-4 font-medium text-zinc-950 dark:text-zinc-50">
                         {predictionMatch
                           ? getMatchLabelWithFlag(predictionMatch)
                           : `Match #${prediction.match_id}`}
@@ -778,13 +774,13 @@ export const PredictionsDashboard = () => {
                         {prediction.team1_score} - {prediction.team2_score}
                       </td>
                       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
-                        {prediction.first_goal_in ? firstGoalInLabels[prediction.first_goal_in] : "N/A"}
+                        {prediction.first_goal_in ? firstGoalInLabels[prediction.first_goal_in] : "Not Predicted"}
                       </td>
                       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
-                        {getTeamNameById(
+                        {prediction.first_scoring_team_id ? getTeamNameById(
                           predictionMatch,
                           prediction.first_scoring_team_id,
-                        )}
+                        ) : "Not Predicted"}
                       </td>
                       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
                         {prediction.yellow_card_count}
@@ -793,13 +789,13 @@ export const PredictionsDashboard = () => {
                         {prediction.red_card_count}
                       </td>
                       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
-                        {getTeamNameById(
+                        {prediction.kick_off_team_id ? getTeamNameById(
                           predictionMatch,
                           prediction.kick_off_team_id,
-                        )}
+                        ) : "Not Predicted"}
                       </td>
                       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
-                        {matchDurationLabels[prediction.match_duration]}
+                        {prediction.match_duration ? matchDurationLabels[prediction.match_duration] : "Not Predicted"}
                       </td>
                       <td className="px-5 py-4 text-right text-zinc-700 dark:text-zinc-300">
                         {formatDateTime(prediction.predicted_datetime, false)}
@@ -866,14 +862,14 @@ export const PredictionsDashboard = () => {
                 {([
                   [`${selectedMatch.team1_name} Score`, pendingPredictionFields.team1_score],
                   [`${selectedMatch.team2_name} Score`, pendingPredictionFields.team2_score],
-                  ["First Goal In", pendingPredictionFields.first_goal_in ? firstGoalInLabels[pendingPredictionFields.first_goal_in] : "N/A"],
+                  ["First Goal In", pendingPredictionFields.first_goal_in ? firstGoalInLabels[pendingPredictionFields.first_goal_in] : "Not Predicted"],
                   ["First Score By", pendingPredictionFields.first_scoring_team_id
                     ? getTeamNameById(selectedMatch, pendingPredictionFields.first_scoring_team_id)
-                    : "N/A"],
+                    : "Not Predicted"],
                   ["Yellow Cards", String(pendingPredictionFields.yellow_card_count)],
                   ["Red Cards", String(pendingPredictionFields.red_card_count)],
-                  ["Kick-off Team", pendingPredictionFields.kick_off_team_id ? getTeamNameById(selectedMatch, pendingPredictionFields.kick_off_team_id) : "N/A"],
-                  ["Duration", matchDurationLabels[pendingPredictionFields.match_duration]],
+                  ["Kick-off Team", pendingPredictionFields.kick_off_team_id ? getTeamNameById(selectedMatch, pendingPredictionFields.kick_off_team_id) : "Not Predicted"],
+                  ["Duration", pendingPredictionFields.match_duration ? matchDurationLabels[pendingPredictionFields.match_duration] : "Not Predicted"],
 
                 ] as [string, string][]).map(([label, value]) => (
                   <div key={label} className="flex flex-col gap-0.5 bg-white dark:bg-zinc-900 px-4 py-3">

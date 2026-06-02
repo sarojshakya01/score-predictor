@@ -453,7 +453,7 @@ async def send_reminder_email() -> None:
             team1_name = match.team1.name
             team2_name = match.team2.name
             match_title = f"{team1_name} vs {team2_name}"
-            match_time_str = match.match_datetime.strftime("%Y-%m-%d %H:%M UTC")
+            match_time_str = match.match_datetime.astimezone().strftime("%Y-%m-%d %H:%M %Z")
 
             # Fetch existing predictions for this match
             pred_result = await db.execute(

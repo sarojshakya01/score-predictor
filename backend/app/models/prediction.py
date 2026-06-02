@@ -59,7 +59,8 @@ class Prediction(TimestampMixin, Base):
 
     kick_off_team_id: Mapped[int] = mapped_column(
         ForeignKey("teams.id"),
-        nullable=False,
+        nullable=True,
+        default=None,
     )
     first_scoring_team_id: Mapped[int | None] = mapped_column(
         ForeignKey("teams.id"),
@@ -87,7 +88,8 @@ class Prediction(TimestampMixin, Base):
             values_callable=match_duration_values,
             validate_strings=True,
         ),
-        nullable=False,
+        nullable=True,
+        default=None,
     )
 
     predicted_datetime: Mapped[datetime] = mapped_column(

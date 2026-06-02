@@ -340,7 +340,7 @@ const AdminUsersPage = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        title={editingUserId ? "Edit user" : "New user"}
+        title={editingUserId ? "Edit User" : "New User"}
       >
         <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">
           <label className="block">
@@ -428,7 +428,7 @@ const AdminUsersPage = () => {
               />
             </label>
           </div>
-          <label className="flex items-center gap-3 rounded-md border border-zinc-200 px-3 py-3 text-sm font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">
+          <label className="flex items-center gap-3 cursor-pointer rounded-md border border-zinc-200 px-3 py-3 text-sm font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">
             <input
               autoComplete=""
               type="checkbox"

@@ -9,11 +9,11 @@ CREATE TABLE predictions (
     yellow_card_count INT NOT NULL,
     red_card_count INT NOT NULL,
 
-    kick_off_team_id INT NOT NULL,
+    kick_off_team_id INT NULL DEFAULT NULL,
     first_scoring_team_id INT NULL DEFAULT NULL,
     first_goal_in ENUM('1H', '2H', 'ET') NULL DEFAULT NULL,
 
-    match_duration ENUM('90', '120', 'PENALTY') NOT NULL,
+    match_duration ENUM('90', '120', 'PENALTY') NULL DEFAULT NULL,
 
     predicted_datetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         ON UPDATE CURRENT_TIMESTAMP,

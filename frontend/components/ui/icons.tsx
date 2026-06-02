@@ -459,3 +459,45 @@ export const IconRules = ({ className = "h-4 w-4" }: IconProps) => (
     <line x1="8" y1="9" x2="10" y2="9" />
   </svg>
 );
+
+export const IconCheck = ({ className = "h-5 w-5 text-emerald-500 dark:text-emerald-400" }: IconProps) => (
+  <svg
+    xmlns="http://w3.org"
+    className={className}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="10" />
+
+    <path
+      d="m9 12 2 2 4-4"
+      fill="none"
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="stroke-slate-900 dark:stroke-slate-950"
+    />
+  </svg>
+);
+
+
+export const IconCross = ({ className = "h-5 w-5 text-emerald-500 dark:text-emerald-400" }: IconProps) => (
+  <svg
+    xmlns="http://w3.org"
+    className={className}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="10" />
+    <path
+      d="m15 9-6 6M9 9l6 6"
+      fill="none"
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="stroke-slate-900 dark:stroke-slate-950"
+    />
+  </svg>
+);

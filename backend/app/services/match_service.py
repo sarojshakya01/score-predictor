@@ -1,5 +1,6 @@
 """Match business logic."""
 
+import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -11,6 +12,7 @@ from app.models.match import Match
 from app.repositories.match_repository import MatchRepository
 from app.repositories.setting_repository import SettingRepository
 from app.repositories.team_repository import TeamRepository
+from app.repositories.user_repository import UserRepository
 from app.schemas.match import (
     MatchCreate,
     MatchListResponse,
@@ -28,6 +30,7 @@ class MatchService:
         self._match_repository = MatchRepository(db)
         self._team_repository = TeamRepository(db)
         self._setting_repository = SettingRepository(db)
+        self._user_repository = UserRepository(db)
 
     async def list_matches(
         self,
@@ -175,6 +178,7 @@ class MatchService:
         """Update a match after validating changed fields."""
         try:
             match = await self._get_match_or_404(match_id)
+            was_locked = match.match_locked
             values = data.model_dump(exclude_unset=True)
 
             if not values:
@@ -217,6 +221,25 @@ class MatchService:
             )
 
             updated_match = await self._match_repository.update(match, values)
+
+            # Notify all active users when a locked match is unlocked.
+            now_locked = values.get("match_locked", was_locked)
+            if was_locked and not now_locked:
+                try:
+                    from app.services.email_service import send_match_unlocked_email  # noqa: PLC0415
+                    active_users = await self._user_repository.list_active_users()
+                    recipient_emails = [u.email for u in active_users]
+                    payload = self._build_response_payload(updated_match)
+                    asyncio.create_task(send_match_unlocked_email(
+                        recipients=recipient_emails,
+                        team1_name=payload["team1_name"],
+                        team2_name=payload["team2_name"],
+                    ))
+                except Exception:
+                    logger.exception(
+                        "Failed to send match-unlocked email for match %s", match_id
+                    )
+
             return MatchResponse.model_validate(
                 self._build_response_payload(updated_match),
             )
@@ -331,8 +354,7 @@ class MatchService:
                 detail="first_goal_in is required when match scores include goals",
             )
 
-        has_goals_from_both_teams = team1_score > 0 and team2_score > 0
-        if has_goals_from_both_teams and first_scoring_team_id is None:
+        if first_scoring_team_id is None:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="first_scoring_team_id is required when match scores include goals",
