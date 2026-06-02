@@ -11,6 +11,7 @@ import {
   updateSetting,
 } from "@/lib/settings";
 import type { SettingCreate, SettingResponse } from "@/lib/settings";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { IconCancel, IconPencil, IconPlus, IconSave, IconSearch, IconTrash, IconX } from "@/components/ui/icons";
 
 const emptyFormState: SettingCreate = {
@@ -35,6 +36,7 @@ const AdminSettingsPage = () => {
   const [formError, setFormError] = useState<string | null>(null);
 
   const [isDeletingId, setIsDeletingId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<SettingResponse | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -123,15 +125,20 @@ const AdminSettingsPage = () => {
     }
   };
 
-  const handleDelete = async (setting: SettingResponse) => {
-    if (!window.confirm(`Delete setting ${setting.name}?`)) return;
+  const handleDeleteClick = (setting: SettingResponse) => {
+    setDeleteTarget(setting);
+  };
 
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    const setting = deleteTarget;
+    setDeleteTarget(null);
     setIsDeletingId(setting.id);
     try {
       await deleteSetting(setting.id);
       setSettings((current) => current.filter((s) => s.id !== setting.id));
     } catch (error) {
-      alert(getErrorMessage(error, "Unable to delete setting."));
+      setLoadError(getErrorMessage(error, "Unable to delete setting."));
     } finally {
       setIsDeletingId(null);
     }
@@ -234,7 +241,7 @@ const AdminSettingsPage = () => {
                           className="inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-700 hover:bg-rose-50 cursor-pointer transition disabled:opacity-40 dark:text-rose-400 dark:hover:bg-rose-950"
                           disabled={isDeletingId === setting.id}
                           type="button"
-                          onClick={() => void handleDelete(setting)}
+                          onClick={() => handleDeleteClick(setting)}
                         >
                           <IconTrash className="h-4 w-4" />
                           <span className="sr-only">Delete</span>
@@ -254,6 +261,16 @@ const AdminSettingsPage = () => {
           </table>
         </div>
       </section>
+
+      <ConfirmModal
+        isOpen={deleteTarget !== null}
+        title="Delete Setting"
+        message={deleteTarget ? `Are you sure you want to delete "${deleteTarget.name}"? This action cannot be undone.` : ""}
+        confirmLabel="Delete"
+        isDangerous
+        onConfirm={() => void handleDeleteConfirm()}
+        onCancel={() => setDeleteTarget(null)}
+      />
 
       <Modal
         isOpen={isModalOpen}

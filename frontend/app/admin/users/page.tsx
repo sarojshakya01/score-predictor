@@ -14,6 +14,7 @@ import {
   updateUser,
 } from "@/lib/users";
 import type { UserCreate, UserResponse } from "@/lib/users";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { IconCancel, IconPencil, IconPlus, IconSave, IconSearch, IconTrash, IconX } from "@/components/ui/icons";
 import { Pagination } from "@/components/ui/pagination";
 
@@ -48,6 +49,7 @@ const AdminUsersPage = () => {
   const [formError, setFormError] = useState<string | null>(null);
 
   const [isDeletingId, setIsDeletingId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<UserResponse | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -161,17 +163,20 @@ const AdminUsersPage = () => {
     }
   };
 
-  const handleDelete = async (user: UserResponse) => {
-    if (!window.confirm(`Delete user ${user.email}?`)) {
-      return;
-    }
+  const handleDeleteClick = (user: UserResponse) => {
+    setDeleteTarget(user);
+  };
 
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    const user = deleteTarget;
+    setDeleteTarget(null);
     setIsDeletingId(user.id);
     try {
       await deleteUser(user.id);
       setUsers((current) => current.filter((u) => u.id !== user.id));
     } catch (error) {
-      alert(getErrorMessage(error, "Unable to delete user."));
+      setLoadError(getErrorMessage(error, "Unable to delete user."));
     } finally {
       setIsDeletingId(null);
     }
@@ -294,7 +299,7 @@ const AdminUsersPage = () => {
                           title="Delete"
                           className="inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-700 hover:bg-rose-50 cursor-pointer transition disabled:opacity-40 dark:text-rose-400 dark:hover:bg-rose-950"
                           disabled={isDeletingId === user.id}
-                          onClick={() => void handleDelete(user)}
+                          onClick={() => handleDeleteClick(user)}
                         >
                           <IconTrash className="h-4 w-4" />
                           <span className="sr-only">Delete</span>
@@ -320,6 +325,16 @@ const AdminUsersPage = () => {
         pageSize={PAGE_SIZE}
         total={filteredUsers.length}
         onChange={setPage}
+      />
+
+      <ConfirmModal
+        isOpen={deleteTarget !== null}
+        title="Delete User"
+        message={deleteTarget ? `Are you sure you want to delete ${deleteTarget.email}? This action cannot be undone.` : ""}
+        confirmLabel="Delete"
+        isDangerous
+        onConfirm={() => void handleDeleteConfirm()}
+        onCancel={() => setDeleteTarget(null)}
       />
 
       <Modal

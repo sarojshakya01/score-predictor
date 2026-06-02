@@ -21,6 +21,7 @@ import type { MatchCreate, MatchDuration, MatchResponse, MatchStage } from "@/li
 import { listAdminTeams } from "@/lib/teams";
 import type { TeamResponse } from "@/lib/teams";
 import { formatDateTime, getMatchLabelWithFlag } from "@/components/ui/match-card";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { IconCancel, IconPencil, IconPlus, IconSave, IconSearch, IconTrash, IconX } from "@/components/ui/icons";
 import { Pagination } from "@/components/ui/pagination";
 import Link from "next/link";
@@ -230,6 +231,7 @@ const AdminMatchesPage = () => {
   const [formState, setFormState] = useState<MatchFormState>(emptyFormState);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeletingId, setIsDeletingId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<MatchResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -372,12 +374,16 @@ const AdminMatchesPage = () => {
     }
   };
 
-  const handleDelete = async (match: MatchResponse) => {
-    if (!window.confirm(`Delete ${getMatchLabelText(match)}?`)) return;
+  const handleDeleteClick = (match: MatchResponse) => {
+    setDeleteTarget(match);
+  };
 
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    const match = deleteTarget;
+    setDeleteTarget(null);
     setIsDeletingId(match.id);
     setFormError(null);
-
     try {
       await deleteMatch(match.id);
       setMatches((currentMatches) =>
@@ -464,12 +470,12 @@ const AdminMatchesPage = () => {
                 <th className="px-5 py-3">Day</th>
                 <th className="px-5 py-3">Venue</th>
                 <th className="px-5 py-3">Stage</th>
-                <th className="px-5 py-3">Kickoff</th>
+                <th className="px-5 py-3 min-w-[150px]">Time</th>
                 <th className="px-5 py-3">Score</th>
-                <th className="px-5 py-3">Kickoff Team</th>
-                <th className="px-5 py-3">First Scorer</th>
-                <th className="px-5 py-3">Goal in 1H</th>
-                <th className="px-5 py-3">Match Duration</th>
+                <th className="px-5 py-3 min-w-[150px]">Kickoff Team</th>
+                <th className="px-5 py-3 min-w-[150px]">First Goal in</th>
+                <th className="px-5 py-3 min-w-[170px]">First Score by</th>
+                <th className="px-5 py-3 min-w-[170px]">Match Duration</th>
                 <th className="px-5 py-3">Status</th>
                 <th className="px-5 py-3 text-right">Actions</th>
               </tr>
@@ -520,7 +526,7 @@ const AdminMatchesPage = () => {
                           className="inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-700 hover:bg-rose-50 cursor-pointer transition disabled:opacity-40 dark:text-rose-400 dark:hover:bg-rose-950"
                           disabled={isDeletingId === match.id}
                           type="button"
-                          onClick={() => void handleDelete(match)}
+                          onClick={() => handleDeleteClick(match)}
                         >
                           <IconTrash className="h-4 w-4" />
                           <span className="sr-only">Delete</span>
@@ -546,6 +552,16 @@ const AdminMatchesPage = () => {
         pageSize={PAGE_SIZE}
         total={filteredMatches.length}
         onChange={setPage}
+      />
+
+      <ConfirmModal
+        isOpen={deleteTarget !== null}
+        title="Delete Match"
+        message={deleteTarget ? `Are you sure you want to delete ${getMatchLabelText(deleteTarget)}? This action cannot be undone.` : ""}
+        confirmLabel="Delete"
+        isDangerous
+        onConfirm={() => void handleDeleteConfirm()}
+        onCancel={() => setDeleteTarget(null)}
       />
 
       <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingMatchId ? "Edit match" : "New match"}>

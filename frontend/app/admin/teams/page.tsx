@@ -11,6 +11,7 @@ import {
   updateTeam,
 } from "@/lib/teams";
 import type { TeamCreate, TeamResponse } from "@/lib/teams";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import Image from "next/image";
 import { IconCancel, IconPencil, IconPlus, IconSave, IconSearch, IconTrash, IconX } from "@/components/ui/icons";
 import { Pagination } from "@/components/ui/pagination";
@@ -41,6 +42,7 @@ const AdminTeamsPage = () => {
   const [formError, setFormError] = useState<string | null>(null);
 
   const [isDeletingId, setIsDeletingId] = useState<number | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<TeamResponse | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -141,17 +143,20 @@ const AdminTeamsPage = () => {
     }
   };
 
-  const handleDelete = async (team: TeamResponse) => {
-    if (!window.confirm(`Delete team ${team.name}?`)) {
-      return;
-    }
+  const handleDeleteClick = (team: TeamResponse) => {
+    setDeleteTarget(team);
+  };
 
+  const handleDeleteConfirm = async () => {
+    if (!deleteTarget) return;
+    const team = deleteTarget;
+    setDeleteTarget(null);
     setIsDeletingId(team.id);
     try {
       await deleteTeam(team.id);
       setTeams((current) => current.filter((t) => t.id !== team.id));
     } catch (error) {
-      alert(getErrorMessage(error, "Unable to delete team."));
+      setLoadError(getErrorMessage(error, "Unable to delete team."));
     } finally {
       setIsDeletingId(null);
     }
@@ -267,7 +272,7 @@ const AdminTeamsPage = () => {
                           title="Delete"
                           className="inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-700 hover:bg-rose-50 cursor-pointer transition disabled:opacity-40 dark:text-rose-400 dark:hover:bg-rose-950"
                           disabled={isDeletingId === team.id}
-                          onClick={() => void handleDelete(team)}
+                          onClick={() => handleDeleteClick(team)}
                         >
                           <IconTrash className="h-4 w-4" />
                           <span className="sr-only">Delete</span>
@@ -293,6 +298,16 @@ const AdminTeamsPage = () => {
         pageSize={PAGE_SIZE}
         total={filteredTeams.length}
         onChange={setPage}
+      />
+
+      <ConfirmModal
+        isOpen={deleteTarget !== null}
+        title="Delete Team"
+        message={deleteTarget ? `Are you sure you want to delete ${deleteTarget.name}? This action cannot be undone.` : ""}
+        confirmLabel="Delete"
+        isDangerous
+        onConfirm={() => void handleDeleteConfirm()}
+        onCancel={() => setDeleteTarget(null)}
       />
 
       <Modal

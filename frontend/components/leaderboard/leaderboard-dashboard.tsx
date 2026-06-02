@@ -146,26 +146,33 @@ const ScoreRow = ({
         </span>
       </td>
 
-      {/* Score – actual */}
+      {/* Score */}
       <ActualCell>
         <span className="font-semibold text-zinc-700 dark:text-zinc-300">
           {item.team1_score} – {item.team2_score}
         </span>
       </ActualCell>
-      {/* Score – predicted */}
       <PredCell>
         {item.predicted_team1_score} – {item.predicted_team2_score}
       </PredCell>
-      {/* Score points */}
       <PtsCell points={item.score_points} />
 
-      {/* Goal diff – actual */}
-      <ActualCell>{Math.abs(item.team1_score - item.team2_score)}</ActualCell>
-      {/* Goal diff – predicted */}
+      {/* Goal diff */}
+      <ActualCell>{item.team1_score - item.team2_score}</ActualCell>
       <PredCell>
         {Math.abs(item.predicted_team1_score - item.predicted_team2_score)}
       </PredCell>
       <PtsCell points={item.goal_difference_points} />
+
+      {/* First goal in */}
+      <ActualCell>{fmtFirstGoalIn(item.first_goal_in)}</ActualCell>
+      <PredCell>{fmtFirstGoalIn(item.predicted_first_goal_in)}</PredCell>
+      <PtsCell points={item.first_goal_in_points} />
+
+      {/* First scoring team */}
+      <ActualCell>{fmtVal(item.first_scoring_team)}</ActualCell>
+      <PredCell>{fmtVal(item.predicted_first_scoring_team)}</PredCell>
+      <PtsCell points={item.first_scoring_team_points} />
 
       {/* Yellow cards */}
       <ActualCell>{fmtVal(item.yellow_card_count)}</ActualCell>
@@ -182,16 +189,6 @@ const ScoreRow = ({
       <PredCell>{item.predicted_kick_off_team}</PredCell>
       <PtsCell points={item.kick_off_team_points} />
 
-      {/* First goal in */}
-      <ActualCell>{fmtFirstGoalIn(item.first_goal_in)}</ActualCell>
-      <PredCell>{fmtFirstGoalIn(item.predicted_first_goal_in)}</PredCell>
-      <PtsCell points={item.first_goal_in_points} />
-
-      {/* First scoring team */}
-      <ActualCell>{fmtVal(item.first_scoring_team)}</ActualCell>
-      <PredCell>{fmtVal(item.predicted_first_scoring_team)}</PredCell>
-      <PtsCell points={item.first_scoring_team_points} />
-
       {/* Duration */}
       <ActualCell>{fmtDuration(item.match_duration)}</ActualCell>
       <PredCell>{fmtDuration(item.predicted_match_duration)}</PredCell>
@@ -205,11 +202,11 @@ const ScoreRow = ({
 const GROUP_COLS: { label: string; colSpan: number; color: string }[] = [
   { label: "Score", colSpan: 3, color: "bg-violet-50 text-violet-700 dark:bg-violet-950/50 dark:text-violet-400" },
   { label: "Goal Diff", colSpan: 3, color: "bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-400" },
+  { label: "First Goal in", colSpan: 3, color: "bg-lime-50 text-lime-700 dark:bg-lime-950/50 dark:text-lime-400" },
+  { label: "First Score by", colSpan: 3, color: "bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-400" },
   { label: "Yellow Card", colSpan: 3, color: "bg-amber-50 text-amber-700 dark:bg-amber-950/50 dark:text-amber-400" },
   { label: "Red Card", colSpan: 3, color: "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-400" },
   { label: "Kick-off", colSpan: 3, color: "bg-teal-50 text-teal-700 dark:bg-teal-950/50 dark:text-teal-400" },
-  { label: "First Goal in", colSpan: 3, color: "bg-lime-50 text-lime-700 dark:bg-lime-950/50 dark:text-lime-400" },
-  { label: "First Score by", colSpan: 3, color: "bg-orange-50 text-orange-700 dark:bg-orange-950/50 dark:text-orange-400" },
   { label: "Duration", colSpan: 3, color: "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-400" },
 ];
 
@@ -346,7 +343,7 @@ const UserPointsDetailModal = ({
                       rowSpan={2}
                       className="whitespace-nowrap border-r border-zinc-200 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:border-zinc-700 dark:text-zinc-500"
                     >
-                      #
+                      S.N.
                     </th>
                     <th
                       rowSpan={2}
@@ -458,7 +455,7 @@ const LeaderboardRow = ({
 }) => {
   return (
     <tr className="dark:hover:bg-zinc-800/40 transition-colors">
-      <td className="px-5 py-4 font-semibold text-zinc-950 dark:text-zinc-100">#{row.rank}</td>
+      <td className="px-5 py-4 font-semibold text-zinc-950 dark:text-zinc-100">{row.rank}</td>
       <td className="px-5 py-4">
         <button
           type="button"
@@ -470,20 +467,20 @@ const LeaderboardRow = ({
       </td>
       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.score_points}</td>
       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.goal_difference_points}</td>
-      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.kick_off_team_points}</td>
+      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.first_goal_in_points}</td>
+      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.first_scoring_team_points}</td>
       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.yellow_card_points}</td>
       <td className="px-5 py-4">
         <StatusPill tone={getPointsTone(row.red_card_points)}>
           {formatSignedNumber(row.red_card_points)}
         </StatusPill>
       </td>
-      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.first_goal_in_points}</td>
-      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.first_scoring_team_points}</td>
+      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.kick_off_team_points}</td>
       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.match_duration_points}</td>
       <td className="px-5 py-4 text-right font-semibold text-zinc-950 dark:text-zinc-100">
         {row.total_points}
       </td>
-      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
+      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300 text-right">
         {row.predicted_matches} / {completedMatches}
       </td>
     </tr>
@@ -514,7 +511,7 @@ const RaceChartRow = ({
 
   return (
     <div className="grid min-w-[42rem] grid-cols-[4rem_13rem_1fr_5rem_5rem] items-center gap-3 px-4 py-3 text-sm">
-      <div className="font-semibold text-zinc-950 dark:text-zinc-100">#{standing.rank}</div>
+      <div className="font-semibold text-zinc-950 dark:text-zinc-100">{standing.rank}</div>
       <div className="truncate font-medium text-indigo-600 hover:text-indigo-800 hover:underline transition-colors cursor-pointer text-left dark:text-indigo-400 dark:hover:text-indigo-300" onClick={() => onUserClick(standing.user_id, standing.name)}>{standing.name}</div>
       <div className="h-9 overflow-hidden rounded-md bg-zinc-100 dark:bg-zinc-700">
         <div
@@ -767,17 +764,17 @@ export const LeaderboardDashboard = () => {
               <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800/70 dark:text-zinc-400">
                 <tr>
                   <th className="px-5 py-3 dark:text-zinc-400">Rank</th>
-                  <th className="px-5 py-3 dark:text-zinc-400">User</th>
+                  <th className="px-5 py-3 dark:text-zinc-400 min-w-[150px]">User</th>
                   <th className="px-5 py-3 dark:text-zinc-400">Score</th>
-                  <th className="px-5 py-3 dark:text-zinc-400">Goal Diff</th>
-                  <th className="px-5 py-3 dark:text-zinc-400">Kick-off</th>
-                  <th className="px-5 py-3 dark:text-zinc-400">Yello Card</th>
-                  <th className="px-5 py-3 dark:text-zinc-400">Red Card</th>
-                  <th className="px-5 py-3 dark:text-zinc-400">First Score In</th>
-                  <th className="px-5 py-3 dark:text-zinc-400">First Score By</th>
+                  <th className="px-5 py-3 dark:text-zinc-400 min-w-[120px]">Goal Diff</th>
+                  <th className="px-5 py-3 dark:text-zinc-400 min-w-[160px]">First Score In</th>
+                  <th className="px-5 py-3 dark:text-zinc-400 min-w-[170px]">First Score By</th>
+                  <th className="px-5 py-3 dark:text-zinc-400 min-w-[140px]">Yello Card</th>
+                  <th className="px-5 py-3 dark:text-zinc-400 min-w-[120px]">Red Card</th>
                   <th className="px-5 py-3 dark:text-zinc-400">Duration</th>
-                  <th className="px-5 py-3 text-right dark:text-zinc-400">Total Points</th>
-                  <th className="px-5 py-3 text-right dark:text-zinc-400">Predicted Matches</th>
+                  <th className="px-5 py-3 dark:text-zinc-400 min-w-[110px]">Kick-off</th>
+                  <th className="px-5 py-3 text-right dark:text-zinc-400 min-w-[150px]">Total Points</th>
+                  <th className="px-5 py-3 text-right dark:text-zinc-400 min-w-[100px]">Predicted/ Completed</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">

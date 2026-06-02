@@ -747,26 +747,28 @@ export const PredictionsDashboard = () => {
           <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
             <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
               <tr>
-                <th className="px-5 py-3">Match</th>
+                <th className="px-5 py-3">S.N.</th>
+                <th className="px-5 py-3 text-center min-w-[300px]">Match</th>
                 <th className="px-5 py-3">Score</th>
-                <th className="px-5 py-3">First Goal in</th>
-                <th className="px-5 py-3">First Score by</th>
-                <th className="px-5 py-3">Yellow Card</th>
-                <th className="px-5 py-3">Red Card</th>
-                <th className="px-5 py-3">Kick-off</th>
-                <th className="px-5 py-3">Duration</th>
-                <th className="px-5 py-3 text-right">Submitted</th>
+                <th className="px-5 py-3 min-w-[170px]">First Goal in</th>
+                <th className="px-5 py-3 min-w-[170px]">First Score by</th>
+                <th className="px-5 py-3 min-w-[150px]">Yellow Card</th>
+                <th className="px-5 py-3 min-w-[120px]">Red Card</th>
+                <th className="px-5 py-3 min-w-[120px]">Kick-off</th>
+                <th className="px-5 py-3 min-w-[120px]">Duration</th>
+                <th className="px-5 py-3 text-right min-w-[150px]">Submitted</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {predictions.length > 0 ? (
-                predictions.map((prediction) => {
+                predictions.map((prediction, idx) => {
                   const predictionMatch = matches.find(
                     (match) => match.id === prediction.match_id,
                   );
 
                   return (
                     <tr key={prediction.id}>
+                      <td className="px-5 py-4">{idx + 1}</td>
                       <td className="px-5 py-4 font-medium text-zinc-950 dark:text-zinc-50">
                         {predictionMatch
                           ? getMatchLabelWithFlag(predictionMatch)
