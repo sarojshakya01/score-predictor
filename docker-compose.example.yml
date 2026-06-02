@@ -2,8 +2,8 @@
 # docker-compose.yml  –  Football Score Predictor
 #
 # Services
-#   backend   – FastAPI + APScheduler  (port 8000)
-#   frontend  – Next.js 16 standalone  (port 3000)
+#   backend   – FastAPI + APScheduler  (port 8025)
+#   frontend  – Next.js 16 standalone  (port 8026)
 #
 # The MySQL database runs on the HOST machine, not inside Docker.
 # On Linux the backend reaches it via host.docker.internal (enabled below).
@@ -29,12 +29,12 @@ services:
       # Allows containers to reach the host's MySQL on all platforms
       - "host.docker.internal:host-gateway"
     ports:
-      - "8025:8000"
+      - "8025:8025"
     networks:
       - sp_net
     healthcheck:
       test: ["CMD", "python", "-c",
-             "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+             "import urllib.request; urllib.request.urlopen('http://localhost:8026/health')"]
       interval: 15s
       timeout: 5s
       retries: 5
@@ -47,7 +47,7 @@ services:
       dockerfile: Dockerfile
       args:
         # Baked into the Next.js bundle at build time
-        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000/api/v1}
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8026/api/v1}
     container_name: sp_frontend
     restart: unless-stopped
     environment:
@@ -56,7 +56,7 @@ services:
       backend:
         condition: service_healthy
     ports:
-      - "8026:3000"
+      - "8026:8026"
     networks:
       - sp_net
 

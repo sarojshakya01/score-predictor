@@ -1,4 +1,4 @@
-const DEFAULT_API_BASE_URL = "http://localhost:8000/api/v1";
+const DEFAULT_API_BASE_URL = "http://localhost:8025/api/v1";
 
 export const DEFAULT_TIMEZONE = 'Asia/Kathmandu';
 export const API_BASE_URL = (

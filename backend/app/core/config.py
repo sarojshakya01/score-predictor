@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     located in the backend root directory.
     """
 
+    # ── App Port ─────────────────────────────────────────────────
+    PORT: int = 8025
+
     # ── Database ─────────────────────────────────────────────────
     DATABASE_URL: str = ""
 
@@ -24,12 +27,12 @@ class Settings(BaseSettings):
     EMAIL_PASS: str = "[PASSWORD]"
     EMAIL_SMTP: str = "smtp.gmail.com"
     EMAIL_PORT: int = 587
-    SITE_URL: str = "https://worldcup202.javra.com/"
+    SITE_URL: str = "http://localhost:8026/"
 
     API_BASE_PATH: str = "/api/v1"
 
     # ── CORS ─────────────────────────────────────────────────────
-    CORS_ORIGINS: list[str] = ["http://localhost:3000", "https://worldcup.javra.com"]
+    CORS_ORIGINS: list[str] = ["http://localhost:8025", "http://localhost:8026"]
 
     model_config = SettingsConfigDict(
         env_file=".env",

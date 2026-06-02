@@ -36,7 +36,7 @@ COPY --chown=appuser:appgroup . .
 
 USER appuser
 
-EXPOSE 8000
+EXPOSE 8025
 
 # DATABASE_URL, JWT_SECRET, EMAIL_* etc. are injected at runtime via .env / compose
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8025"]

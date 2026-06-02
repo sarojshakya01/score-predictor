@@ -23,6 +23,7 @@ app = FastAPI(
     version="1.0.0",
     description="Football Match Tournament Prediction Platform API",
     lifespan=lifespan,
+    port=settings.PORT or 8025,
 )
 
 # ── Middleware ───────────────────────────────────────────────────
