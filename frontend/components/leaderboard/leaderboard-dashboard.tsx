@@ -44,23 +44,15 @@ const getLoadErrorMessage = (error: unknown): string => {
 };
 
 const formatSignedNumber = (value: number): string => {
-  if (value < 0) {
-    return `-${value}`;
-  }
-
   return String(value);
 };
 
 const getPointsTone = (points: number): PillTone => {
   if (points > 0) {
-    return "secondary";
+    return "primary";
   }
 
-  if (points < 0) {
-    return "accent";
-  }
-
-  return "primary";
+  return "accent";
 };
 
 const getFrameMaxPoints = (frame: LeaderboardRaceFrameResponse): number => {
@@ -517,7 +509,7 @@ const RaceChartRow = ({
     standing.total_points < 0
       ? "bg-rose-600"
       : standing.match_points > 0
-        ? "bg-emerald-600"
+        ? "bg-tournament-primary-light"
         : "bg-zinc-500";
 
   return (

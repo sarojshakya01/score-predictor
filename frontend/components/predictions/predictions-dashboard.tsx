@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
+import { Modal } from "@/components/ui/modal";
 import { StatusPill } from "@/components/ui/status-pill";
 import { ApiError } from "@/lib/api";
 import { isAuthenticated, MissingAuthTokenError } from "@/lib/auth";
@@ -125,18 +126,6 @@ const hasAnyGoalPrediction = (
   );
 };
 
-const hasBothTeamGoalPrediction = (
-  state: Pick<PredictionFormState, "team1Score" | "team2Score">,
-): boolean => {
-  const team1Score = Number(state.team1Score);
-  const team2Score = Number(state.team2Score);
-
-  return (
-    (Number.isFinite(team1Score) && team1Score > 0) &&
-    (Number.isFinite(team2Score) && team2Score > 0)
-  );
-};
-
 const isMatchDuration = (value: string): value is MatchDuration => {
   return matchDurations.includes(value as MatchDuration);
 };
@@ -184,6 +173,8 @@ export const PredictionsDashboard = () => {
   const [predictions, setPredictions] = useState<PredictionResponse[]>([]);
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
+  const [pendingPredictionFields, setPendingPredictionFields] = useState<PredictionFields | null>(null);
 
   const selectedMatch = useMemo(
     () => matches.find((match) => match.id === selectedMatchId) ?? null,
@@ -201,7 +192,7 @@ export const PredictionsDashboard = () => {
     nextMatches: MatchResponse[],
     nextPredictions: PredictionResponse[],
   ) => {
-    const firstMatch = nextMatches[0] ?? null;
+    const firstMatch = nextMatches.find((match) => !match.match_locked) ?? null;
     const firstMatchPrediction = firstMatch
       ? nextPredictions.find(
         (prediction) => prediction.match_id === firstMatch.id,
@@ -305,7 +296,7 @@ export const PredictionsDashboard = () => {
         return {
           ...nextState,
           firstScoringTeamId: "",
-          isGoalInFirstHalf: "",
+          firstGoalIn: "",
         };
       }
 
@@ -354,6 +345,46 @@ export const PredictionsDashboard = () => {
     };
   };
 
+  const submitPrediction = async (predictionFields: PredictionFields) => {
+    if (!selectedMatch) return;
+    setIsSubmitting(true);
+    try {
+      const savedPrediction = selectedPrediction
+        ? await updatePrediction(selectedPrediction.id, predictionFields)
+        : await createPrediction({
+          ...predictionFields,
+          match_id: selectedMatch.id,
+        });
+
+      setPredictions((currentPredictions) => {
+        const existingIndex = currentPredictions.findIndex(
+          (prediction) => prediction.id === savedPrediction.id,
+        );
+        if (existingIndex === -1) {
+          return [savedPrediction, ...currentPredictions];
+        }
+        return currentPredictions.map((prediction) =>
+          prediction.id === savedPrediction.id ? savedPrediction : prediction,
+        );
+      });
+      setAuthRequired(false);
+      setSuccessMessage(
+        selectedPrediction
+          ? "Prediction updated successfully."
+          : "Prediction submitted successfully.",
+      );
+    } catch (error) {
+      if (error instanceof MissingAuthTokenError) {
+        setAuthRequired(true);
+      }
+      setFormError(
+        getErrorMessage(error, "Unable to save prediction. Please try again."),
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
@@ -375,47 +406,29 @@ export const PredictionsDashboard = () => {
       return;
     }
 
-    setIsSubmitting(true);
-
+    let predictionFields: PredictionFields;
     try {
-      const predictionFields = buildPredictionFields();
-      const savedPrediction = selectedPrediction
-        ? await updatePrediction(selectedPrediction.id, predictionFields)
-        : await createPrediction({
-          ...predictionFields,
-          match_id: selectedMatch.id,
-        });
-
-      setPredictions((currentPredictions) => {
-        const existingIndex = currentPredictions.findIndex(
-          (prediction) => prediction.id === savedPrediction.id,
-        );
-
-        if (existingIndex === -1) {
-          return [savedPrediction, ...currentPredictions];
-        }
-
-        return currentPredictions.map((prediction) =>
-          prediction.id === savedPrediction.id ? savedPrediction : prediction,
-        );
-      });
-      setAuthRequired(false);
-      setSuccessMessage(
-        selectedPrediction
-          ? "Prediction updated successfully."
-          : "Prediction submitted successfully.",
-      );
+      predictionFields = buildPredictionFields();
     } catch (error) {
-      if (error instanceof MissingAuthTokenError) {
-        setAuthRequired(true);
-      }
-
-      setFormError(
-        getErrorMessage(error, "Unable to save prediction. Please try again."),
-      );
-    } finally {
-      setIsSubmitting(false);
+      setFormError(getErrorMessage(error, "Invalid prediction values."));
+      return;
     }
+
+    // Always show confirmation modal before saving
+    setPendingPredictionFields(predictionFields);
+    setShowUpdateConfirm(true);
+  };
+
+  const handleConfirmSubmit = async () => {
+    if (!pendingPredictionFields) return;
+    setShowUpdateConfirm(false);
+    await submitPrediction(pendingPredictionFields);
+    setPendingPredictionFields(null);
+  };
+
+  const handleCancelSubmit = () => {
+    setShowUpdateConfirm(false);
+    setPendingPredictionFields(null);
   };
 
   const handleCardClick = (match: MatchResponse) => {
@@ -469,7 +482,6 @@ export const PredictionsDashboard = () => {
   const isFormDisabled =
     isSubmitting || authRequired || !selectedMatch || selectedStatus === "Locked";
   const hasAnyPredictedGoals = hasAnyGoalPrediction(formState);
-  const hasBothTeamsPredictedGoals = hasBothTeamGoalPrediction(formState);
 
   const inputCls = "mt-1 h-11 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-emerald-900";
   const selectCls = "mt-1 h-11 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:disabled:bg-zinc-700 dark:disabled:text-zinc-500 dark:focus:ring-emerald-900";
@@ -576,7 +588,7 @@ export const PredictionsDashboard = () => {
           <ImageWithFallback width={525} height={525} src={"/images/players/" + selectedMatch?.team1_name_short?.toLowerCase() + ".png"} alt={selectedMatch?.team1_name || "Captain Image"} />
         </div>{""}
         <form
-          className="relative w-full lg:max-w-2xl rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 p-4 sm:p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
+          className={(selectedStatus === "Locked" ? "opacity-50 " : "") + "relative w-full lg:max-w-2xl rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 p-4 sm:p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"}
           onSubmit={handleSubmit}
         >
           <div className="flex flex-wrap items-center justify-center gap-3">
@@ -633,7 +645,7 @@ export const PredictionsDashboard = () => {
             {/* First Goal in */}
             <label className="flex flex-col gap-1">
               <span className={labelTextCls}>First Goal in</span>
-              <select disabled={!hasAnyPredictedGoals} name="first_goal_in" required={hasAnyPredictedGoals} value={hasAnyPredictedGoals ? formState.firstGoalIn : ""} onChange={(e) => updateField("firstGoalIn", e.target.value)} className={selectCls}>
+              <select disabled={!hasAnyPredictedGoals} name="first_goal_in" value={hasAnyPredictedGoals ? formState.firstGoalIn : ""} onChange={(e) => updateField("firstGoalIn", e.target.value)} className={selectCls}>
                 <option value="">{hasAnyPredictedGoals ? "Select Time" : "N/A"}</option>
                 {selectedMatch && selectedMatch.match_stage === "GROUP" && firstGoalIns.filter((fg) => fg !== "ET").map((fg) => <option key={fg} value={fg}>{firstGoalInLabels[fg]}</option>)}
                 {selectedMatch && selectedMatch.match_stage !== "GROUP" && firstGoalIns.map((fg) => <option key={fg} value={fg}>{firstGoalInLabels[fg]}</option>)}
@@ -643,8 +655,8 @@ export const PredictionsDashboard = () => {
             {/* First Scoring Team */}
             <label className="flex flex-col gap-1">
               <span className={labelTextCls}>First Score by</span>
-              <select disabled={!hasBothTeamsPredictedGoals} name="first_scoring_team_id" required={hasBothTeamsPredictedGoals} value={hasBothTeamsPredictedGoals ? formState.firstScoringTeamId : ""} onChange={(e) => updateField("firstScoringTeamId", e.target.value)} className={selectCls}>
-                <option value="">{hasBothTeamsPredictedGoals ? "Select Team" : "N/A"}</option>
+              <select disabled={!hasAnyPredictedGoals} name="first_scoring_team_id" value={hasAnyPredictedGoals ? formState.firstScoringTeamId : ""} onChange={(e) => updateField("firstScoringTeamId", e.target.value)} className={selectCls}>
+                <option value="">{hasAnyPredictedGoals ? "Select Time" : "N/A"}</option>
                 {selectedMatch && (<>
                   {Number(formState.team1Score || 0) > 0 && <option value={selectedMatch.team1_id}>{selectedMatch.team1_name}</option>}
                   {Number(formState.team2Score || 0) > 0 && <option value={selectedMatch.team2_id}>{selectedMatch.team2_name}</option>}
@@ -809,6 +821,89 @@ export const PredictionsDashboard = () => {
           </table>
         </div>
       </section >
+
+      {/* Prediction Confirmation Modal */}
+      <Modal
+        isOpen={showUpdateConfirm}
+        onClose={handleCancelSubmit}
+        title={selectedPrediction ? "Update Prediction" : "Confirm Prediction"}
+      >
+        <div className="flex flex-col gap-5">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            {selectedPrediction ? (
+              <>
+                You are about to{" "}
+                <span className="font-semibold text-zinc-900 dark:text-zinc-100">change</span>{" "}
+                your prediction for{" "}
+                <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                  {selectedMatch ? getMatchLabelText(selectedMatch) : "this match"}
+                </span>
+                . This will overwrite your existing prediction.
+              </>
+            ) : (
+              <>
+                You are about to{" "}
+                <span className="font-semibold text-zinc-900 dark:text-zinc-100">submit</span>{" "}
+                your prediction for{" "}
+                <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                  {selectedMatch ? getMatchLabelText(selectedMatch) : "this match"}
+                </span>
+                . Please review before confirming.
+              </>
+            )}
+          </p>
+
+          {pendingPredictionFields && selectedMatch && (
+            <div className="rounded-md border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+              <div className="bg-zinc-50 dark:bg-zinc-800 px-4 py-2 border-b border-zinc-200 dark:border-zinc-700">
+                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Your Prediction
+                </p>
+              </div>
+              <dl className="grid grid-cols-2 gap-px bg-zinc-200 dark:bg-zinc-700">
+                {([
+                  [`${selectedMatch.team1_name} Score`, pendingPredictionFields.team1_score],
+                  [`${selectedMatch.team2_name} Score`, pendingPredictionFields.team2_score],
+                  ["First Goal In", pendingPredictionFields.first_goal_in ? firstGoalInLabels[pendingPredictionFields.first_goal_in] : "N/A"],
+                  ["First Score By", pendingPredictionFields.first_scoring_team_id
+                    ? getTeamNameById(selectedMatch, pendingPredictionFields.first_scoring_team_id)
+                    : "N/A"],
+                  ["Yellow Cards", String(pendingPredictionFields.yellow_card_count)],
+                  ["Red Cards", String(pendingPredictionFields.red_card_count)],
+                  ["Kick-off Team", pendingPredictionFields.kick_off_team_id ? getTeamNameById(selectedMatch, pendingPredictionFields.kick_off_team_id) : "N/A"],
+                  ["Duration", matchDurationLabels[pendingPredictionFields.match_duration]],
+
+                ] as [string, string][]).map(([label, value]) => (
+                  <div key={label} className="flex flex-col gap-0.5 bg-white dark:bg-zinc-900 px-4 py-3">
+                    <dt className="text-xs text-zinc-500 dark:text-zinc-400">{label}</dt>
+                    <dd className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-1">
+            <button
+              type="button"
+              onClick={handleCancelSubmit}
+              className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleConfirmSubmit()}
+              disabled={isSubmitting}
+              className="inline-flex h-10 items-center gap-2 justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400"
+            >
+              {isSubmitting
+                ? (selectedPrediction ? "Updating..." : "Submitting...")
+                : (selectedPrediction ? "Confirm Update" : "Confirm & Submit")}
+            </button>
+          </div>
+        </div>
+      </Modal>
     </>
   );
 };

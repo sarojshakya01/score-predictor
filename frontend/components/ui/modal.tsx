@@ -17,18 +17,22 @@ export const Modal = ({ children, isOpen, onClose, title, isLarge = false }: Mod
 
     if (isOpen) {
       if (!dialog.open) {
+        const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
         dialog.showModal();
         document.body.style.overflow = "hidden";
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
       }
     } else {
       if (dialog.open) {
         dialog.close();
         document.body.style.overflow = "";
+        document.body.style.paddingRight = "";
       }
     }
 
     return () => {
       document.body.style.overflow = "";
+      document.body.style.paddingRight = "";
     };
   }, [isOpen]);
 
