@@ -47,7 +47,7 @@ class MatchService:
 
             if not is_admin and match_day is None and match_stage is None:
                 setting = await self._setting_repository.get_by_name("current_match_day")
-                match_day = int(setting.value) if setting else None
+                match_day = int(setting.value["day"]) if setting else None
 
             matches = await self._match_repository.list_matches(
                 offset=offset,

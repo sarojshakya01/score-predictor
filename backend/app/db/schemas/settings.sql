@@ -3,7 +3,7 @@ CREATE TABLE settings (
 
     name VARCHAR(100) NOT NULL UNIQUE,
     friendly_name VARCHAR(100) NOT NULL,
-    value TEXT NOT NULL,
+    value JSON NOT NULL,
 
     -- TimestampMixin fields
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -16,9 +16,6 @@ CREATE TABLE settings (
 
     CONSTRAINT ck_settings_friendly_name_not_empty
         CHECK (CHAR_LENGTH(friendly_name) > 0),
-
-    CONSTRAINT ck_settings_value_not_empty
-        CHECK (CHAR_LENGTH(`value`) > 0),
 
     -- Index
     INDEX ix_settings_name (name)

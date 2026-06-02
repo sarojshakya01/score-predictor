@@ -1,6 +1,6 @@
 """Setting SQLAlchemy model."""
 
-from sqlalchemy import CheckConstraint, String, Text
+from sqlalchemy import CheckConstraint, JSON, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin
@@ -21,20 +21,20 @@ class Setting(TimestampMixin, Base):
         nullable=False,
         index=True,
     )
-    friendly_name: Mapped[str | None] = mapped_column(
+    friendly_name: Mapped[str] = mapped_column(
         String(100),
-        nullable=True,
+        nullable=False,
     )
-    value: Mapped[str] = mapped_column(
-        Text,
+    value: Mapped[dict] = mapped_column(
+        JSON,
         nullable=False,
     )
 
     __table_args__ = (
         CheckConstraint("CHAR_LENGTH(name) > 0", name="ck_settings_name_not_empty"),
         CheckConstraint(
-            "CHAR_LENGTH(`value`) > 0",
-            name="ck_settings_value_not_empty",
+            "CHAR_LENGTH(friendly_name) > 0",
+            name="ck_settings_friendly_name_not_empty",
         ),
     )
 

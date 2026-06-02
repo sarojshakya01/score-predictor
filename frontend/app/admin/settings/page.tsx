@@ -1,7 +1,9 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
+import { ConfirmModal } from "@/components/ui/confirm-modal";
+import { IconCancel, IconPencil, IconPlus, IconSave, IconSearch, IconTrash, IconX } from "@/components/ui/icons";
 import { Modal } from "@/components/ui/modal";
 import { getErrorMessage } from "@/lib/forms/error-message";
 import {
@@ -11,17 +13,46 @@ import {
   updateSetting,
 } from "@/lib/settings";
 import type { SettingCreate, SettingResponse } from "@/lib/settings";
-import { ConfirmModal } from "@/components/ui/confirm-modal";
-import { IconCancel, IconPencil, IconPlus, IconSave, IconSearch, IconTrash, IconX } from "@/components/ui/icons";
 
-const emptyFormState: SettingCreate = {
-  name: "",
-  friendly_name: "",
-  value: "",
+// ── helpers ───────────────────────────────────────────────────────────────────
+
+const prettyJson = (v: Record<string, unknown>): string =>
+  JSON.stringify(v, null, 2);
+
+const tryParseJson = (raw: string): { ok: true; value: Record<string, unknown> } | { ok: false; error: string } => {
+  try {
+    const parsed = JSON.parse(raw);
+    if (typeof parsed !== "object" || Array.isArray(parsed) || parsed === null) {
+      return { ok: false, error: "Value must be a JSON object { … }" };
+    }
+    if (Object.keys(parsed).length === 0) {
+      return { ok: false, error: "Value object must not be empty" };
+    }
+    return { ok: true, value: parsed as Record<string, unknown> };
+  } catch {
+    return { ok: false, error: "Invalid JSON — please check your syntax" };
+  }
 };
 
-const inputCls = "mt-2 h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-400 dark:focus:ring-zinc-700";
+// ── form state ────────────────────────────────────────────────────────────────
+
+type FormState = {
+  name: string;
+  friendly_name: string;
+  valueRaw: string; // textarea string — parsed on submit
+};
+
+const emptyForm: FormState = {
+  name: "",
+  friendly_name: "",
+  valueRaw: "{\n  \n}",
+};
+
+const inputCls =
+  "mt-2 h-11 w-full rounded-md border border-zinc-300 bg-white px-3 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-400 dark:focus:ring-zinc-700";
 const labelCls = "text-sm font-medium text-zinc-700 dark:text-zinc-300";
+
+// ── component ─────────────────────────────────────────────────────────────────
 
 const AdminSettingsPage = () => {
   const [settings, setSettings] = useState<SettingResponse[]>([]);
@@ -31,55 +62,49 @@ const AdminSettingsPage = () => {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSettingId, setEditingSettingId] = useState<number | null>(null);
-  const [formState, setFormState] = useState<SettingCreate>(emptyFormState);
+  const [formState, setFormState] = useState<FormState>(emptyForm);
+  const [jsonError, setJsonError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
   const [isDeletingId, setIsDeletingId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SettingResponse | null>(null);
 
+  // load
   useEffect(() => {
     let isMounted = true;
-
-    const loadSettings = async () => {
+    const load = async () => {
       setIsLoading(true);
       setLoadError(null);
-
       try {
-        const settingList = await listSetting({ limit: 100 });
-        if (isMounted) {
-          setSettings(settingList.items);
-        }
-      } catch (error) {
-        if (isMounted) {
-          setLoadError(getErrorMessage(error, "Unable to load settings."));
-        }
+        const res = await listSetting({ limit: 100 });
+        if (isMounted) setSettings(res.items);
+      } catch (err) {
+        if (isMounted) setLoadError(getErrorMessage(err, "Unable to load settings."));
       } finally {
         if (isMounted) setIsLoading(false);
       }
     };
-
-    void loadSettings();
+    void load();
     return () => { isMounted = false; };
   }, []);
 
+  // search
   const filteredSettings = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return settings;
-    return settings.filter((s) =>
-      s.name.toLowerCase().includes(q) ||
-      s.friendly_name.toLowerCase().includes(q) ||
-      s.value.toLowerCase().includes(q)
+    return settings.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        s.friendly_name.toLowerCase().includes(q),
     );
   }, [settings, searchQuery]);
 
-  const handleSearch = (value: string) => {
-    setSearchQuery(value);
-  };
-
+  // modal open/close
   const handleOpenCreateModal = () => {
     setEditingSettingId(null);
-    setFormState(emptyFormState);
+    setFormState(emptyForm);
+    setJsonError(null);
     setFormError(null);
     setIsModalOpen(true);
   };
@@ -89,56 +114,85 @@ const AdminSettingsPage = () => {
     setFormState({
       name: setting.name,
       friendly_name: setting.friendly_name,
-      value: setting.value,
+      valueRaw: prettyJson(setting.value),
     });
+    setJsonError(null);
     setFormError(null);
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => setIsModalOpen(false);
 
-  const updateField = (field: keyof SettingCreate, value: string) => {
-    setFormState((prev) => ({ ...prev, [field]: value }));
+  // field update
+  const updateField = useCallback(
+    (field: keyof FormState, val: string) => {
+      setFormState((prev) => ({ ...prev, [field]: val }));
+      if (field === "valueRaw") setJsonError(null);
+    },
+    [],
+  );
+
+  // pretty-print button
+  const handlePrettyPrint = () => {
+    const result = tryParseJson(formState.valueRaw);
+    if (result.ok) {
+      setFormState((prev) => ({ ...prev, valueRaw: prettyJson(result.value) }));
+      setJsonError(null);
+    } else {
+      setJsonError(result.error);
+    }
   };
 
+  // submit
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setFormError(null);
-    setIsSubmitting(true);
 
+    const parsed = tryParseJson(formState.valueRaw);
+    if (!parsed.ok) {
+      setJsonError(parsed.error);
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      const savedSetting = editingSettingId
-        ? await updateSetting(editingSettingId, formState)
-        : await createSetting(formState);
+      const payload: SettingCreate = {
+        name: formState.name,
+        friendly_name: formState.friendly_name,
+        value: parsed.value,
+      };
+
+      const saved = editingSettingId
+        ? await updateSetting(editingSettingId, payload)
+        : await createSetting(payload);
 
       setSettings((current) => {
         if (editingSettingId) {
-          return current.map((s) => (s.id === savedSetting.id ? savedSetting : s));
+          return current.map((s) => (s.id === saved.id ? saved : s));
         }
-        return [...current, savedSetting].sort((a, b) => a.name.localeCompare(b.name));
+        return [...current, saved].sort((a, b) => a.name.localeCompare(b.name));
       });
       setIsModalOpen(false);
-    } catch (error) {
-      setFormError(getErrorMessage(error, "Unable to save setting."));
+    } catch (err) {
+      setFormError(getErrorMessage(err, "Unable to save setting."));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleDeleteClick = (setting: SettingResponse) => {
-    setDeleteTarget(setting);
-  };
+  // delete
+  const handleDeleteClick = (setting: SettingResponse) => setDeleteTarget(setting);
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
-    const setting = deleteTarget;
+    const target = deleteTarget;
     setDeleteTarget(null);
-    setIsDeletingId(setting.id);
+    setIsDeletingId(target.id);
     try {
-      await deleteSetting(setting.id);
-      setSettings((current) => current.filter((s) => s.id !== setting.id));
-    } catch (error) {
-      setLoadError(getErrorMessage(error, "Unable to delete setting."));
+      await deleteSetting(target.id);
+      setSettings((current) => current.filter((s) => s.id !== target.id));
+    } catch (err) {
+      setLoadError(getErrorMessage(err, "Unable to delete setting."));
     } finally {
       setIsDeletingId(null);
     }
@@ -148,35 +202,36 @@ const AdminSettingsPage = () => {
 
   return (
     <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+      {/* header */}
       <section className="flex flex-wrap items-center justify-between gap-3">
-        <div><h2 className="text-zinc-950 dark:text-zinc-50">App Configurations</h2></div>
+        <h2 className="text-zinc-950 dark:text-zinc-50">App Configurations</h2>
         <button
-          className="inline-flex h-10 items-center gap-2 rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition cursor-pointer hover:bg-tournament-primary"
           type="button"
           onClick={handleOpenCreateModal}
+          className="inline-flex h-10 items-center gap-2 rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:opacity-90"
         >
           <IconPlus className="h-4 w-4" />
           New Setting
         </button>
       </section>
 
-      {/* Search bar */}
+      {/* search */}
       <div className="relative">
-        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-zinc-400 dark:text-zinc-500">
+        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-zinc-400">
           <IconSearch className="h-4 w-4" />
         </span>
         <input
           type="search"
           value={searchQuery}
-          onChange={(e) => handleSearch(e.target.value)}
-          placeholder="Search by name, friendly name, or value…"
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by name or friendly name…"
           className="h-10 w-full rounded-md border border-zinc-200 bg-white pl-9 pr-9 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:ring-emerald-900"
         />
         {isSearchActive && (
           <button
             type="button"
             aria-label="Clear search"
-            onClick={() => handleSearch("")}
+            onClick={() => setSearchQuery("")}
             className="absolute inset-y-0 right-3 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
           >
             <IconX className="h-4 w-4" />
@@ -184,18 +239,19 @@ const AdminSettingsPage = () => {
         )}
       </div>
 
-      {loadError ? (
-        <section className="rounded-md border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-400">
+      {loadError && (
+        <p className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-400">
           {loadError}
-        </section>
-      ) : null}
+        </p>
+      )}
 
+      {/* table */}
       <section className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
         {isSearchActive && (
           <div className="border-b border-zinc-100 px-5 py-2.5 text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
             {filteredSettings.length === 0
               ? `No settings match "${searchQuery}"`
-              : `${filteredSettings.length} of ${settings.length} setting${settings.length !== 1 ? "s" : ""} match "${searchQuery}"`}
+              : `${filteredSettings.length} of ${settings.length} settings match "${searchQuery}"`}
           </div>
         )}
         <div className="overflow-x-auto">
@@ -205,7 +261,7 @@ const AdminSettingsPage = () => {
                 <th className="px-5 py-3">S.N.</th>
                 <th className="px-5 py-3">Name</th>
                 <th className="px-5 py-3">Friendly Name</th>
-                <th className="px-5 py-3">Value</th>
+                <th className="px-5 py-3">Value (JSON)</th>
                 <th className="px-5 py-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -219,29 +275,33 @@ const AdminSettingsPage = () => {
               ) : filteredSettings.length > 0 ? (
                 filteredSettings.map((setting, idx) => (
                   <tr key={setting.id} className="transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40">
-                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{idx + 1}</td>
-                    <td className="px-5 py-4 font-medium text-zinc-950 dark:text-zinc-100">
+                    <td className="px-5 py-4 text-zinc-500 dark:text-zinc-400">{idx + 1}</td>
+                    <td className="px-5 py-4 font-mono text-xs font-medium text-zinc-950 dark:text-zinc-100">
                       {setting.name}
                     </td>
                     <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{setting.friendly_name}</td>
-                    <td className="max-w-xs truncate px-5 py-4 text-zinc-700 dark:text-zinc-300">{setting.value}</td>
+                    <td className="max-w-xs px-5 py-4">
+                      <pre className="max-h-[150px] overflow-x-auto whitespace-pre-wrap break-all rounded bg-zinc-50 px-2 py-1 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400">
+                        {prettyJson(setting.value)}
+                      </pre>
+                    </td>
                     <td className="px-5 py-4 text-right">
                       <div className="flex justify-end gap-3">
                         <button
                           title="Edit"
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-50 cursor-pointer transition dark:text-emerald-400 dark:hover:bg-emerald-950"
                           type="button"
                           onClick={() => handleOpenEditModal(setting)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-emerald-700 transition hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950"
                         >
                           <IconPencil className="h-4 w-4" />
                           <span className="sr-only">Edit</span>
                         </button>
                         <button
                           title="Delete"
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-700 hover:bg-rose-50 cursor-pointer transition disabled:opacity-40 dark:text-rose-400 dark:hover:bg-rose-950"
-                          disabled={isDeletingId === setting.id}
                           type="button"
+                          disabled={isDeletingId === setting.id}
                           onClick={() => handleDeleteClick(setting)}
+                          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-700 transition hover:bg-rose-50 disabled:opacity-40 dark:text-rose-400 dark:hover:bg-rose-950"
                         >
                           <IconTrash className="h-4 w-4" />
                           <span className="sr-only">Delete</span>
@@ -252,7 +312,7 @@ const AdminSettingsPage = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={4} className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400">
+                  <td colSpan={5} className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400">
                     {isSearchActive ? `No settings match "${searchQuery}".` : "No settings found."}
                   </td>
                 </tr>
@@ -262,16 +322,22 @@ const AdminSettingsPage = () => {
         </div>
       </section>
 
+      {/* delete confirm */}
       <ConfirmModal
         isOpen={deleteTarget !== null}
         title="Delete Setting"
-        message={deleteTarget ? `Are you sure you want to delete "${deleteTarget.name}"? This action cannot be undone.` : ""}
+        message={
+          deleteTarget
+            ? `Are you sure you want to delete "${deleteTarget.name}"? This action cannot be undone.`
+            : ""
+        }
         confirmLabel="Delete"
         isDangerous
         onConfirm={() => void handleDeleteConfirm()}
         onCancel={() => setDeleteTarget(null)}
       />
 
+      {/* create / edit modal */}
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -285,9 +351,11 @@ const AdminSettingsPage = () => {
               required
               value={formState.name}
               onChange={(e) => updateField("name", e.target.value)}
+              placeholder="e.g. game_rules"
               className={inputCls}
             />
           </label>
+
           <label className="block">
             <span className={labelCls}>Friendly Name</span>
             <input
@@ -295,31 +363,54 @@ const AdminSettingsPage = () => {
               required
               value={formState.friendly_name}
               onChange={(e) => updateField("friendly_name", e.target.value)}
+              placeholder="e.g. Game Rules"
               className={inputCls}
             />
           </label>
-          <label className="block">
-            <span className={labelCls}>Value</span>
-            <textarea
-              rows={4}
-              required
-              value={formState.value}
-              onChange={(e) => updateField("value", e.target.value)}
-              className="mt-2 w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-400 dark:focus:ring-zinc-700"
-            />
-          </label>
 
-          {formError ? (
-            <p className="mt-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-400">
+          {/* JSON value editor */}
+          <div className="block">
+            <div className="flex items-center justify-between">
+              <span className={labelCls}>Value (JSON)</span>
+              <button
+                type="button"
+                onClick={handlePrettyPrint}
+                className="text-xs font-medium text-tournament-primary hover:underline"
+              >
+                Format JSON
+              </button>
+            </div>
+            <textarea
+              rows={10}
+              required
+              spellCheck={false}
+              value={formState.valueRaw}
+              onChange={(e) => updateField("valueRaw", e.target.value)}
+              placeholder={'{\n  "key": "value"\n}'}
+              className={`mt-2 w-full rounded-md border font-mono text-xs ${jsonError
+                ? "border-rose-400 focus:ring-rose-200 dark:border-rose-600 dark:focus:ring-rose-900"
+                : "border-zinc-300 focus:border-tournament-primary focus:ring-emerald-100 dark:border-zinc-600 dark:focus:border-zinc-400 dark:focus:ring-zinc-700"
+                } bg-white px-3 py-2 text-zinc-950 outline-none transition focus:ring-2 dark:bg-zinc-800 dark:text-zinc-100`}
+            />
+            {jsonError && (
+              <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{jsonError}</p>
+            )}
+            <p className="mt-1 text-xs text-zinc-400 dark:text-zinc-500">
+              Must be a valid JSON object. Use <code className="font-mono">{"{ }"}</code> at the top level.
+            </p>
+          </div>
+
+          {formError && (
+            <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-400">
               {formError}
             </p>
-          ) : null}
+          )}
 
-          <div className="mt-4 flex justify-end gap-3">
+          <div className="mt-2 flex justify-end gap-3">
             <button
               type="button"
               onClick={handleCloseModal}
-              className="inline-flex h-11 px-4 items-center gap-2 justify-center rounded-md border cursor-pointer border-zinc-200 bg-white text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:bg-zinc-700"
+              className="inline-flex h-11 items-center gap-2 rounded-md border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
             >
               <IconCancel className="h-4 w-4" />
               Cancel
@@ -327,7 +418,7 @@ const AdminSettingsPage = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="inline-flex h-11 px-4 items-center gap-2 cursor-pointer rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400"
+              className="inline-flex h-11 items-center gap-2 rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:bg-zinc-400"
             >
               <IconSave className="h-4 w-4" />
               {isSubmitting ? "Saving…" : "Save Setting"}

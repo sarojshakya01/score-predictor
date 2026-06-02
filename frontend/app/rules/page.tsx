@@ -2,67 +2,102 @@
 
 import { useEffect, useState } from "react";
 import { PageShell } from "@/components/ui/page-shell";
-import { listRules } from "@/lib/settings";
+import { getGameRules } from "@/lib/settings";
+import type { GameRuleGroup, GameRuleEntry } from "@/lib/settings";
 
-export type RuleBand = {
-  items: string[];
-  title: string;
-};
+/** Replace the <points> placeholder. Notes (points === 0) are left as-is. */
+const resolveInstruction = (entry: GameRuleEntry): string =>
+  entry.instruction.replace("<points>", String(Math.abs(entry.points)));
 
 const RulesPage = () => {
-  const [ruleBands, setRuleBands] = useState<RuleBand[]>([]);
+  const [groups, setGroups] = useState<GameRuleGroup[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
-    const loadRules = async () => {
+    const load = async () => {
       try {
-        const response = await listRules();
-        if (!isMounted) return;
-        const bands = response.items.map(item => ({
-          id: item.id,
-          title: item.friendly_name,
-          items: item.value.split(",").map(line => line.trim()).filter(line => line.length > 0)
-        }));
-        bands.sort((a, b) => (a.id - b.id));
-        setRuleBands(bands);
+        const res = await getGameRules();
+        // sort by the order field defined in the JSON
+        const sorted = [...res.rules].sort((a, b) => a.order - b.order);
+        if (isMounted) setGroups(sorted);
       } catch {
-        if (isMounted) setError("Failed to load rules.");
+        if (isMounted) setError("Failed to load rules. Please try again later.");
       } finally {
         if (isMounted) setIsLoading(false);
       }
     };
-    void loadRules();
+    void load();
     return () => { isMounted = false; };
   }, []);
 
   return (
     <PageShell
       eyebrow="Rules"
-      subtitle="Scoring bands used for match predictions and leaderboard totals."
+      subtitle="Scoring rules used for match predictions and leaderboard totals."
       title="Prediction Rules"
     >
-      {error ? (
+      {error && (
         <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-300">
           {error}
         </div>
-      ) : null}
+      )}
 
       {isLoading ? (
-        <div className="text-sm text-zinc-500 dark:text-zinc-400">Loading rules...</div>
+        <div className="text-sm text-zinc-500 dark:text-zinc-400">Loading rules…</div>
+      ) : groups.length === 0 && !error ? (
+        <div className="text-sm text-zinc-500 dark:text-zinc-400">No rules configured yet.</div>
       ) : (
-        <section className="grid gap-4 lg:grid-cols-2">
-          {ruleBands.map((band) => (
-            <article key={band.title} className="rounded-md border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-              <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">{band.title}</h2>
-              <ul className="mt-4 space-y-3 text-sm leading-6 text-zinc-700 dark:text-zinc-300">
-                {band.items.map((item, index) => (
-                  <li key={`${band.title}-${index}`} className="flex gap-3">
-                    <span className="mt-2 h-2 w-2 shrink-0 rounded-full bg-tournament-secondary" />
-                    <span>{item}</span>
-                  </li>
-                ))}
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {groups.map((group) => (
+            <article
+              key={group.name}
+              className="flex flex-col rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
+            >
+              {/* group header */}
+              <header className="border-b border-zinc-100 px-4 py-3 dark:border-zinc-800">
+                <h2 className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">
+                  {group.friend_name}
+                </h2>
+              </header>
+
+              {/* rule entries */}
+              <ul className="flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800">
+                {[...group.rules]
+                  .sort((a, b) => a.order - b.order)
+                  .map((entry, idx) => {
+                    const isNote = entry.points === 0;
+                    return (
+                      <li
+                        key={idx}
+                        className="flex items-start gap-3 px-4 py-3"
+                      >
+                        {isNote ? (
+                          /* note row — no badge, italic muted text */
+                          <p className="text-xs italic leading-5 text-zinc-400 dark:text-zinc-500">
+                            {entry.instruction}
+                          </p>
+                        ) : (
+                          <>
+                            {/* points badge */}
+                            <span
+                              className={`mt-0.5 shrink-0 inline-flex min-w-[2.5rem] items-center justify-center rounded-full px-1.5 py-0.5 text-xs font-bold tabular-nums ${
+                                entry.points > 0
+                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
+                                  : "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300"
+                              }`}
+                            >
+                              {entry.points > 0 ? `+${entry.points}` : entry.points}
+                            </span>
+                            <p className="text-sm leading-5 text-zinc-700 dark:text-zinc-300">
+                              {resolveInstruction(entry)}
+                            </p>
+                          </>
+                        )}
+                      </li>
+                    );
+                  })}
               </ul>
             </article>
           ))}

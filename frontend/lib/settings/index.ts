@@ -1,15 +1,23 @@
 export {
   createSetting,
   deleteSetting,
+  getGameRules,
+  getMatchDay,
   listSetting,
-  listRules,
   settingService,
   updateSetting,
 } from "@/lib/settings/setting-service";
 export type {
+  GameRuleEntry,
+  GameRuleGroup,
+  GameRulesResponse,
+  GameRulesValue,
   ListSettingsParams,
+  MatchDayResponse,
+  MatchDayValue,
   SettingCreate,
   SettingListResponse,
   SettingResponse,
   SettingUpdate,
 } from "@/lib/settings/types";
+export { asGameRulesValue, asMatchDayValue } from "@/lib/settings/types";

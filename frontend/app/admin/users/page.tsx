@@ -310,7 +310,7 @@ const AdminUsersPage = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400">
+                  <td colSpan={6} className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400">
                     {isSearchActive ? `No users match "${searchQuery}".` : "No users found."}
                   </td>
                 </tr>

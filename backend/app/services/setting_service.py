@@ -1,6 +1,5 @@
 """Setting business logic."""
 
-from app.schemas.setting import MatchDayResponse
 import logging
 
 from fastapi import HTTPException, status
@@ -10,6 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.setting import Setting
 from app.repositories.setting_repository import SettingRepository
 from app.schemas.setting import (
+    GameRuleGroup,
+    GameRulesResponse,
+    MatchDayResponse,
     SettingCreate,
     SettingListResponse,
     SettingResponse,
@@ -17,6 +19,7 @@ from app.schemas.setting import (
 )
 
 logger = logging.getLogger(__name__)
+
 
 class SettingService:
     """Handles setting validation and orchestration."""
@@ -46,7 +49,6 @@ class SettingService:
                 offset=offset,
             )
         except HTTPException:
-            # Re-raise FastAPI HTTP exceptions
             raise
         except Exception as e:
             logger.exception("Unexpected error during list_settings", e)
@@ -112,10 +114,31 @@ class SettingService:
         setting = await self._get_setting_or_404(setting_id)
         await self._setting_repository.delete(setting)
 
-    async def get_current_match_day(self, setting_name: str) -> MatchDayResponse:
-        """Get current match day."""
-        setting = await self._get_setting_or_404_by_name(setting_name)
-        return MatchDayResponse.model_validate({'value': int(setting.value) if setting.value else 0})
+    async def get_current_match_day(self) -> MatchDayResponse:
+        """Return the current match day extracted from the JSON value."""
+        setting = await self._get_setting_or_404_by_name("current_match_day")
+        try:
+            day = int(setting.value["day"])
+        except (KeyError, TypeError, ValueError) as exc:
+            logger.exception("Malformed current_match_day setting value")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="current_match_day setting is misconfigured",
+            ) from exc
+        return MatchDayResponse(value=day)
+
+    async def get_game_rules(self) -> GameRulesResponse:
+        """Return the parsed game_rules setting."""
+        setting = await self._get_setting_or_404_by_name("game_rules")
+        try:
+            rules = [GameRuleGroup(**r) for r in setting.value["rules"]]
+        except (KeyError, TypeError, ValueError) as exc:
+            logger.exception("Malformed game_rules setting value")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="game_rules setting is misconfigured",
+            ) from exc
+        return GameRulesResponse(rules=rules)
 
     async def _get_setting_or_404(self, setting_id: int) -> Setting:
         """Fetch a setting or raise a 404."""
@@ -128,7 +151,7 @@ class SettingService:
         return setting
 
     async def _get_setting_or_404_by_name(self, setting_name: str) -> Setting:
-        """Fetch a setting or raise a 404."""
+        """Fetch a setting by name or raise a 404."""
         setting = await self._setting_repository.get_by_name(setting_name)
         if setting is None:
             raise HTTPException(
@@ -147,10 +170,7 @@ class SettingService:
     ) -> SettingListResponse:
         """Build a paginated setting response."""
         return SettingListResponse(
-            items=[
-                SettingResponse.model_validate(setting)
-                for setting in settings
-            ],
+            items=[SettingResponse.model_validate(s) for s in settings],
             total=total,
             limit=limit,
             offset=offset,

@@ -806,7 +806,7 @@ export const PredictionsDashboard = () => {
               ) : (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={10}
                     className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400"
                   >
                     {authRequired

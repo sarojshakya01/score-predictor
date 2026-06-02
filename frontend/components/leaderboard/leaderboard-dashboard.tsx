@@ -721,16 +721,14 @@ export const LeaderboardDashboard = () => {
 
   if (authRequired) {
     return (
-      <section className="flex flex-col gap-3 rounded-md border border-amber-200 px-4 py-4 text-sm dark:text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-zinc-300 sm:flex-row sm:items-center sm:justify-between">
+      <section className="flex flex-col gap-3 rounded-md border border-yellow-200 px-4 py-4 text-sm text-yellow-900 dark:text-zinc-400 dark:border-yellow-700 bg-yellow-50 dark:bg-amber-950 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold">Login required</h2>
-          <p className="mt-1 text-sm">
-            Log in to view tournament leaderboard and the racing charts.
-          </p>
+          <p className="mt-1 text-sm">Log in to view tournament leaderboard and the racing charts..</p>
         </div>
         <Link
           href="/login"
-          className="inline-flex h-10 items-center justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary"
+          className="inline-flex h-10 items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
         >
           Login
         </Link>

@@ -1,7 +1,9 @@
 import { apiFetch } from "@/lib/api";
 import { authenticatedApiFetch } from "@/lib/auth";
 import type {
+  GameRulesResponse,
   ListSettingsParams,
+  MatchDayResponse,
   SettingCreate,
   SettingListResponse,
   SettingResponse,
@@ -10,19 +12,9 @@ import type {
 
 const toQueryString = (params: ListSettingsParams): string => {
   const searchParams = new URLSearchParams();
-
-  if (params.offset !== undefined) {
-    searchParams.set("offset", String(params.offset));
-  }
-
-  if (params.limit !== undefined) {
-    searchParams.set("limit", String(params.limit));
-  }
-
-  if (params.search !== undefined) {
-    searchParams.set("search", params.search);
-  }
-
+  if (params.offset !== undefined) searchParams.set("offset", String(params.offset));
+  if (params.limit !== undefined) searchParams.set("limit", String(params.limit));
+  if (params.search !== undefined) searchParams.set("search", params.search);
   return searchParams.toString();
 };
 
@@ -31,21 +23,15 @@ export const listSetting = async (
 ): Promise<SettingListResponse> => {
   const queryString = toQueryString(params);
   const path = queryString ? `/admin/settings?${queryString}` : "/admin/settings";
-
-  return authenticatedApiFetch<SettingListResponse>(path, {
-    method: "GET",
-  });
+  return authenticatedApiFetch<SettingListResponse>(path, { method: "GET" });
 };
 
-export const listRules = async (
-  params: ListSettingsParams = {},
-): Promise<SettingListResponse> => {
-  const queryString = toQueryString(params);
-  const path = queryString ? `/rules?${queryString}` : "/rules";
+export const getGameRules = async (): Promise<GameRulesResponse> => {
+  return apiFetch<GameRulesResponse>("/rules", { method: "GET" });
+};
 
-  return apiFetch<SettingListResponse>(path, {
-    method: "GET",
-  });
+export const getMatchDay = async (): Promise<MatchDayResponse> => {
+  return apiFetch<MatchDayResponse>("/matchday", { method: "GET" });
 };
 
 export const createSetting = async (data: SettingCreate): Promise<SettingResponse> => {
@@ -61,10 +47,7 @@ export const updateSetting = async (
 ): Promise<SettingResponse> => {
   return authenticatedApiFetch<SettingResponse, SettingUpdate>(
     `/admin/settings/${settingId}`,
-    {
-      body: data,
-      method: "PUT",
-    },
+    { body: data, method: "PUT" },
   );
 };
 
@@ -74,16 +57,11 @@ export const deleteSetting = async (settingId: number): Promise<void> => {
   });
 };
 
-export const listSettings = async (): Promise<SettingListResponse> => {
-  return apiFetch<SettingListResponse>("/settings", {
-    method: "GET",
-  });
-};
-
 export const settingService = {
   createSetting,
   deleteSetting,
+  getGameRules,
+  getMatchDay,
   listSetting,
-  listSettings,
   updateSetting,
 };
