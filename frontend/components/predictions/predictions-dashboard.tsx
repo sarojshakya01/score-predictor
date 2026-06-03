@@ -318,7 +318,7 @@ export const PredictionsDashboard = () => {
 
     return {
       first_scoring_team_id: hasPredictedGoalsFromBothTeams
-        ? parsePositiveInteger(formState.firstScoringTeamId, "first scoring team")
+        ? parsePositiveInteger(formState.firstScoringTeamId, "First Score by")
         : null,
       first_goal_in: hasPredictedGoals && isFirstGoalIn(formState.firstGoalIn)
         ? formState.firstGoalIn

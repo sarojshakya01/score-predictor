@@ -191,7 +191,7 @@ const buildMatchPayload = (state: MatchFormState): MatchCreate => {
 
   return {
     first_goal_in: matchHasGoals && isFirstGoalIn(state.firstGoalIn) ? state.firstGoalIn : null,
-    first_scoring_team_id: matchHasGoals ? parseRequiredInteger(state.firstScoringTeamId, "First Scoring Team") : null,
+    first_scoring_team_id: matchHasGoals ? parseRequiredInteger(state.firstScoringTeamId, "First Scored by") : null,
     match_duration: isMatchDuration(state.matchDuration) ? state.matchDuration : null, // change to UTC TZ
     match_datetime: state.matchDatetime,
     match_day: parseRequiredInteger(state.matchDay, "Match Day"),
@@ -491,8 +491,8 @@ const AdminMatchesPage = () => {
                     <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{formatDateTime(match.match_datetime)}</td>
                     <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{formatScore(match)}</td>
                     <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{getTeamNameById(teams, match.kick_off_team_id) || "--"}</td>
-                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{getTeamNameById(teams, match.first_scoring_team_id) || "--"}</td>
                     <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{match.first_goal_in ? firstGoalInLabels[match.first_goal_in as FirstGoalIn] : "--"}</td>
+                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{getTeamNameById(teams, match.first_scoring_team_id) || "--"}</td>
                     <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{match.match_duration ? matchDurationLabels[match.match_duration as MatchDuration] : "--"}</td>
                     <td className="px-5 py-4">
                       <StatusPill tone={match.match_locked ? "accent" : "secondary"}>
