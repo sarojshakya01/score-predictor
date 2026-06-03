@@ -118,7 +118,7 @@ class SettingService:
         """Return the current match day extracted from the JSON value."""
         setting = await self._get_setting_or_404_by_name("current_match_day")
         try:
-            day = int(setting.value["day"])
+            day = int(setting.value["day"]) if setting.value["day"] else 0
         except (KeyError, TypeError, ValueError) as exc:
             logger.exception("Malformed current_match_day setting value")
             raise HTTPException(

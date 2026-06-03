@@ -501,3 +501,23 @@ export const IconCross = ({ className = "h-5 w-5 text-emerald-500 dark:text-emer
     />
   </svg>
 );
+
+export const IconWarning = ({ className = "h-5 w-5 text-orange-500 dark:text-orange-400" }: IconProps) => (
+  <svg
+    xmlns="http://w3.org"
+    className={className}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="10" />
+    <path
+      d="M12 8v4M12 16h.01"
+      fill="none"
+      strokeWidth={2.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="stroke-slate-900 dark:stroke-slate-950"
+    />
+  </svg>
+);

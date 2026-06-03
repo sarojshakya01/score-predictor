@@ -5,7 +5,7 @@ import { PredictionStatus } from "@/lib/matches/types";
 import Link from "next/link";
 import Image from "next/image";
 import { DEFAULT_TIMEZONE } from "@/lib/api/config";
-import { IconCheck, IconCross } from "./icons";
+import { IconCheck, IconCross, IconWarning } from "./icons";
 
 // ---------------------------------------------------------------------------
 // Lock-urgency helpers
@@ -153,6 +153,32 @@ export const MatchVenue = (match: MatchResponse) => (
   </dl>
 );
 
+const MatchSaveStatus = (isPredictionAvailable: boolean, isSaved: boolean, isMatchLocked: boolean) => {
+  if (!isPredictionAvailable) return <></>
+  if (isMatchLocked && !isSaved) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200">
+        <IconCross className="h-4 w-4 shrink-0" />
+        Missed
+      </span>
+    );
+  } else if (isSaved) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-tournament-secondary text-white">
+        <IconCheck className="h-4 w-4 shrink-0" />
+        Saved
+      </span>
+    );
+  } else {
+    return (
+      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-tournament-accent text-white animate-bounce">
+        <IconWarning className="h-4 w-4 shrink-0" />
+        Not Saved
+      </span>
+    );
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Card components
 // ---------------------------------------------------------------------------
@@ -161,9 +187,10 @@ export const SelectableMatchCard = (props: {
   match: MatchResponse;
   isSelected: boolean;
   isSaved: boolean;
+  isPredictionAvailable: boolean;
   handleCardClick: (match: MatchResponse) => void;
 }) => {
-  const { match, isSelected, isSaved, handleCardClick } = props;
+  const { match, isSelected, isSaved, isPredictionAvailable, handleCardClick } = props;
 
   return (
     <article
@@ -189,7 +216,7 @@ export const SelectableMatchCard = (props: {
         </div>
         <div className="flex items-center justify-self-end">
           <dd className="mt-1 font-medium text-zinc-950 dark:text-zinc-50">
-            {isSaved ? <span className="flex items-center gap-2 bg-tournament-secondary text-white px-2 py-1 rounded"><IconCheck className="h-4 w-4 shrink-0" /> Saved</span> : <span className="flex items-center gap-2 bg-tournament-accent text-white px-2 py-1 rounded"><IconCross className="h-4 w-4 shrink-0" /> Not Saved</span>}
+            {MatchSaveStatus(isPredictionAvailable, isSaved, match.match_locked)}
           </dd>
         </div>
       </dl>

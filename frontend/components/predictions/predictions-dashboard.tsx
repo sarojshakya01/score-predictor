@@ -28,6 +28,7 @@ import type {
 } from "@/lib/predictions";
 import {
   formatDateTime,
+  getLockUrgency,
   getMatchLabelWithFlag,
   getPredictionStatus,
   getStatusTone,
@@ -567,6 +568,7 @@ export const PredictionsDashboard = () => {
                 key={match.id}
                 match={match}
                 isSaved={isSaved}
+                isPredictionAvailable={predictions.length > 0}
                 isSelected={isSelected}
                 handleCardClick={handleCardClick}
               />
@@ -602,7 +604,7 @@ export const PredictionsDashboard = () => {
             </div>
           </div>
           <div className="absolute right-[20px] top-[20px]">
-            <StatusPill tone={getStatusTone(selectedStatus)} urgency={selectedMatch ? getPredictionStatus(selectedMatch) === "Locking soon" ? "alarm" : "warn" : "none"}>
+            <StatusPill tone={getStatusTone(selectedStatus)} urgency={selectedMatch ? getLockUrgency(selectedMatch) : "none"}>
               {selectedStatus}
             </StatusPill>
           </div>
@@ -732,7 +734,7 @@ export const PredictionsDashboard = () => {
         <div className="hidden lg:flex w-40 h-[525px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48">
           <ImageWithFallback width={525} height={525} src={"/images/players/" + selectedMatch?.team2_name_short?.toLowerCase() + ".png"} alt={selectedMatch?.team2_name || "Captain Image"} />
         </div>
-      </section>
+      </section >
       <section className="overflow-hidden rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 shadow-sm grid gap-6 dark:border-zinc-700 dark:bg-zinc-900">
         <div className="border-b border-zinc-200 px-5 py-4 dark:border-zinc-700">
           <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">

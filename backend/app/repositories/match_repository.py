@@ -1,5 +1,6 @@
 """Repository for match database operations."""
 
+from app.services.setting_service import SettingService
 from collections.abc import Mapping
 from datetime import datetime, timedelta, timezone
 
@@ -168,25 +169,36 @@ class MatchRepository:
         if first_match is None:
             return []
 
-        # Convert naive datetime to local timezone-aware datetime
-        # from_datetime = from_datetime.astimezone()
+        service = SettingService(self._db)
+        current_match_day = await service.get_current_match_day()
 
-        first_match_datetime = first_match.match_datetime.replace(
-            tzinfo=timezone.utc,
-        )
-
-        if first_match_datetime > to_datetime:
-            to_datetime = first_match_datetime + timedelta(days=1)
+        match_day = None
+        if current_match_day.value:
+            match_day = int(current_match_day.value)
 
         statement = (
             select(Match)
             .options(selectinload(Match.team1), selectinload(Match.team2))
-            .where(Match.match_datetime >= from_datetime)
-            .where(Match.match_datetime <= to_datetime)
         )
 
         if not include_locked:
             statement = statement.where(Match.match_locked.is_(False))
+
+        if match_day:
+            statement = statement.where(Match.match_day == match_day)
+        else:
+            # Convert naive datetime to local timezone-aware datetime
+            # from_datetime = from_datetime.astimezone()
+
+            first_match_datetime = first_match.match_datetime.replace(
+                tzinfo=timezone.utc,
+            )
+
+            if first_match_datetime > to_datetime:
+                to_datetime = first_match_datetime + timedelta(days=1)
+
+            statement = statement.where(Match.match_datetime >= from_datetime)
+            statement = statement.where(Match.match_datetime <= to_datetime)
 
         result = await self._db.execute(
             statement.order_by(Match.match_datetime.asc(), Match.id.asc())
