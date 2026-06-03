@@ -20,7 +20,6 @@ Register it in app/main.py:
     from app.workers.scheduler import lifespan
     app = FastAPI(..., lifespan=lifespan)
 """
-import json
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
@@ -256,7 +255,7 @@ async def update_current_match_day() -> None:
             return
 
         new_day = str(upcoming.match_day)
-        json_value = json.dumps({"day": new_day})
+        json_value = {"day": new_day}
 
         # Upsert the setting row
         setting_result = await db.execute(

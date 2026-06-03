@@ -103,21 +103,32 @@ const MatchDayNGroupNStatus = (match: MatchResponse) => {
   );
 };
 
-export const getMatchLabelWithFlag = (match: MatchResponse, width: string = "w-full"): JSX.Element => (
+export const getTeam1WithFlag = (match: MatchResponse, size: string = "md") => (
+  <div className={(size === "sm" ? "w-full" : "w-[47%]") + " flex items-center justify-end gap-2 pr-2"}>
+    <span className="inline-block w-full text-right">{match.team1_name}</span>
+    {match.team1_flag_url ? (
+      <Image width={30} height={30} className={(size === "sm" ? "min-h-[18px]" : "min-h-[25px]") + " w-auto rounded object-cover shadow-sm"} decoding="async" loading="lazy" src={match.team1_flag_url} alt="flag" />
+    ) : null}
+  </div>
+)
+
+export const getVs = (size: string = "md") => (
+  <span className={(size === "sm" ? "w-full" : "w-[6%]") + " text-sm text-center text-zinc-400 dark:text-zinc-500"}>vs</span>
+)
+
+export const getTeam2WithFlag = (match: MatchResponse, size: string = "md") => (
+  <div className={(size === "sm" ? "w-full" : "w-[47%]") + " flex items-center justify-start gap-2 pl-2"}>
+    {match.team2_flag_url ? (
+      <Image width={30} height={30} className={(size === "sm" ? "min-h-[18px]" : "min-h-[25px]") + " w-auto rounded object-cover shadow-sm"} decoding="async" loading="lazy" src={match.team2_flag_url} alt="flag" />
+    ) : null}
+    <span className="inline-block w-full text-left">{match.team2_name}</span>
+  </div>
+)
+export const getMatchLabelWithFlag = (match: MatchResponse, width: string = "w-full", size: string = "md"): JSX.Element => (
   <div className={`flex ${width} items-center gap-3`}>
-    <div className="flex w-[47%] items-center justify-end gap-2 pr-2">
-      <span className="inline-block w-full text-right">{match.team1_name}</span>
-      {match.team1_flag_url ? (
-        <Image width={30} height={30} className="min-h-[25px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={match.team1_flag_url} alt="flag" />
-      ) : null}
-    </div>
-    <span className="w-[6%] text-sm text-center text-zinc-400 dark:text-zinc-500">vs</span>
-    <div className="flex w-[47%] items-center justify-start gap-2 pl-2">
-      {match.team2_flag_url ? (
-        <Image width={30} height={30} className="min-h-[25px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={match.team2_flag_url} alt="flag" />
-      ) : null}
-      <span className="inline-block w-full text-left">{match.team2_name}</span>
-    </div>
+    {getTeam1WithFlag(match, size)}
+    {getVs()}
+    {getTeam2WithFlag(match, size)}
   </div>
 );
 

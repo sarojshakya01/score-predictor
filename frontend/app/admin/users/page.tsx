@@ -208,7 +208,7 @@ const AdminUsersPage = () => {
           type="search"
           value={searchQuery}
           onChange={(e) => handleSearch(e.target.value)}
-          placeholder="Search by name, email, role, or mobile…"
+          placeholder="Search by name, email, role, or mobile..."
           className="h-10 w-full rounded-md border border-zinc-200 bg-white pl-9 pr-9 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:ring-emerald-900"
         />
         {isSearchActive && (

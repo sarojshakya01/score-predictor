@@ -20,7 +20,7 @@ import {
 import type { MatchCreate, MatchDuration, MatchResponse, MatchStage } from "@/lib/matches";
 import { listAdminTeams } from "@/lib/teams";
 import type { TeamResponse } from "@/lib/teams";
-import { formatDateTime, getMatchLabelWithFlag } from "@/components/ui/match-card";
+import { formatDateTime, getMatchLabelWithFlag, getTeam1WithFlag, getTeam2WithFlag, getVs } from "@/components/ui/match-card";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { IconCancel, IconPencil, IconPlus, IconSave, IconSearch, IconTrash, IconX } from "@/components/ui/icons";
 import { Pagination } from "@/components/ui/pagination";
@@ -275,10 +275,10 @@ const AdminMatchesPage = () => {
     return matches.filter((m) =>
       m.team1_name.toLowerCase().includes(q) ||
       m.team2_name.toLowerCase().includes(q) ||
-      (m.venue_name ?? "").toLowerCase().includes(q) ||
-      String(m.match_day).includes(q) ||
-      (m.match_stage ?? "").toLowerCase().includes(q) ||
-      (matchStageLabels[m.match_stage as MatchStage] ?? "").toLowerCase().includes(q) ||
+      // (m.venue_name ?? "").toLowerCase().includes(q) ||
+      // String(m.match_day).includes(q) ||
+      // (m.match_stage ?? "").toLowerCase().includes(q) ||
+      // (matchStageLabels[m.match_stage as MatchStage] ?? "").toLowerCase().includes(q) ||
       formatDateTime(m.match_datetime).toLowerCase().includes(q) ||
       (m.match_locked ? "locked" : "open").includes(q)
     );
@@ -411,7 +411,7 @@ const AdminMatchesPage = () => {
           type="search"
           value={searchQuery}
           onChange={(e) => handleSearch(e.target.value)}
-          placeholder="Search by team, venue, match day, stage, or status…"
+          placeholder="Search by team, time, status..."
           className="h-10 w-full rounded-md border border-zinc-200 bg-white pl-9 pr-9 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:ring-emerald-900"
         />
         {isSearchActive && (
@@ -454,19 +454,16 @@ const AdminMatchesPage = () => {
           <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
             <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
               <tr>
-                <th className="px-5 py-3">S.N.</th>
-                <th className="px-5 py-3 text-center">Match</th>
-                <th className="px-5 py-3">Day</th>
-                <th className="px-5 py-3">Venue</th>
-                <th className="px-5 py-3">Stage</th>
-                <th className="px-5 py-3 min-w-[150px]">Time</th>
-                <th className="px-5 py-3">Score</th>
-                <th className="px-5 py-3 min-w-[150px]">Kickoff Team</th>
-                <th className="px-5 py-3 min-w-[150px]">First Goal in</th>
-                <th className="px-5 py-3 min-w-[170px]">First Score by</th>
-                <th className="px-5 py-3 min-w-[170px]">Match Duration</th>
-                <th className="px-5 py-3">Status</th>
-                <th className="px-5 py-3 text-right">Actions</th>
+                <th className="px-3 py-3">S.N.</th>
+                <th className="px-3 py-3 text-center" colSpan={3}>Match</th>
+                <th className="px-3 py-3 min-w-[140px]">Time</th>
+                <th className="px-3 py-3">Score</th>
+                <th className="px-3 py-3 min-w-[140px]">Kickoff Team</th>
+                <th className="px-3 py-3 min-w-[135px]">First Goal in</th>
+                <th className="px-3 py-3 min-w-[145px]">First Score by</th>
+                <th className="px-3 py-3 min-w-[155px]">Match Duration</th>
+                <th className="px-3 py-3">Status</th>
+                <th className="px-3 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -479,27 +476,28 @@ const AdminMatchesPage = () => {
               ) : pagedMatches.length > 0 ? (
                 pagedMatches.map((match, idx) => (
                   <tr key={match.id} className="transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40">
-                    <td className="px-5 py-4 text-left text-zinc-700 dark:text-zinc-300">{idx + 1}</td>
-                    <td className="px-5 py-4 font-medium text-zinc-950 dark:text-zinc-50">
-                      {getMatchLabelWithFlag(match)}
+                    <td className="px-3 py-3 text-left text-zinc-700 dark:text-zinc-300">{idx + 1}</td>
+                    <td className="pl-3 pr-0 py-3 font-medium text-zinc-950 dark:text-zinc-50">
+                      {getTeam1WithFlag(match, "sm")}
                     </td>
-                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{match.match_day}</td>
-                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
-                      <Link href={`https://google.com/search?q=${match.venue_name}`} target="_blank" className="text-tournament-primary-light hover:text-tournament-primary">{match.venue_name}</Link>
+                    <td className="px-3 py-3 font-medium text-zinc-950 dark:text-zinc-50">
+                      {getVs("sm")}
                     </td>
-                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{match.match_stage ? matchStageLabels[match.match_stage] : "--"}</td>
-                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{formatDateTime(match.match_datetime)}</td>
-                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{formatScore(match)}</td>
-                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{getTeamNameById(teams, match.kick_off_team_id) || "--"}</td>
-                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{match.first_goal_in ? firstGoalInLabels[match.first_goal_in as FirstGoalIn] : "--"}</td>
-                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{getTeamNameById(teams, match.first_scoring_team_id) || "--"}</td>
-                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{match.match_duration ? matchDurationLabels[match.match_duration as MatchDuration] : "--"}</td>
-                    <td className="px-5 py-4">
+                    <td className="pl-0 pr-3 py-3 font-medium text-zinc-950 dark:text-zinc-50">
+                      {getTeam2WithFlag(match, "sm")}
+                    </td>
+                    <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{formatDateTime(match.match_datetime)}</td>
+                    <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{formatScore(match)}</td>
+                    <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{getTeamNameById(teams, match.kick_off_team_id) || "--"}</td>
+                    <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.first_goal_in ? firstGoalInLabels[match.first_goal_in as FirstGoalIn] : "--"}</td>
+                    <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{getTeamNameById(teams, match.first_scoring_team_id) || "--"}</td>
+                    <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.match_duration ? matchDurationLabels[match.match_duration as MatchDuration] : "--"}</td>
+                    <td className="px-3 py-3">
                       <StatusPill tone={match.match_locked ? "accent" : "secondary"}>
                         {getMatchStatus(match)}
                       </StatusPill>
                     </td>
-                    <td className="px-5 py-4 text-right">
+                    <td className="px-3 py-3 text-right">
                       <div className="flex justify-end gap-1">
                         <button
                           title="Edit"

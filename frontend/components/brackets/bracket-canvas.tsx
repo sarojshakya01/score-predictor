@@ -254,7 +254,7 @@ const drawSlot = async (context: CanvasRenderingContext2D, slot: BracketSlot, se
   }
 
   context.fillStyle = winnerSide === "team1" ? "#047857" : textPrimary;
-  context.fillText(truncateText(context, match.team1_name.length < 12 ? match.team1_name : match.team1_name_short, teamTextWidth), slot.x + flagMaxWidth + 12, slot.y + flagMaxHeight);
+  context.fillText(truncateText(context, match.team1_name.length < 12 ? match.team1_name : match.team1_name_short, teamTextWidth), slot.x + flagMaxWidth + 15, slot.y + flagMaxHeight - 3);
   context.fillText(truncateText(context, match.team1_score?.toString() ?? "-", teamTextWidth), slot.x + flagMaxWidth + 10 + teamTextWidth + 15, slot.y + flagMaxHeight);
 
   if (match.team2_flag_url) {
@@ -266,12 +266,12 @@ const drawSlot = async (context: CanvasRenderingContext2D, slot: BracketSlot, se
   }
 
   context.fillStyle = winnerSide === "team2" ? "#047857" : textPrimary;
-  context.fillText(truncateText(context, match.team2_name.length < 12 ? match.team2_name : match.team2_name_short, teamTextWidth), slot.x + flagMaxWidth + 12, slot.y + 2 * flagMaxHeight + 5);
+  context.fillText(truncateText(context, match.team2_name.length < 12 ? match.team2_name : match.team2_name_short, teamTextWidth), slot.x + flagMaxWidth + 15, slot.y + 2 * flagMaxHeight + 2);
   context.fillText(match.team2_score?.toString() ?? "-", slot.x + flagMaxWidth + 10 + teamTextWidth + 15, slot.y + 2 * flagMaxHeight + 5);
 
   context.font = "500 10px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
   context.fillStyle = textMuted;
-  context.fillText(truncateText(context, formatDateTime(match.match_datetime), teamTextWidth), slot.x + flagMaxWidth + 10, slot.y + 2 * flagMaxHeight + 22);
+  context.fillText(truncateText(context, formatDateTime(match.match_datetime), teamTextWidth), slot.x + flagMaxWidth + 15, slot.y + 2 * flagMaxHeight + 22);
 
   if (match.match_stage === "F") {
     const trophySrc = await loadImage("/images/trophy.png");
