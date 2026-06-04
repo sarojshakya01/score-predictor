@@ -26,7 +26,7 @@ const AdminPage = () => {
 
       try {
         const [userList, matchList, teamList, upcomingMatchList] = await Promise.all([
-          listAdminUsers({ limit: 1000 }),
+          listAdminUsers({ limit: 500 }),
           listAdminMatches({ limit: 1000 }),
           listAdminTeams({ limit: 1000 }),
           listUpcomingMatches({ limit: 500 })

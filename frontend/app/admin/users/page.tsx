@@ -59,7 +59,7 @@ const AdminUsersPage = () => {
       setLoadError(null);
 
       try {
-        const userList = await listAdminUsers({ limit: 1000 });
+        const userList = await listAdminUsers({ limit: 500 });
         if (isMounted) {
           setUsers(userList.items);
         }
