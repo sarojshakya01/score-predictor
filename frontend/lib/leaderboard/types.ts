@@ -81,6 +81,7 @@ export type UserPointsDetailsResponse = {
   predicted_match_duration: string;
   match_duration_points: number;
   total_points: number;
+  match_stage: string | null;
 };
 
 export type UserPointsDetailsListResponse = {
@@ -88,4 +89,7 @@ export type UserPointsDetailsListResponse = {
   user_name: string;
   items: UserPointsDetailsResponse[];
   total_points: number;
+  winner_points: number;
+  runner_up_points: number;
+  third_place_points: number;
 };

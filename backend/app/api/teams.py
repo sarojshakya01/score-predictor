@@ -14,12 +14,32 @@ from app.services.team_service import TeamService
 
 group_router = APIRouter(prefix="/teams/groups", tags=["Teams"])
 
+router = APIRouter(prefix="/teams", tags=["Teams"])
 
 admin_router = APIRouter(
     prefix="/admin/teams",
     tags=["Teams"],
     dependencies=[Depends(get_current_admin_user)],
 )
+
+@router.get(
+    "",
+    response_model=TeamListResponse,
+    summary="List teams",
+)
+async def list_all_teams(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+) -> TeamListResponse:
+    """Return all teams for admin final/runnerup and third place predictions."""
+    service = TeamService(db)
+    return await service.list_teams(
+        offset=offset,
+        limit=limit,
+        group=None,
+        search=None,
+    )
 
 
 @group_router.get(

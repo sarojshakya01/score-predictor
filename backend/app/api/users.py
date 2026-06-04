@@ -53,6 +53,20 @@ async def update_current_user_profile(
     service = UserService(db)
     return await service.update_current_profile(user=current_user, data=data)
 
+@router.put(
+    "/finalist",
+    response_model=UserResponse,
+    summary="Update current user's finalist",
+)
+async def update_current_user_finalist(
+    data: UserProfileUpdate,
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> UserResponse:
+    """Update the current authenticated user's profile."""
+    service = UserService(db)
+    return await service.update_current_profile(user=current_user, data=data)
+
 
 @leaderboard_router.get(
     "",

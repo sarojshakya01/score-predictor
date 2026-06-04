@@ -3,7 +3,9 @@ export {
   deleteMatch,
   listAdminMatches,
   listMatches,
+  listMatchResults,
   listUpcomingMatches,
+  listFinalMatches,
   matchService,
   updateMatch,
 } from "@/lib/matches/match-service";

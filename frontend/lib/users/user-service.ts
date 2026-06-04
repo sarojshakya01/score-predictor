@@ -64,6 +64,13 @@ export const updateUser = async (
   );
 };
 
+export const updateCurrentUserFinalist = async (data: UserUpdate): Promise<UserResponse> => {
+  return authenticatedApiFetch<UserResponse, UserUpdate>(`/users/finalist`, {
+    body: data,
+    method: "PUT",
+  });
+}
+
 export const deleteUser = async (userId: number): Promise<void> => {
   await authenticatedApiFetch<null>(`/admin/users/${userId}`, {
     method: "DELETE",

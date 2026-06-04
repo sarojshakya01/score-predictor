@@ -10,7 +10,10 @@ export type UserResponse = {
   middle_name: string | null;
   mobile_no: string;
   role: UserRole;
+  runner_up_team_id: number | null;
+  third_place_team_id: number | null;
   updated_at: string;
+  winner_team_id: number | null;
 };
 
 export type UserListResponse = {
@@ -29,6 +32,9 @@ export type UserCreate = {
   password?: string;
   role?: UserRole;
   is_active?: boolean;
+  winner_team_id?: number | null;
+  runner_up_team_id?: number | null;
+  third_place_team_id?: number | null;
 };
 
 export type UserUpdate = Partial<UserCreate>;

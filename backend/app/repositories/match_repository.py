@@ -21,7 +21,11 @@ class MatchRepository:
         """Fetch a match by primary key."""
         result = await self._db.execute(
             select(Match)
-            .options(selectinload(Match.team1), selectinload(Match.team2))
+            .options(
+                selectinload(Match.team1),
+                selectinload(Match.team2),
+                selectinload(Match.winner),
+            )
             .where(Match.id == match_id),
         )
         return result.scalar_one_or_none()
@@ -39,6 +43,7 @@ class MatchRepository:
         statement = select(Match).options(
             selectinload(Match.team1),
             selectinload(Match.team2),
+            selectinload(Match.winner),
         )
 
         if match_day is not None:
@@ -79,16 +84,28 @@ class MatchRepository:
         result = await self._db.execute(statement)
         return int(result.scalar_one())
 
-    async def list_completed_matches(self) -> list[Match]:
+    async def list_completed_matches(
+        self,
+        *,
+        offset: int = 0,
+        limit: int | None = None,
+    ) -> list[Match]:
         """Fetch matches with final scores for standings calculations."""
         statement = (
             select(Match)
-            .options(selectinload(Match.team1), selectinload(Match.team2))
+            .options(
+                selectinload(Match.team1),
+                selectinload(Match.team2),
+                selectinload(Match.winner),
+            )
             .where(Match.match_locked.is_(True))
             .where(Match.team1_score.is_not(None))
             .where(Match.team2_score.is_not(None))
             .order_by(Match.match_datetime.asc(), Match.id.asc())
         )
+
+        if limit is not None:
+            statement = statement.offset(offset).limit(limit)
 
         result = await self._db.execute(statement)
         return list(result.scalars().all())
@@ -144,7 +161,11 @@ class MatchRepository:
         prediction_deadline_floor = from_datetime.astimezone() + timedelta(hours=1)
         statement = (
             select(Match)
-            .options(selectinload(Match.team1), selectinload(Match.team2))
+            .options(
+                selectinload(Match.team1),
+                selectinload(Match.team2),
+                selectinload(Match.winner),
+            )
             .where(Match.match_locked.is_(False))
             .where(Match.match_datetime > prediction_deadline_floor)
             .order_by(Match.match_datetime.asc(), Match.id.asc())
@@ -178,7 +199,11 @@ class MatchRepository:
 
         statement = (
             select(Match)
-            .options(selectinload(Match.team1), selectinload(Match.team2))
+            .options(
+                selectinload(Match.team1),
+                selectinload(Match.team2),
+                selectinload(Match.winner),
+            )
         )
 
         if not include_locked:
@@ -207,40 +232,35 @@ class MatchRepository:
         )
         return list(result.scalars().all())
 
-    async def count_upcoming(
+    async def list_finals(
         self,
         *,
-        from_datetime: datetime,
-        to_datetime: datetime,
         include_locked: bool = True,
-    ) -> int:
-        """Count upcoming matches using the same filters as list_upcoming."""
-        first_match = await self.get_first_match()
-        if first_match is None:
-            return 0
-
-        # Convert naive datetime to local timezone-aware datetime
-        from_datetime = from_datetime.astimezone()
-
-        first_match_datetime = first_match.match_datetime.replace(
-            tzinfo=timezone.utc,
-        ).astimezone()
-
-        if first_match_datetime > to_datetime:
-            to_datetime = first_match_datetime + timedelta(days=1)
+    ) -> list[Match]:
+        """Fetch upcoming matches ordered by match date."""
 
         statement = (
-            select(func.count())
-            .select_from(Match)
-            .where(Match.match_datetime >= from_datetime)
-            .where(Match.match_datetime <= to_datetime)
+            select(Match)
+            .options(
+                selectinload(Match.team1),
+                selectinload(Match.team2),
+                selectinload(Match.winner),
+            )
         )
 
         if not include_locked:
             statement = statement.where(Match.match_locked.is_(False))
 
-        result = await self._db.execute(statement)
-        return int(result.scalar_one())
+        statement = statement.where(
+            (Match.match_stage == '3P') |
+            (Match.match_stage == "F")
+        )
+
+        result = await self._db.execute(
+            statement.order_by(Match.match_datetime.asc(), Match.id.asc()),
+        )
+
+        return list(result.scalars().all())
 
     async def get_first_match(self) -> Match | None:
         statement = select(Match)

@@ -1,0 +1,135 @@
+import Image from "next/image";
+
+import { formatDateTime } from "@/components/ui/match-card";
+import { StatusPill } from "@/components/ui/status-pill";
+import type { MatchResponse } from "@/lib/matches";
+
+const getWinnerLabel = (match: MatchResponse): string => {
+  if (match.winner_id === match.team1_id) {
+    return match.team1_name;
+  }
+
+  if (match.winner_id === match.team2_id) {
+    return match.team2_name;
+  }
+
+  return "DRAW";
+};
+
+const getWinnerTone = (match: MatchResponse): "secondary" | "primary" => {
+  return match.winner_id === null ? "primary" : "secondary";
+};
+
+const TeamScoreRow = ({
+  flagUrl,
+  isWinner,
+  name,
+  score,
+}: {
+  flagUrl: string;
+  isWinner: boolean;
+  name: string;
+  score: number | null;
+}) => {
+  return (
+    <div
+      className={[
+        "flex items-center justify-between gap-3 rounded-md px-2 py-2",
+        isWinner ? "bg-emerald-50 dark:bg-emerald-950/30" : "",
+      ].join(" ")}
+    >
+      <div className="flex min-w-0 items-center gap-2">
+        <Image
+          width={28}
+          height={28}
+          className="min-h-[26px] w-auto shrink-0 rounded object-cover shadow-sm"
+          decoding="async"
+          loading="lazy"
+          src={flagUrl}
+          alt={`${name} flag`}
+        />
+        <p
+          className={[
+            "truncate text-sm",
+            isWinner
+              ? "font-semibold text-emerald-800 dark:text-emerald-200"
+              : "font-medium text-zinc-800 dark:text-zinc-200",
+          ].join(" ")}
+        >
+          {name}
+        </p>
+      </div>
+      <span className="shrink-0 text-lg font-semibold text-zinc-950 dark:text-zinc-50">
+        {score ?? "-"}
+      </span>
+    </div>
+  );
+};
+
+export const MatchResultsList = ({ matches }: { matches: MatchResponse[] }) => {
+  if (matches.length === 0) {
+    return (
+      <div className="rounded-md border border-zinc-200 bg-white px-5 py-10 text-center shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+        <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
+          No results yet
+        </h2>
+        <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+          Completed match results will appear here after scores are locked.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <article className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-zinc-950">
+      <div className="flex gap-3 overflow-x-auto p-4">
+        {matches.map((match) => {
+          const team1Won = match.winner_id === match.team1_id;
+          const team2Won = match.winner_id === match.team2_id;
+
+          return (
+            <div
+              key={match.id}
+              className="relative flex min-h-44 w-60 shrink-0 flex-col justify-between rounded-md border border-zinc-200 bg-zinc-50 p-3 text-left shadow-sm dark:border-zinc-700 dark:bg-zinc-800"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:text-zinc-400">
+                    Match day {match.match_day}
+                  </p>
+                  <p className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">
+                    {formatDateTime(match.match_datetime)}
+                  </p>
+                </div>
+                <StatusPill tone={getWinnerTone(match)}>
+                  <span className="max-w-[96px] truncate">
+                    {getWinnerLabel(match)}
+                  </span>
+                </StatusPill>
+              </div>
+
+              <div className="mt-4 grid gap-2">
+                <TeamScoreRow
+                  flagUrl={match.team1_flag_url}
+                  isWinner={team1Won}
+                  name={match.team1_name}
+                  score={match.team1_score}
+                />
+                <TeamScoreRow
+                  flagUrl={match.team2_flag_url}
+                  isWinner={team2Won}
+                  name={match.team2_name}
+                  score={match.team2_score}
+                />
+              </div>
+
+              <p className="mt-4 truncate text-xs text-zinc-500 dark:text-zinc-400">
+                {match.venue_name || "Venue TBA"}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </article>
+  );
+};

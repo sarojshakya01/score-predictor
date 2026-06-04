@@ -10,6 +10,7 @@ export type PredictionFields = {
   team1_score: number;
   team2_score: number;
   yellow_card_count: number | null;
+  winner_team_id: number | null;
 };
 
 export type PredictionCreate = PredictionFields & {

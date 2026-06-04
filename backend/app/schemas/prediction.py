@@ -114,6 +114,7 @@ class UserPointsDetailsResponse(BaseModel):
     score_points: int
     goal_difference_points: int
     total_points: int
+    match_stage: str | None
 
 
 class UserPointsDetailsListResponse(BaseModel):
@@ -123,4 +124,7 @@ class UserPointsDetailsListResponse(BaseModel):
     user_name: str
     items: list[UserPointsDetailsResponse]
     total_points: int
+    winner_points: int
+    runner_up_points: int
+    third_place_points: int
 

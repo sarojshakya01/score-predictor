@@ -12,6 +12,7 @@ class MatchBase(BaseModel):
 
     team1_id: int = Field(..., gt=0)
     team2_id: int = Field(..., gt=0)
+    winner_id: int | None = Field(default=None, gt=0)
     team1_score: int | None = Field(default=None, ge=0)
     team2_score: int | None = Field(default=None, ge=0)
     yellow_card_count: int | None = Field(default=None, ge=0)
@@ -32,6 +33,12 @@ class MatchBase(BaseModel):
         """Validate team relationships within the match payload."""
         if self.team1_id == self.team2_id:
             raise ValueError("team1_id and team2_id must be different")
+
+        if self.winner_id is not None and self.winner_id not in {
+            self.team1_id,
+            self.team2_id,
+        }:
+            raise ValueError("winner_id must match one of the match teams")
 
         if self.kick_off_team_id is not None and self.kick_off_team_id not in {
             self.team1_id,
@@ -57,6 +64,7 @@ class MatchUpdate(BaseModel):
 
     team1_id: int | None = Field(default=None, gt=0)
     team2_id: int | None = Field(default=None, gt=0)
+    winner_id: int | None = Field(default=None, gt=0)
     team1_score: int | None = Field(default=None, ge=0)
     team2_score: int | None = Field(default=None, ge=0)
     yellow_card_count: int | None = Field(default=None, ge=0)
@@ -81,6 +89,14 @@ class MatchUpdate(BaseModel):
             and self.team1_id == self.team2_id
         ):
             raise ValueError("team1_id and team2_id must be different")
+
+        if (
+            self.team1_id is not None
+            and self.team2_id is not None
+            and self.winner_id is not None
+            and self.winner_id not in {self.team1_id, self.team2_id}
+        ):
+            raise ValueError("winner_id must match one of the match teams")
 
         if (
             self.team1_id is not None

@@ -1,18 +1,21 @@
 import Link from "next/link";
 
+import { FinalsWinnerSelector } from "@/components/home/finals-winner-selector";
+import { MatchResultsList } from "@/components/home/match-results-list";
 import { MetricCard, Metrics } from "@/components/ui/metric-card";
 import { PageShell } from "@/components/ui/page-shell";
 import { StatusPill, toneClasses } from "@/components/ui/status-pill";
 import { ApiError } from "@/lib/api";
 import { getHomeSummary } from "@/lib/home";
 import type { HomeSummaryResponse } from "@/lib/home";
-import { listUpcomingMatches } from "@/lib/matches";
+import { listMatchResults, listUpcomingMatches } from "@/lib/matches";
 import type { MatchResponse } from "@/lib/matches";
 import { MatchCard } from "@/components/ui/match-card";
 
 type HomePageData = {
   errors: string[];
   matches: MatchResponse[];
+  results: MatchResponse[];
   summary: HomeSummaryResponse | null;
 };
 
@@ -29,13 +32,16 @@ const getLoadErrorMessage = (error: unknown, fallback: string): string => {
 };
 
 const loadHomePageData = async (): Promise<HomePageData> => {
-  const [summaryResult, matchesResult] = await Promise.allSettled([
-    getHomeSummary(),
-    listUpcomingMatches({ includeLocked: true, limit: 3 }),
-  ]);
+  const [summaryResult, matchesResult, resultsResult] =
+    await Promise.allSettled([
+      getHomeSummary(),
+      listUpcomingMatches({ includeLocked: true, limit: 6 }),
+      listMatchResults({ limit: 8 }),
+    ]);
   const errors: string[] = [];
   let summary: HomeSummaryResponse | null = null;
   let matches: MatchResponse[] = [];
+  let results: MatchResponse[] = [];
 
   if (summaryResult.status === "fulfilled") {
     summary = summaryResult.value;
@@ -59,7 +65,18 @@ const loadHomePageData = async (): Promise<HomePageData> => {
     );
   }
 
-  return { errors, matches, summary };
+  if (resultsResult.status === "fulfilled") {
+    results = resultsResult.value.items;
+  } else {
+    errors.push(
+      getLoadErrorMessage(
+        resultsResult.reason,
+        "Unable to load match results.",
+      ),
+    );
+  }
+
+  return { errors, matches, results, summary };
 };
 
 const formatNumber = (value: number | undefined): string => {
@@ -116,7 +133,7 @@ const formatMinutes = (value: number): string => {
 };
 
 const Home = async () => {
-  const { errors, matches, summary } = await loadHomePageData();
+  const { errors, matches, results, summary } = await loadHomePageData();
   const dashboardMetrics = buildDashboardMetrics(summary);
   const nextLock = summary?.next_lock ?? null;
 
@@ -151,6 +168,21 @@ const Home = async () => {
         </section>
       ) : null}
 
+      <section>
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
+              Predict Winners
+            </h2>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              Predict your World Cup 2026 winner, runner-up and third place.
+            </p>
+          </div>
+        </div>
+
+        <FinalsWinnerSelector />
+      </section>
+
       <section className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {dashboardMetrics.map((metric) => (
@@ -184,10 +216,25 @@ const Home = async () => {
         <div className="mb-4 flex items-end justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
+              Match results
+            </h2>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              See the latest match results.
+            </p>
+          </div>
+        </div>
+
+        <MatchResultsList matches={results} />
+      </section>
+
+      <section>
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
               Upcoming matches
             </h2>
             <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-              Open fixtures for score and match detail predictions.
+              Select the fixtures and make your predictions.
             </p>
           </div>
           <Link

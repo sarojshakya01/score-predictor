@@ -15,6 +15,9 @@ class UserProfileUpdate(BaseModel):
     middle_name: str | None = Field(default=None, max_length=100)
     last_name: str | None = Field(default=None, min_length=1, max_length=100)
     mobile_no: str | None = Field(default=None, min_length=1, max_length=20)
+    winner_team_id: int | None = Field(default=None, gt=0)
+    runner_up_team_id: int | None = Field(default=None, gt=0)
+    third_place_team_id: int | None = Field(default=None, gt=0)
 
     @field_validator("email")
     @classmethod
@@ -58,6 +61,9 @@ class UserCreate(BaseModel):
     password: str = Field(..., min_length=8, max_length=128)
     role: UserRole = UserRole.USER
     is_active: bool = True
+    winner_team_id: int | None = Field(default=None, gt=0)
+    runner_up_team_id: int | None = Field(default=None, gt=0)
+    third_place_team_id: int | None = Field(default=None, gt=0)
 
     @field_validator("email")
     @classmethod
@@ -96,6 +102,9 @@ class UserUpdate(BaseModel):
     password: str | None = Field(default=None, min_length=8, max_length=128)
     role: UserRole | None = None
     is_active: bool | None = None
+    winner_team_id: int | None = Field(default=None, gt=0)
+    runner_up_team_id: int | None = Field(default=None, gt=0)
+    third_place_team_id: int | None = Field(default=None, gt=0)
 
     @field_validator("email")
     @classmethod
@@ -139,6 +148,9 @@ class UserResponse(BaseModel):
     mobile_no: str
     role: UserRole
     is_active: bool
+    winner_team_id: int | None
+    runner_up_team_id: int | None
+    third_place_team_id: int | None
     created_at: datetime
     updated_at: datetime
     message: str | None = None

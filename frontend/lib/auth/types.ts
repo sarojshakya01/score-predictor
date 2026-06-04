@@ -36,6 +36,9 @@ export type UserResponse = {
   mobile_no: string;
   role: UserRole;
   is_active: boolean;
+  winner_team_id: number | null;
+  runner_up_team_id: number | null;
+  third_place_team_id: number | null;
   created_at: string;
   updated_at: string;
   message?: string | undefined;

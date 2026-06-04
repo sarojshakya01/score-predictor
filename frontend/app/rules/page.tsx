@@ -49,58 +49,112 @@ const RulesPage = () => {
       ) : groups.length === 0 && !error ? (
         <div className="text-sm text-zinc-500 dark:text-zinc-400">No rules configured yet.</div>
       ) : (
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
-          {groups.map((group) => (
-            <article
-              key={group.name}
-              className="flex flex-col rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
-            >
-              {/* group header */}
-              <header className="border-b border-zinc-100 px-4 py-3 dark:border-zinc-800">
-                <h2 className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">
-                  {group.friend_name}
-                </h2>
-              </header>
+        <>
+          <section className="grid gap-4 sm:grid-cols-1 lg:grid-cols-1">
+            {groups.filter((group) => group.name === "winners").map((group) => (
+              <article
+                key={group.name}
+                className="flex flex-col rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
+              >
+                {/* group header */}
+                <header className="border-b border-zinc-100 px-4 py-3 dark:border-zinc-800">
+                  <h2 className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">
+                    {group.friend_name}
+                  </h2>
+                </header>
 
-              {/* rule entries */}
-              <ul className="flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800">
-                {[...group.rules]
-                  .sort((a, b) => a.order - b.order)
-                  .map((entry, idx) => {
-                    const isNote = entry.points === 0;
-                    return (
-                      <li
-                        key={idx}
-                        className="flex items-start gap-3 px-4 py-3"
-                      >
-                        {isNote ? (
-                          /* note row — no badge, italic muted text */
-                          <p className="text-xs italic leading-5 text-zinc-400 dark:text-zinc-500">
-                            {entry.instruction}
-                          </p>
-                        ) : (
-                          <>
-                            {/* points badge */}
-                            <span
-                              className={`mt-0.5 shrink-0 inline-flex min-w-[2.5rem] items-center justify-center rounded-full px-1.5 py-0.5 text-xs font-bold tabular-nums ${entry.points > 0
+                {/* rule entries */}
+                <ul className="flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800">
+                  {[...group.rules]
+                    .sort((a, b) => a.order - b.order)
+                    .map((entry, idx) => {
+                      const isNote = entry.points === 0;
+                      return (
+                        <li
+                          key={idx}
+                          className="flex items-start gap-3 px-4 py-3"
+                        >
+                          {isNote ? (
+                            /* note row — no badge, italic muted text */
+                            <p className="text-xs italic leading-5 text-zinc-400 dark:text-zinc-500">
+                              {entry.instruction}
+                            </p>
+                          ) : (
+                            <>
+                              {/* points badge */}
+                              <span
+                                className={`mt-0.5 shrink-0 inline-flex min-w-[2.5rem] items-center justify-center rounded-full px-1.5 py-0.5 text-xs font-bold tabular-nums ${entry.points > 0
                                   ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
                                   : "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300"
-                                }`}
-                            >
-                              {entry.points > 0 ? `+${entry.points}` : entry.points}
-                            </span>
-                            <p className="text-sm leading-5 text-zinc-700 dark:text-zinc-300">
-                              {resolveInstruction(entry)}
+                                  }`}
+                              >
+                                {entry.points > 0 ? `+${entry.points}` : entry.points}
+                              </span>
+                              <p className="text-sm leading-5 text-zinc-700 dark:text-zinc-300">
+                                {resolveInstruction(entry)}
+                              </p>
+                            </>
+                          )}
+                        </li>
+                      );
+                    })}
+                </ul>
+              </article>
+            ))}
+          </section>
+          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
+            {groups.filter((group) => group.name !== "winners").map((group) => (
+              <article
+                key={group.name}
+                className="flex flex-col rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
+              >
+                {/* group header */}
+                <header className="border-b border-zinc-100 px-4 py-3 dark:border-zinc-800">
+                  <h2 className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">
+                    {group.friend_name}
+                  </h2>
+                </header>
+
+                {/* rule entries */}
+                <ul className="flex flex-col divide-y divide-zinc-100 dark:divide-zinc-800">
+                  {[...group.rules]
+                    .sort((a, b) => a.order - b.order)
+                    .map((entry, idx) => {
+                      const isNote = entry.points === 0;
+                      return (
+                        <li
+                          key={idx}
+                          className="flex items-start gap-3 px-4 py-3"
+                        >
+                          {isNote ? (
+                            /* note row — no badge, italic muted text */
+                            <p className="text-xs italic leading-5 text-zinc-400 dark:text-zinc-500">
+                              {entry.instruction}
                             </p>
-                          </>
-                        )}
-                      </li>
-                    );
-                  })}
-              </ul>
-            </article>
-          ))}
-        </section>
+                          ) : (
+                            <>
+                              {/* points badge */}
+                              <span
+                                className={`mt-0.5 shrink-0 inline-flex min-w-[2.5rem] items-center justify-center rounded-full px-1.5 py-0.5 text-xs font-bold tabular-nums ${entry.points > 0
+                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300"
+                                  : "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300"
+                                  }`}
+                              >
+                                {entry.points > 0 ? `+${entry.points}` : entry.points}
+                              </span>
+                              <p className="text-sm leading-5 text-zinc-700 dark:text-zinc-300">
+                                {resolveInstruction(entry)}
+                              </p>
+                            </>
+                          )}
+                        </li>
+                      );
+                    })}
+                </ul>
+              </article>
+            ))}
+          </section>
+        </>
       )}
     </PageShell>
   );

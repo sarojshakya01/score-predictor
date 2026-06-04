@@ -41,11 +41,13 @@ class MatchService:
         match_stage: str | None = None,
         match_day: int | None = None,
         match_locked: bool | None = None,
+        all_matches: bool | None = None,
     ) -> MatchListResponse:
         """Return paginated matches for admin screens."""
         try:
 
-            if not is_admin and match_day is None and match_stage is None:
+            # if no params are sent, find current match day from the settings
+            if not is_admin and all_matches is None and match_day is None and match_stage is None:
                 setting = await self._setting_repository.get_by_name("current_match_day")
                 match_day = int(setting.value["day"]) if setting else None
 
@@ -94,11 +96,7 @@ class MatchService:
                 limit=limit,
                 include_locked=include_locked,
             )
-            total = await self._match_repository.count_upcoming(
-                from_datetime=now,
-                to_datetime=now + timedelta(days=2),
-                include_locked=include_locked,
-            )
+            total = len(matches)
             return self._build_list_response(
                 matches=matches,
                 total=total,
@@ -113,6 +111,64 @@ class MatchService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An unexpected error occurred: could not list upcoming matches",
+            )
+
+    async def list_finals(
+        self,
+        *,
+        include_locked: bool,
+    ) -> MatchListResponse:
+        """Return upcoming matches for public prediction flows."""
+        try:
+            matches = await self._match_repository.list_finals(
+                include_locked=include_locked,
+            )
+            total = len(matches)
+
+            return self._build_list_response(
+                matches=matches,
+                total=total,
+                limit=total,
+                offset=0,
+            )
+        except HTTPException:
+            # Re-raise FastAPI HTTP exceptions
+            raise
+        except Exception as e:
+            logger.exception("Unexpected error during list_upcoming", e)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected error occurred: could not list upcoming matches",
+            )
+
+    async def list_results(
+        self,
+        *,
+        offset: int,
+        limit: int,
+    ) -> MatchListResponse:
+        """Return completed match results for public home-page display."""
+        try:
+            matches = await self._match_repository.list_completed_matches(
+                offset=offset,
+                limit=limit,
+            )
+            total = await self._match_repository.count_completed_matches()
+
+            return self._build_list_response(
+                matches=matches,
+                total=total,
+                limit=limit,
+                offset=offset,
+            )
+        except HTTPException:
+            # Re-raise FastAPI HTTP exceptions
+            raise
+        except Exception as e:
+            logger.exception("Unexpected error during list_results", e)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected error occurred: could not list match results",
             )
 
     async def get_match(self, match_id: int) -> MatchResponse:
@@ -150,6 +206,7 @@ class MatchService:
             await self._validate_team_references(
                 team1_id=data.team1_id,
                 team2_id=data.team2_id,
+                winner_id=values.get("winner_id"),
                 kick_off_team_id=data.kick_off_team_id,
                 first_scoring_team_id=values.get("first_scoring_team_id"),
             )
@@ -186,6 +243,7 @@ class MatchService:
 
             team1_id = values.get("team1_id", match.team1_id)
             team2_id = values.get("team2_id", match.team2_id)
+            winner_id = values.get("winner_id", match.winner_id)
             kick_off_team_id = values.get("kick_off_team_id", match.kick_off_team_id)
             first_scoring_team_id = values.get(
                 "first_scoring_team_id",
@@ -216,6 +274,7 @@ class MatchService:
             await self._validate_team_references(
                 team1_id=team1_id,
                 team2_id=team2_id,
+                winner_id=winner_id,
                 kick_off_team_id=kick_off_team_id,
                 first_scoring_team_id=first_scoring_team_id,
             )
@@ -283,6 +342,7 @@ class MatchService:
         *,
         team1_id: Any,
         team2_id: Any,
+        winner_id: Any,
         kick_off_team_id: Any,
         first_scoring_team_id: Any,
     ) -> None:
@@ -297,6 +357,12 @@ class MatchService:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="team1_id and team2_id must be different",
+            )
+
+        if winner_id is not None and winner_id not in {team1_id, team2_id}:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="winner_id must match one of the match teams",
             )
 
         if kick_off_team_id is not None and kick_off_team_id not in {
@@ -318,7 +384,13 @@ class MatchService:
             )
 
         missing_team_ids: list[int] = []
-        for team_id in {team1_id, team2_id, kick_off_team_id, first_scoring_team_id}:
+        for team_id in {
+            team1_id,
+            team2_id,
+            winner_id,
+            kick_off_team_id,
+            first_scoring_team_id,
+        }:
             if team_id is None:
                 continue
 

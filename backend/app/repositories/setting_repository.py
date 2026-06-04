@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.setting import Setting
@@ -62,16 +62,6 @@ class SettingRepository:
             .limit(limit),
         )
         return list(result.scalars().all())
-
-    async def count_settings(self, *, search: str | None = None) -> int:
-        """Count settings using the same filters as list_settings."""
-        statement = select(func.count()).select_from(Setting)
-
-        if search is not None:
-            statement = statement.where(Setting.name.ilike(f"%_{search}"))
-
-        result = await self._db.execute(statement)
-        return int(result.scalar_one())
 
     async def create(self, setting: Setting) -> Setting:
         """Persist a new setting and return the refreshed instance."""

@@ -19,6 +19,7 @@ export type MatchResponse = {
   kick_off_team_id: number | null;
   red_card_count: number | null;
   team1_id: number;
+  winner_id: number | null;
   team1_group: string;
   team1_name: string;
   team1_name_short: string;
@@ -47,6 +48,7 @@ export type MatchFields = {
   kick_off_team_id: number | null;
   red_card_count: number | null;
   team1_id: number;
+  winner_id: number | null;
   team1_score: number | null;
   team2_id: number;
   team2_score: number | null;

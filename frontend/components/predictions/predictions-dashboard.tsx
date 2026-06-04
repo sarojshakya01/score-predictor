@@ -135,6 +135,16 @@ const isFirstGoalIn = (value: string): value is FirstGoalIn => {
   return firstGoalIns.includes(value as FirstGoalIn);
 };
 
+const getWinnerTeamId = (team1Score: number, team2Score: number, selectedMatch: MatchResponse | null) => {
+  if (team1Score > team2Score) {
+    return selectedMatch?.team1_id || null;
+  }
+  if (team2Score > team1Score) {
+    return selectedMatch?.team2_id || null;
+  }
+  return null;
+};
+
 const buildFormState = (
   match: MatchResponse,
   prediction?: PredictionResponse,
@@ -171,6 +181,7 @@ export const PredictionsDashboard = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [matches, setMatches] = useState<MatchResponse[]>([]);
+  const [allMatches, setAllMatches] = useState<MatchResponse[]>([]);
   const [predictions, setPredictions] = useState<PredictionResponse[]>([]);
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -223,6 +234,13 @@ export const PredictionsDashboard = () => {
           includeLocked: true,
           limit: 50,
         });
+
+        try {
+          const allMatches = await listMatches();
+          if (allMatches?.items?.length) {
+            setAllMatches(allMatches.items);
+          }
+        } catch { }
 
         let matchDaySetting = null;
         try {
@@ -339,6 +357,7 @@ export const PredictionsDashboard = () => {
         formState.yellowCardCount,
         "Yellow cards",
       ),
+      winner_team_id: getWinnerTeamId(team1Score, team2Score, selectedMatch),
     };
   };
 
@@ -445,14 +464,19 @@ export const PredictionsDashboard = () => {
     setSuccessMessage(null);
 
     try {
-      const matchList = await listMatches({ matchDay });
+      let matchList = allMatches.filter((match) => match.match_day === matchDay);
 
-      if (matchList.items.length === 0) {
+      if (matchList.length) {
+        const matchResponse = await listMatches({ matchDay });
+        matchList = matchResponse.items;
+      }
+
+      if (matchList.length === 0) {
         setLoadError(`No matches found for match day ${matchDay}.`);
         setCurrentMatchDay(null);
       } else {
         setCurrentMatchDay(matchDay);
-        applyMatchSelection(matchList.items, predictions);
+        applyMatchSelection(matchList, predictions);
       }
     } catch (error) {
       setLoadError(
@@ -760,7 +784,7 @@ export const PredictionsDashboard = () => {
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {predictions.length > 0 ? (
                 predictions.map((prediction, idx) => {
-                  const predictionMatch = matches.find(
+                  const predictionMatch = allMatches.find(
                     (match) => match.id === prediction.match_id,
                   );
 

@@ -43,6 +43,38 @@ async def list_upcoming_matches(
     )
 
 @router.get(
+    "/finals/",
+    response_model=MatchListResponse,
+    summary="List final matches (3rd Place and Final)",
+)
+async def list_final_matches(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    include_locked: bool = None,
+) -> MatchListResponse:
+    """Return final matches for prediction and home-page flows."""
+    service = MatchService(db)
+    return await service.list_finals(
+        include_locked=include_locked,
+    )
+
+@router.get(
+    "/results/",
+    response_model=MatchListResponse,
+    summary="List completed match results",
+)
+async def list_match_results(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    offset: Annotated[int, Query(ge=0)] = 0,
+    limit: Annotated[int, Query(ge=1, le=100)] = 6,
+) -> MatchListResponse:
+    """Return completed matches for home-page results."""
+    service = MatchService(db)
+    return await service.list_results(
+        offset=offset,
+        limit=limit,
+    )
+
+@router.get(
     "",
     response_model=MatchListResponse,
     summary="List matches",
@@ -61,7 +93,8 @@ async def list_asked_matches(
         limit=limit,
         match_day=match_day,
         match_stage=match_stage,
-    )   
+        all_matches=True
+    )
 
 
 @admin_router.get(

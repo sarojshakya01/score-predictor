@@ -41,7 +41,7 @@ class SettingService:
                 limit=limit,
                 search=search,
             )
-            total = await self._setting_repository.count_settings(search=search)
+            total = len(settings)
             return self._build_list_response(
                 settings=settings,
                 total=total,

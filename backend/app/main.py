@@ -12,6 +12,7 @@ from app.api.settings import admin_router as admin_settings_router
 from app.api.settings import router as settings_router
 from app.api.teams import admin_router as admin_teams_router
 from app.api.teams import group_router
+from app.api.teams import router as teams_router
 from app.api.users import admin_router as admin_users_router
 from app.api.users import leaderboard_router
 from app.api.users import router as users_router
@@ -47,6 +48,7 @@ api_router.include_router(predictions_router)
 api_router.include_router(settings_router)
 api_router.include_router(admin_settings_router)
 api_router.include_router(group_router)
+api_router.include_router(teams_router)
 api_router.include_router(admin_teams_router)
 api_router.include_router(users_router)
 api_router.include_router(leaderboard_router)

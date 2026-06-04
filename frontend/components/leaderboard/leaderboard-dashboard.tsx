@@ -286,7 +286,7 @@ const UserPointsDetailModal = ({
           {/* Summary cards */}
           <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
-              { label: "Predictions", value: data.items.length, color: "text-zinc-900" },
+              { label: "Total Match Predictions", value: data.items.length, color: "text-zinc-900" },
               {
                 label: "Total Points",
                 value: formatSignedNumber(data.total_points),
@@ -301,7 +301,7 @@ const UserPointsDetailModal = ({
                 label: "Avg per Match",
                 value:
                   data.items.length > 0
-                    ? (data.total_points / data.items.length).toFixed(1)
+                    ? (data.total_points - (data.winner_points + data.runner_up_points + data.third_place_points) / data.items.length).toFixed(1)
                     : "—",
                 color: "text-zinc-900",
               },
@@ -388,6 +388,42 @@ const UserPointsDetailModal = ({
                 </tbody>
                 {/* Totals footer */}
                 <tfoot className="border-t-2 border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/70">
+                  {data.items.some((item) => item.match_stage === "F") && (<>
+                    <tr>
+                      <td colSpan={3} className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                        Winner Prediction Points
+                      </td>
+                      {/* Score pts */}
+                      <td colSpan={2} />
+                      <PtsCell
+                        points={data.winner_points}
+                      />
+                      <td colSpan={21} />
+                    </tr>
+                    <tr>
+                      <td colSpan={3} className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                        Runner up Prediction Points
+                      </td>
+                      {/* Score pts */}
+                      <td colSpan={2} />
+                      <PtsCell
+                        points={data.runner_up_points}
+                      />
+                      <td colSpan={21} />
+                    </tr></>)}
+
+                  {data.items.some((item) => item.match_stage === "3P") && (<>
+                    <tr>
+                      <td colSpan={3} className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                        Third Place Prediction Points
+                      </td>
+                      {/* Score pts */}
+                      <td colSpan={2} />
+                      <PtsCell
+                        points={data.third_place_points}
+                      />
+                      <td colSpan={21} />
+                    </tr></>)}
                   <tr>
                     <td colSpan={3} className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                       Totals
@@ -395,7 +431,7 @@ const UserPointsDetailModal = ({
                     {/* Score pts */}
                     <td colSpan={2} />
                     <PtsCell
-                      points={data.items.reduce((s, i) => s + i.score_points, 0)}
+                      points={data.items.reduce((s, i) => s + i.score_points, 0) + data.winner_points + data.runner_up_points + data.third_place_points}
                     />
                     {/* Goal diff pts */}
                     <td colSpan={2} />
@@ -438,8 +474,9 @@ const UserPointsDetailModal = ({
             </div>
           )}
         </>
-      )}
-    </Modal>
+      )
+      }
+    </Modal >
   );
 };
 
@@ -465,6 +502,9 @@ const LeaderboardRow = ({
           {row.name}
         </button>
       </td>
+      <td className="px-5 py-4 font-semibold text-zinc-950 dark:text-zinc-100">
+        {row.total_points}
+      </td>
       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.score_points}</td>
       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.goal_difference_points}</td>
       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.first_goal_in_points}</td>
@@ -477,9 +517,6 @@ const LeaderboardRow = ({
       </td>
       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.kick_off_team_points}</td>
       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.match_duration_points}</td>
-      <td className="px-5 py-4 text-right font-semibold text-zinc-950 dark:text-zinc-100">
-        {row.total_points}
-      </td>
       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300 text-right">
         {row.predicted_matches} / {completedMatches}
       </td>
@@ -605,8 +642,8 @@ const RaceChart = ({ frames, onUserClick }: { frames: LeaderboardRaceFrameRespon
             <span>Rank</span>
             <span>User</span>
             <span>Total</span>
-            <span className="text-right">Match Point</span>
-            <span className="text-right">Pts</span>
+            <span className="text-right">Match Pts</span>
+            <span className="text-right">Total Pts</span>
           </div>
         </div>
         <div className="max-h-[30rem] divide-y divide-zinc-100 overflow-y-auto dark:divide-zinc-800">
@@ -763,6 +800,7 @@ export const LeaderboardDashboard = () => {
                 <tr>
                   <th className="px-5 py-3 dark:text-zinc-400">Rank</th>
                   <th className="px-5 py-3 dark:text-zinc-400 min-w-[150px]">User</th>
+                  <th className="px-5 py-3 dark:text-zinc-200 min-w-[150px]">Total Points</th>
                   <th className="px-5 py-3 dark:text-zinc-400">Score</th>
                   <th className="px-5 py-3 dark:text-zinc-400 min-w-[120px]">Goal Diff</th>
                   <th className="px-5 py-3 dark:text-zinc-400 min-w-[160px]">First Score In</th>
@@ -771,7 +809,6 @@ export const LeaderboardDashboard = () => {
                   <th className="px-5 py-3 dark:text-zinc-400 min-w-[120px]">Red Card</th>
                   <th className="px-5 py-3 dark:text-zinc-400">Duration</th>
                   <th className="px-5 py-3 dark:text-zinc-400 min-w-[110px]">Kick-off</th>
-                  <th className="px-5 py-3 text-right dark:text-zinc-400 min-w-[150px]">Total Points</th>
                   <th className="px-5 py-3 text-right dark:text-zinc-400 min-w-[100px]">Predicted/ Completed</th>
                 </tr>
               </thead>

@@ -395,6 +395,66 @@ export const IconLeaderboard = ({ className = "h-4 w-4" }: IconProps) => (
   </svg>
 );
 
+export const IconTrophy = ({ className = "h-4 w-4" }: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M8 21h8" />
+    <path d="M12 17v4" />
+    <path d="M7 4h10v4a5 5 0 0 1-10 0V4z" />
+    <path d="M7 6H4a2 2 0 0 0 0 4h3" />
+    <path d="M17 6h3a2 2 0 0 1 0 4h-3" />
+    <path d="M9 17h6" />
+  </svg>
+);
+
+export const IconMedal = ({ className = "h-4 w-4" }: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M7 2h10l-3 7H10L7 2z" />
+    <path d="M10 9 7 2" />
+    <path d="m14 9 3-7" />
+    <circle cx="12" cy="15" r="5" />
+    <path d="M12 13v4" />
+    <path d="M10 15h4" />
+  </svg>
+);
+
+export const IconAward = ({ className = "h-4 w-4" }: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="8" r="5" />
+    <path d="M8.5 12.5 7 22l5-3 5 3-1.5-9.5" />
+    <path d="m9 8 1.5 1.5L14 6" />
+  </svg>
+);
+
 export const IconGroups = ({ className = "h-4 w-4" }: IconProps) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

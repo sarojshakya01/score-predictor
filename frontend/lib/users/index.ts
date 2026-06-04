@@ -2,6 +2,7 @@ export {
   createUser,
   deleteUser,
   listAdminUsers,
+  updateCurrentUserFinalist,
   updateUser,
   userService,
 } from "@/lib/users/user-service";

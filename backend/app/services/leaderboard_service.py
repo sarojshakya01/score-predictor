@@ -65,6 +65,9 @@ class DurationRules:
 @dataclass(frozen=True)
 class ScoringRules:
     """Complete point table loaded from the game_rules setting."""
+    winner: int = 100
+    runner_up: int = 50
+    third_place: int = 25
     score: ScoreRules = field(default_factory=ScoreRules)
     goal_difference: BandedRules = field(default_factory=BandedRules)
     yellow_card: BandedRules = field(default_factory=BandedRules)
@@ -359,14 +362,21 @@ class LeaderboardService:
                         score_points=score.score_points,
                         goal_difference_points=score.goal_difference_points,
                         total_points=score.total_points,
+                        match_stage=match.match_stage
                     )
                 )
+
+            final_matches = await self._match_repository.list_finals(include_locked=True)
+            winner_points, runner_up_points, third_place_points = self._calculate_finalist_points(final_matches, user, rules)
 
             return UserPointsDetailsListResponse(
                 user_id=user_id,
                 user_name=self._format_user_name(user),
                 items=items,
-                total_points=running_total,
+                total_points=running_total + winner_points + runner_up_points + third_place_points,
+                winner_points=winner_points,
+                runner_up_points=runner_up_points,
+                third_place_points=third_place_points,
             )
         except HTTPException:
             raise
@@ -464,7 +474,13 @@ class LeaderboardService:
         user_names = {
             user.id: LeaderboardService._format_user_name(user) for user in users
         }
-        cumulative_points = {user.id: 0 for user in users}
+
+        finalist_points = {user.id: 0 for user in users}
+        for user in users:
+            winner_points, runner_up_points, third_place_points = LeaderboardService._calculate_finalist_points(completed_matches, user, rules)
+            finalist_points[user.id] = winner_points + runner_up_points + third_place_points
+
+        cumulative_points = {user.id: finalist_points[user.id] for user in users}
         predictions_by_match: dict[int, list[Prediction]] = {}
 
         for prediction in predictions:
@@ -746,3 +762,24 @@ class LeaderboardService:
             -totals.yellow_card_points,
             totals.name,
         )
+
+    @staticmethod
+    def _calculate_finalist_points(final_matches: list[Match], user: User, rules: ScoringRules) -> tuple[int, int, int]:
+        """Get points from finalist predictions."""
+        third_place_match = next((m for m in final_matches if m.match_stage == '3P'), None)
+        final_match = next((m for m in final_matches if m.match_stage == 'F'), None)
+
+        runner_up_team = (
+            final_match.team2_id
+            if final_match is not None and final_match.team1_id == final_match.winner_id
+            else (
+                final_match.team1_id
+                if final_match is not None
+                else None
+            )
+        )
+
+        winner_points = rules.winner if final_match is not None and user.winner_team_id == final_match.winner else 0
+        runner_up_points = rules.runner_up if user.runner_up_team_id == runner_up_team else 0
+        third_place_points = rules.third_place if third_place_match is not None and user.third_place_team_id == third_place_match.winner_id else 0
+        return winner_points, runner_up_points, third_place_points

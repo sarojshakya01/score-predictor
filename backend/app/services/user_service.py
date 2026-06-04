@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
 from app.models.user import User, UserRole
+from app.repositories.team_repository import TeamRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.user import (
     UserCreate,
@@ -20,11 +21,19 @@ from app.schemas.user import (
 
 logger = logging.getLogger(__name__)
 
+FINALIST_TEAM_ID_FIELDS = (
+    "winner_team_id",
+    "runner_up_team_id",
+    "third_place_team_id",
+)
+
+
 class UserService:
     """Handles user validation and orchestration."""
 
     def __init__(self, db: AsyncSession) -> None:
         self._user_repository = UserRepository(db)
+        self._team_repository = TeamRepository(db)
 
     async def get_current_profile(self, user: User) -> UserResponse:
         """Return the current user's profile."""
@@ -50,6 +59,8 @@ class UserService:
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Email already registered",
             )
+
+        await self._validate_team_ids(values)
 
         try:
             updated_user = await self._user_repository.update(user, values)
@@ -117,6 +128,16 @@ class UserService:
             password=hash_password(data.password),
             role=data.role,
             is_active=False, # do not activate by default
+            winner_team_id=data.winner_team_id,
+            runner_up_team_id=data.runner_up_team_id,
+            third_place_team_id=data.third_place_team_id,
+        )
+
+        await self._validate_team_ids(
+            {
+                field_name: getattr(data, field_name)
+                for field_name in FINALIST_TEAM_ID_FIELDS
+            },
         )
 
         try:
@@ -172,6 +193,8 @@ class UserService:
         if isinstance(password, str):
             values["password"] = hash_password(password)
 
+        await self._validate_team_ids(values)
+
         try:
             updated_user = await self._user_repository.update(user, values)
         except IntegrityError:
@@ -196,6 +219,20 @@ class UserService:
                 )
 
         return UserResponse.model_validate(updated_user)
+
+    async def _validate_team_ids(self, values: dict[str, object]) -> None:
+        """Ensure provided finalist team IDs reference existing teams."""
+        for field_name in FINALIST_TEAM_ID_FIELDS:
+            team_id = values.get(field_name)
+            if team_id is None:
+                continue
+
+            team = await self._team_repository.get_by_id(int(team_id))
+            if team is None:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"{field_name} must reference an existing team",
+                )
 
     async def delete_user(self, *, user_id: int, current_admin_id: int) -> None:
         """Delete a user from the admin user management screen."""

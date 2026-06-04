@@ -17,14 +17,13 @@ import {
   matchStages,
   updateMatch,
 } from "@/lib/matches";
-import type { MatchCreate, MatchDuration, MatchResponse, MatchStage } from "@/lib/matches";
+import type { MatchCreate, MatchDuration, MatchResponse } from "@/lib/matches";
 import { listAdminTeams } from "@/lib/teams";
 import type { TeamResponse } from "@/lib/teams";
-import { formatDateTime, getMatchLabelWithFlag, getTeam1WithFlag, getTeam2WithFlag, getVs } from "@/components/ui/match-card";
+import { formatDateTime, getTeam1WithFlag, getTeam2WithFlag, getVs } from "@/components/ui/match-card";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { IconCancel, IconPencil, IconPlus, IconSave, IconSearch, IconTrash, IconX } from "@/components/ui/icons";
 import { Pagination } from "@/components/ui/pagination";
-import Link from "next/link";
 import { FirstGoalIn } from "@/lib/matches/types";
 import { DEFAULT_TIMEZONE } from "@/lib/api/config";
 
@@ -44,6 +43,7 @@ type MatchFormState = {
   team2Id: string;
   team2Score: string;
   venueName: string;
+  winnerId: string;
   yellowCardCount: string;
 };
 
@@ -63,6 +63,7 @@ const emptyFormState: MatchFormState = {
   team2Id: "",
   team2Score: "",
   venueName: "",
+  winnerId: "",
   yellowCardCount: "",
 };
 
@@ -112,6 +113,18 @@ const getTeamNameById = (
   return teams.find((team) => team.id === teamId)?.name ?? `Team #${teamId}`;
 };
 
+const getWinnerLabel = (match: MatchResponse, teams: TeamResponse[]): string => {
+  if (match.winner_id !== null) {
+    return getTeamNameById(teams, match.winner_id);
+  }
+
+  if (match.match_locked) {
+    return "DRAW";
+  }
+
+  return "--";
+};
+
 const getMatchLabelText = (match: MatchResponse): string => {
   return `${match.team1_name} vs ${match.team2_name}`;
 };
@@ -136,6 +149,7 @@ const toFormState = (match: MatchResponse): MatchFormState => ({
   team2Id: String(match.team2_id),
   team2Score: match.team2_score === null ? "" : String(match.team2_score),
   venueName: match.venue_name ?? "",
+  winnerId: match.winner_id === null ? "" : String(match.winner_id),
   yellowCardCount: match.yellow_card_count === null ? "" : String(match.yellow_card_count),
 });
 
@@ -201,6 +215,7 @@ const buildMatchPayload = (state: MatchFormState): MatchCreate => {
     kick_off_team_id: parseOptionalPositiveInteger(state.kickoffTeamId),
     red_card_count: parseOptionalNonNegativeInteger(state.redCardCount, "Red cards"),
     team1_id: team1Id,
+    winner_id: parseOptionalPositiveInteger(state.winnerId),
     team1_score: team1Score,
     team2_id: team2Id,
     team2_score: team2Score,
@@ -297,6 +312,7 @@ const AdminMatchesPage = () => {
         nextState.matchDatetime = convertTimeZone(value as string, DEFAULT_TIMEZONE, 'UTC');
       }
       if (!validTeamIds.has(nextState.kickoffTeamId)) nextState.kickoffTeamId = "";
+      if (!validTeamIds.has(nextState.winnerId)) nextState.winnerId = "";
       if (
         !isFirstGoalIn(nextState.firstGoalIn) ||
         ((field === "team1Score" || field === "team2Score") && !hasGoals(nextState))
@@ -454,10 +470,11 @@ const AdminMatchesPage = () => {
           <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
             <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
               <tr>
-                <th className="px-3 py-3">S.N.</th>
-                <th className="px-3 py-3 text-center" colSpan={3}>Match</th>
+                <th className="sticky left-0 top-0 z-40 w-16 min-w-[64px] max-w-[64px] bg-zinc-100 dark:bg-zinc-900 px-3 py-3 border-b border-zinc-200 dark:border-zinc-800">S.N.</th>
+                <th className="sticky left-[64px] top-0 z-40 w-[320px] min-w-[320px] max-w-[320px] bg-zinc-100 dark:bg-zinc-900 px-3 py-3 text-center font-semibold text-sm border-b border-zinc-200 dark:border-zinc-800" colSpan={3}>Match</th>
                 <th className="px-3 py-3 min-w-[140px]">Time</th>
                 <th className="px-3 py-3">Score</th>
+                <th className="px-3 py-3 min-w-[120px]">Winner</th>
                 <th className="px-3 py-3 min-w-[140px]">Kickoff Team</th>
                 <th className="px-3 py-3 min-w-[135px]">First Goal in</th>
                 <th className="px-3 py-3 min-w-[145px]">First Score by</th>
@@ -476,18 +493,19 @@ const AdminMatchesPage = () => {
               ) : pagedMatches.length > 0 ? (
                 pagedMatches.map((match, idx) => (
                   <tr key={match.id} className="transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40">
-                    <td className="px-3 py-3 text-left text-zinc-700 dark:text-zinc-300">{idx + 1}</td>
-                    <td className="pl-3 pr-0 py-3 font-medium text-zinc-950 dark:text-zinc-50">
+                    <td className="sticky left-0 z-20 w-16 min-w-[64px] max-w-[64px] bg-white dark:bg-zinc-950 px-3 py-3 text-left text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-800">{idx + 1}</td>
+                    <td className="sticky left-[64px] z-20 w-32 min-w-[128px] max-w-[128px] bg-white dark:bg-zinc-950 pl-3 pr-0 py-3 font-medium text-zinc-950 dark:text-zinc-50 border-b border-zinc-200 dark:border-zinc-800">
                       {getTeam1WithFlag(match, "sm")}
                     </td>
-                    <td className="px-3 py-3 font-medium text-zinc-950 dark:text-zinc-50">
+                    <td className="sticky left-[192px] z-20 w-16 min-w-[64px] max-w-[64px] bg-white dark:bg-zinc-950 px-3 py-3 text-center font-medium text-zinc-950 dark:text-zinc-50 border-b border-zinc-200 dark:border-zinc-800">
                       {getVs("sm")}
                     </td>
-                    <td className="pl-0 pr-3 py-3 font-medium text-zinc-950 dark:text-zinc-50">
+                    <td className="sticky left-[256px] z-20 w-32 min-w-[128px] max-w-[128px] bg-white dark:bg-zinc-950 pl-0 pr-3 py-3 font-medium text-zinc-950 dark:text-zinc-50 border-b border-zinc-200 dark:border-zinc-800">
                       {getTeam2WithFlag(match, "sm")}
                     </td>
                     <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{formatDateTime(match.match_datetime)}</td>
                     <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{formatScore(match)}</td>
+                    <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{getWinnerLabel(match, teams)}</td>
                     <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{getTeamNameById(teams, match.kick_off_team_id) || "--"}</td>
                     <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.first_goal_in ? firstGoalInLabels[match.first_goal_in as FirstGoalIn] : "--"}</td>
                     <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{getTeamNameById(teams, match.first_scoring_team_id) || "--"}</td>
@@ -524,7 +542,7 @@ const AdminMatchesPage = () => {
                 ))
               ) : (
                 <tr>
-                  <td className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400" colSpan={8}>
+                  <td className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400" colSpan={13}>
                     {isSearchActive ? `No matches match "${searchQuery}".` : "No matches found."}
                   </td>
                 </tr>
@@ -649,6 +667,13 @@ const AdminMatchesPage = () => {
             <label className="flex items-center gap-3 cursor-pointer rounded-md border border-zinc-200 px-3 py-3 text-sm font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">
               <input checked={formState.matchReminderSent} name="match_reminder_sent" type="checkbox" onChange={(event) => updateField("matchReminderSent", event.target.checked)} className="h-4 w-4 accent-emerald-700" />
               <p>Reminder sent</p>
+            </label>
+            <label className="block">
+              <span className={labelCls}><p>Winner</p></span>
+              <select disabled={true} name="winner_id" value={formState.team1Score > formState.team2Score ? formState.team1Id : (formState.team2Score > formState.team1Score ? formState.team2Id : "")} onChange={(event) => updateField("winnerId", event.target.value)} className={selectCls}>
+                <option value="">{formState.matchLocked && formState.team1Score === formState.team2Score ? "Draw" : "Not set"}</option>
+                {formState.matchLocked && formState.team1Score !== formState.team2Score ? selectedTeams.map((team) => (<option key={team.id} value={team.id}>{team.name}</option>)) : null}
+              </select>
             </label>
           </div>
 

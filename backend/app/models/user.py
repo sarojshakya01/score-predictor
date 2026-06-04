@@ -2,7 +2,7 @@
 
 import enum
 
-from sqlalchemy import Boolean, Enum, Index, String
+from sqlalchemy import Boolean, Enum, ForeignKey, Index, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin
@@ -72,10 +72,30 @@ class User(TimestampMixin, Base):
         server_default="1",
     )
 
+    # ── Tournament Winner Predictions ───────────────────────────
+    winner_team_id: Mapped[int | None] = mapped_column(
+        ForeignKey("teams.id"),
+        nullable=True,
+        default=None,
+    )
+    runner_up_team_id: Mapped[int | None] = mapped_column(
+        ForeignKey("teams.id"),
+        nullable=True,
+        default=None,
+    )
+    third_place_team_id: Mapped[int | None] = mapped_column(
+        ForeignKey("teams.id"),
+        nullable=True,
+        default=None,
+    )
+
     # ── Indexes ──────────────────────────────────────────────────
     __table_args__ = (
         Index("ix_users_role", "role"),
         Index("ix_users_is_active", "is_active"),
+        Index("ix_users_winner_team_id", "winner_team_id"),
+        Index("ix_users_runner_up_team_id", "runner_up_team_id"),
+        Index("ix_users_third_place_team_id", "third_place_team_id"),
     )
 
     def __repr__(self) -> str:

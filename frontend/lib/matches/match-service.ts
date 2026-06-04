@@ -85,6 +85,42 @@ export const listUpcomingMatches = async (
   });
 };
 
+export const listFinalMatches = async (
+  params: ListUpcomingMatchesParams = {},
+): Promise<MatchListResponse> => {
+  const queryString = toUpcomingQueryString(params);
+  const path = queryString
+    ? `/matches/finals/?${queryString}`
+    : "/matches/finals/";
+
+  return apiFetch<MatchListResponse>(path, {
+    method: "GET",
+  });
+};
+
+export const listMatchResults = async (
+  params: Pick<ListMatchesParams, "limit" | "offset"> = {},
+): Promise<MatchListResponse> => {
+  const searchParams = new URLSearchParams();
+
+  if (params.offset !== undefined) {
+    searchParams.set("offset", String(params.offset));
+  }
+
+  if (params.limit !== undefined) {
+    searchParams.set("limit", String(params.limit));
+  }
+
+  const queryString = searchParams.toString();
+  const path = queryString
+    ? `/matches/results/?${queryString}`
+    : "/matches/results/";
+
+  return apiFetch<MatchListResponse>(path, {
+    method: "GET",
+  });
+};
+
 export const getCurrentMatchDay = async (): Promise<MatchDayResponse> => {
   return apiFetch<MatchDayResponse>("/matchday", {
     method: "GET",
@@ -144,6 +180,7 @@ export const matchService = {
   deleteMatch,
   listAdminMatches,
   listMatches,
+  listMatchResults,
   listUpcomingMatches,
   updateMatch,
 };

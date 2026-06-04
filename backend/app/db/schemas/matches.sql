@@ -4,6 +4,7 @@ CREATE TABLE matches (
     -- Team References
     team1_id INT NOT NULL,
     team2_id INT NOT NULL,
+    winner_id INT NULL DEFAULT NULL,
 
     -- Score Fields
     team1_score INT NULL DEFAULT NULL,
@@ -47,6 +48,10 @@ CREATE TABLE matches (
         FOREIGN KEY (team2_id)
         REFERENCES teams(id),
 
+    CONSTRAINT fk_matches_winner
+        FOREIGN KEY (winner_id)
+        REFERENCES teams(id),
+
     CONSTRAINT fk_matches_kick_off_team
         FOREIGN KEY (kick_off_team_id)
         REFERENCES teams(id),
@@ -88,6 +93,13 @@ CREATE TABLE matches (
             OR first_scoring_team_id = team2_id
         ),
 
+    CONSTRAINT ck_matches_winner_participant
+        CHECK (
+            winner_id IS NULL
+            OR winner_id = team1_id
+            OR winner_id = team2_id
+        ),
+
     -- Indexes
     INDEX ix_matches_match_datetime (match_datetime),
     INDEX ix_matches_match_day (match_day),
@@ -95,6 +107,7 @@ CREATE TABLE matches (
     INDEX ix_matches_locked_datetime (match_locked, match_datetime),
     INDEX ix_matches_team1_id (team1_id),
     INDEX ix_matches_team2_id (team2_id),
+    INDEX ix_matches_winner_id (winner_id),
     INDEX ix_matches_kick_off_team_id (kick_off_team_id),
     INDEX ix_matches_first_scoring_team_id (first_scoring_team_id)
 

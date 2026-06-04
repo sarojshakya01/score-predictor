@@ -1,4 +1,5 @@
 import { authenticatedApiFetch } from "@/lib/auth";
+import { apiFetch } from "@/lib/api";
 import type {
   ListTeamsParams,
   TeamCreate,
@@ -36,6 +37,17 @@ export const listAdminTeams = async (
   const path = queryString ? `/admin/teams?${queryString}` : "/admin/teams";
 
   return authenticatedApiFetch<TeamListResponse>(path, {
+    method: "GET",
+  });
+};
+
+export const listAllTeams = async (
+  params: ListTeamsParams = {},
+): Promise<TeamListResponse> => {
+  const queryString = toQueryString(params);
+  const path = queryString ? `/teams?${queryString}` : "/teams";
+
+  return apiFetch<TeamListResponse>(path, {
     method: "GET",
   });
 };

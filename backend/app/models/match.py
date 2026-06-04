@@ -81,6 +81,11 @@ class Match(TimestampMixin, Base):
         ForeignKey("teams.id"),
         nullable=False,
     )
+    winner_id: Mapped[int | None] = mapped_column(
+        ForeignKey("teams.id"),
+        nullable=True,
+        default=None,
+    )
 
     # ── Score Fields ─────────────────────────────────────────────
     team1_score: Mapped[int | None] = mapped_column(
@@ -198,6 +203,11 @@ class Match(TimestampMixin, Base):
         foreign_keys=[team2_id],
         lazy="selectin",
     )
+    winner: Mapped["Team | None"] = relationship(
+        "Team",
+        foreign_keys=[winner_id],
+        lazy="selectin",
+    )
     kick_off_team: Mapped["Team | None"] = relationship(
         "Team",
         foreign_keys=[kick_off_team_id],
@@ -212,6 +222,12 @@ class Match(TimestampMixin, Base):
     # ── Indexes ──────────────────────────────────────────────────
     __table_args__ = (
         CheckConstraint("team1_id <> team2_id", name="ck_matches_distinct_teams"),
+        CheckConstraint(
+            "winner_id IS NULL "
+            "OR winner_id = team1_id "
+            "OR winner_id = team2_id",
+            name="ck_matches_winner_participant",
+        ),
         CheckConstraint(
             "team1_score IS NULL OR team1_score >= 0",
             name="ck_matches_team1_score_nonnegative",
@@ -247,6 +263,7 @@ class Match(TimestampMixin, Base):
         Index("ix_matches_locked_datetime", "match_locked", "match_datetime"),
         Index("ix_matches_team1_id", "team1_id"),
         Index("ix_matches_team2_id", "team2_id"),
+        Index("ix_matches_winner_id", "winner_id"),
         Index("ix_matches_kick_off_team_id", "kick_off_team_id"),
         Index("ix_matches_first_scoring_team_id", "first_scoring_team_id"),
     )
