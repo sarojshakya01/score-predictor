@@ -36,7 +36,7 @@ export const AppShell = ({ children }: AppShellProps) => {
                 width={36}
                 height={36}
                 alt="Football Icon"
-                className="h-9 w-auto"
+                className="h-[35px] w-auto"
               />
               <span className="hidden sm:block">
                 <span className="block text-sm font-semibold text-zinc-950 dark:text-zinc-50 leading-tight">

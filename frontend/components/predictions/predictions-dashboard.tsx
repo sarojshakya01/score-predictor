@@ -204,7 +204,10 @@ export const PredictionsDashboard = () => {
     nextMatches: MatchResponse[],
     nextPredictions: PredictionResponse[],
   ) => {
-    const firstMatch = nextMatches.find((match) => !match.match_locked) ?? null;
+    let firstMatch = nextMatches.find((match) => !match.match_locked) ?? null;
+    if (!firstMatch) {
+      firstMatch = nextMatches.find((match) => match) ?? null;
+    }
     const firstMatchPrediction = firstMatch
       ? nextPredictions.find(
         (prediction) => prediction.match_id === firstMatch.id,
@@ -641,7 +644,7 @@ export const PredictionsDashboard = () => {
                 {selectedMatch ? (
                   <>
                     {selectedMatch.team1_flag_url && (
-                      <Image width={24} height={24} className="min-h-[30px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team1_flag_url} alt={selectedMatch.team1_name} />
+                      <Image width={32} height={32} className="min-h-[30px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team1_flag_url} alt={selectedMatch.team1_name} />
                     )}
                     <span>{selectedMatch.team1_name} Score</span>
                   </>
@@ -656,7 +659,7 @@ export const PredictionsDashboard = () => {
                 {selectedMatch ? (
                   <>
                     {selectedMatch.team2_flag_url && (
-                      <Image width={24} height={24} className="min-h-[30px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team2_flag_url} alt={selectedMatch.team2_name} />
+                      <Image width={32} height={32} className="min-h-[30px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team2_flag_url} alt={selectedMatch.team2_name} />
                     )}
                     <span>{selectedMatch.team2_name} Score</span>
                   </>
