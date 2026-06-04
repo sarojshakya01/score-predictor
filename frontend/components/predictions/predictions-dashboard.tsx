@@ -11,6 +11,7 @@ import { getErrorMessage } from "@/lib/forms/error-message";
 import {
   firstGoalInLabels,
   firstGoalIns,
+  getCurrentMatchDay,
   listMatches,
   listUpcomingMatches,
   matchDurationLabels,
@@ -36,7 +37,6 @@ import {
 } from "../ui/match-card";
 import Image from "next/image";
 import { IconChevronLeft, IconChevronRight, IconSave } from "../ui/icons";
-import { getCurrentMatchDay } from "@/lib/matches/match-service";
 import ImageWithFallback from "../ui/image-with-fallback";
 import { FirstGoalIn } from "@/lib/matches/types";
 

@@ -1,24 +1,7 @@
 import Image from "next/image";
 
 import { formatDateTime } from "@/components/ui/match-card";
-import { StatusPill } from "@/components/ui/status-pill";
 import type { MatchResponse } from "@/lib/matches";
-
-const getWinnerLabel = (match: MatchResponse): string => {
-  if (match.winner_id === match.team1_id) {
-    return match.team1_name;
-  }
-
-  if (match.winner_id === match.team2_id) {
-    return match.team2_name;
-  }
-
-  return "DRAW";
-};
-
-const getWinnerTone = (match: MatchResponse): "secondary" | "primary" => {
-  return match.winner_id === null ? "primary" : "secondary";
-};
 
 const TeamScoreRow = ({
   flagUrl,
@@ -35,7 +18,7 @@ const TeamScoreRow = ({
     <div
       className={[
         "flex items-center justify-between gap-3 rounded-md px-2 py-2",
-        isWinner ? "bg-emerald-50 dark:bg-emerald-950/30" : "",
+        isWinner ? "bg-emerald-200 dark:bg-emerald-900/70" : "",
       ].join(" ")}
     >
       <div className="flex min-w-0 items-center gap-2">
@@ -52,7 +35,7 @@ const TeamScoreRow = ({
           className={[
             "truncate text-sm",
             isWinner
-              ? "font-semibold text-emerald-800 dark:text-emerald-200"
+              ? "font-semibold text-emerald-700 dark:text-emerald-200"
               : "font-medium text-zinc-800 dark:text-zinc-200",
           ].join(" ")}
         >
@@ -97,15 +80,10 @@ export const MatchResultsList = ({ matches }: { matches: MatchResponse[] }) => {
                   <p className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:text-zinc-400">
                     Match day {match.match_day}
                   </p>
-                  <p className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">
-                    {formatDateTime(match.match_datetime)}
-                  </p>
                 </div>
-                <StatusPill tone={getWinnerTone(match)}>
-                  <span className="max-w-[96px] truncate">
-                    {getWinnerLabel(match)}
-                  </span>
-                </StatusPill>
+                <p className="truncate text-xs text-zinc-500 dark:text-zinc-400">
+                  {formatDateTime(match.match_datetime)}
+                </p>
               </div>
 
               <div className="mt-4 grid gap-2">
@@ -123,7 +101,7 @@ export const MatchResultsList = ({ matches }: { matches: MatchResponse[] }) => {
                 />
               </div>
 
-              <p className="mt-4 truncate text-xs text-zinc-500 dark:text-zinc-400">
+              <p className="mt-4 truncate text-xs text-center text-zinc-500 dark:text-zinc-400">
                 {match.venue_name || "Venue TBA"}
               </p>
             </div>

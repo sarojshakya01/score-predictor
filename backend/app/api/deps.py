@@ -66,7 +66,7 @@ async def get_current_user(
         detail = (
             "Please verify your email before continuing."
             if user.email_verified_at is None
-            else "Account is not active. Please contact admin to renew your account."
+            else "Account is not active. Please contact admin to activate/renew your account."
         )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

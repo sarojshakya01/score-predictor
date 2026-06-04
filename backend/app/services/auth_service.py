@@ -97,8 +97,9 @@ class AuthService:
                 access_token="",
                 refresh_token="",
                 message=(
-                    "Account created successfully. Please check your email to "
-                    "verify your account."
+                    "Account created successfully. Please check your email (" 
+                    + data.email 
+                    + ") to verify your account."
                 ),
             )
         except HTTPException:
@@ -126,7 +127,7 @@ class AuthService:
                 detail = (
                     "Please verify your email before logging in."
                     if user.email_verified_at is None
-                    else "Account is not active. Please contact admin to renew your account."
+                    else "Account is not active. Please contact admin to activate/renew your account."
                 )
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,

@@ -7,19 +7,19 @@ import { useEffect, useMemo, useState } from "react";
 import {
   formatDateTime,
   getLockUrgency,
-  getPredictionStatus,
   getStatusTone,
 } from "@/components/ui/match-card";
 import { StatusPill } from "@/components/ui/status-pill";
 import {
   IconAward,
   IconCheck,
+  IconLock,
   IconMedal,
   IconSearch,
   IconTrophy,
   IconX,
 } from "@/components/ui/icons";
-import { listFinalMatches, type MatchResponse } from "@/lib/matches";
+import { getCurrentMatchDay, listFinalMatches, type MatchResponse } from "@/lib/matches";
 import { listAllTeams, type TeamResponse } from "@/lib/teams";
 import { getCurrentUser, isAuthenticated, MissingAuthTokenError, UserResponse } from "@/lib/auth";
 import { Modal } from "../ui/modal";
@@ -185,6 +185,7 @@ const getMatchForPlace = (
 
 export const FinalsWinnerSelector = () => {
   const [authRequired, setAuthRequired] = useState(false);
+  const [currentMatchDay, setCurrentMatchDay] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -281,15 +282,26 @@ export const FinalsWinnerSelector = () => {
       setAuthRequired(!hasAuthToken);
 
       try {
-        const [finalMatchesResult, teamsResult, userResult] =
+        const [matchDayResult, finalMatchesResult, teamsResult, userResult] =
           await Promise.allSettled([
+            getCurrentMatchDay(),
             listFinalMatches({ includeLocked: true, limit: 3 }),
             listAllTeams(),
-            getCurrentUser(),
+            getCurrentUser()
           ]);
+        let matchDay: number | null = null;
         let finalMatches: MatchResponse[] = [];
         let teams: TeamResponse[] = [];
         let currrentUser: UserResponse | null = null;
+
+
+        if (matchDayResult.status === "fulfilled") {
+          matchDay = matchDayResult.value.value;
+        } else {
+          setFormError(
+            getErrorMessage(matchDayResult.reason, "Unable to get data. Please try again."),
+          );
+        }
 
         if (finalMatchesResult.status === "fulfilled") {
           finalMatches = finalMatchesResult.value.items;
@@ -307,12 +319,13 @@ export const FinalsWinnerSelector = () => {
           );
         }
 
-        if (!hasAuthToken) {
+        if (!hasAuthToken || !matchDay) {
           if (!isMounted) {
             return;
           }
         }
 
+        setCurrentMatchDay(matchDay);
         setFinalMatches(finalMatches);
         setTeams(teams);
 
@@ -365,13 +378,14 @@ export const FinalsWinnerSelector = () => {
     finalMatch,
     thirdPlaceMatch,
   );
-  const activeMatchStatus = activeMatch ? getPredictionStatus(activeMatch) : null;
-  const activeMatchLocked = activeMatch?.match_locked ?? false;
+
+  const predictionLocked = currentMatchDay ? currentMatchDay > 7 : false;
+  const predictionStatus = !currentMatchDay ? "Open" : predictionLocked ? "Locked" : currentMatchDay >= 5 ? "Locking soon" : "Open";
   const ActivePlaceIcon = activePlace.icon;
 
   const selectTeam = (teamId: number) => {
     setFormError(null);
-    if (activeMatchLocked) {
+    if (predictionLocked) {
       return;
     }
 
@@ -444,7 +458,7 @@ export const FinalsWinnerSelector = () => {
   };
 
   return (<>
-    <article className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-zinc-950">
+    <article className={(predictionLocked ? "" : "opacity-70 ") + "overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-zinc-950"}>
       <div className="flex flex-row items-center justify-between gap-4 border-b border-zinc-200 p-4 dark:border-zinc-800">
         <div className="flex min-w-0 items-center gap-3">
           <span
@@ -459,22 +473,24 @@ export const FinalsWinnerSelector = () => {
             <p className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">
               Finalist
             </p>
-            <p className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">
+            {predictionLocked ? (<div className="flex gap-1"><IconLock /><p className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">
+              Prediction has been locked.
+            </p></div>) : <p className="mt-1 truncate text-xs text-zinc-500 dark:text-zinc-400">
               {isUpdating ? "Update" : "Select"} your <span className="font-semibold text-zinc-950 dark:text-zinc-50">{activePlace.title}</span> from the team list
-            </p>
+            </p>}
           </div>
         </div>
 
         <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-          {activeMatchStatus ? (
+          {(!predictionLocked && predictionStatus) ? (
             <StatusPill
-              tone={getStatusTone(activeMatchStatus)}
+              tone={getStatusTone(predictionStatus)}
               urgency={activeMatch ? getLockUrgency(activeMatch) : "none"}
             >
-              {activeMatchStatus}
+              {predictionStatus}
             </StatusPill>
           ) : (
-            <StatusPill tone="zinc">Final picks</StatusPill>
+            <StatusPill tone="primary">Final picks</StatusPill>
           )}
 
           <div className="relative w-full sm:w-auto">
@@ -518,8 +534,9 @@ export const FinalsWinnerSelector = () => {
               type="button"
               aria-pressed={isActive}
               onClick={() => setActivePlaceId(place.id)}
+              disabled={predictionLocked}
               className={[
-                "flex w-full flex-col justify-between rounded-md border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md sm:flex-1",
+                "flex w-full flex-col justify-between rounded-md border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-md sm:flex-1 disabled:cursor-not-allowed disabled:opacity-60",
                 place.podiumHeight,
                 place.shellClasses,
                 isActive ? place.activeClasses : "",
@@ -584,7 +601,7 @@ export const FinalsWinnerSelector = () => {
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
             <ActivePlaceIcon className="h-4 w-4" />
-            <span>Select your {activePlace.title}</span>
+            {predictionLocked ? <span>Teams</span> : <span>Select your team</span>}
           </div>
           <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
             {filteredTeams.length} of {teams.length} teams
@@ -603,13 +620,13 @@ export const FinalsWinnerSelector = () => {
                 <button
                   key={team.id}
                   type="button"
-                  disabled={activeMatchLocked}
+                  disabled={predictionLocked}
                   aria-pressed={isSelectedForActivePlace}
                   aria-label={`Select ${team.name} for ${activePlace.title}`}
                   onClick={() => selectTeam(team.id)}
                   className={[
                     "relative flex min-h-36 w-40 shrink-0 flex-col justify-between rounded-md border bg-zinc-50 p-3 text-left transition hover:-translate-y-0.5 hover:border-tournament-primary hover:bg-white hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-tournament-primary dark:hover:bg-zinc-700",
-                    isSelectedForActivePlace
+                    (isSelectedForActivePlace || selectedPlace)
                       ? `${activePlace.activeClasses} bg-white dark:bg-zinc-900`
                       : "border-zinc-200",
                   ].join(" ")}
@@ -690,7 +707,7 @@ export const FinalsWinnerSelector = () => {
             <p>Final schedule will appear when matches are available.</p>
           )}
         </div>
-        <button
+        {!predictionLocked && (<button
           onClick={() => {
             setFormError(null);
             if (Object.values(selections).some((val) => val === null)) {
@@ -702,11 +719,11 @@ export const FinalsWinnerSelector = () => {
           disabled={isLoading}
           className={[
             "inline-flex h-10 items-center justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary",
-            activeMatchLocked ? "pointer-events-none cursor-default opacity-70" : "",
+            (isLoading) ? "pointer-events-none cursor-default opacity-70" : "",
           ].join(" ")}
         >
           Predict
-        </button>
+        </button>)}
       </div>
     </article>
 
