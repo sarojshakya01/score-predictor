@@ -458,7 +458,7 @@ export const FinalsWinnerSelector = () => {
   };
 
   return (<>
-    <article className={(predictionLocked ? "" : "opacity-70 ") + "overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-zinc-950"}>
+    <article className={(predictionLocked ? "opacity-70 " : "") + "overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-zinc-950"}>
       <div className="flex flex-row items-center justify-between gap-4 border-b border-zinc-200 p-4 dark:border-zinc-800">
         <div className="flex min-w-0 items-center gap-3">
           <span
