@@ -74,7 +74,7 @@ export const MatchResultsList = ({ matches }: { matches: MatchResponse[] }) => {
           No results yet
         </h2>
         <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-          Completed match results will appear here after scores are locked.
+          Completed match results will appear here.
         </p>
       </div>
     );

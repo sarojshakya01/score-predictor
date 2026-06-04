@@ -256,8 +256,7 @@ const Home = async () => {
               No upcoming matches
             </h2>
             <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-              Fixtures will appear here as soon as the API has open upcoming
-              matches.
+              Fixtures will appear here as soon as the matches are scheduled.
             </p>
           </div>
         )}

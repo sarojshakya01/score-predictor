@@ -307,37 +307,26 @@ export const FinalsWinnerSelector = () => {
           );
         }
 
-        if (userResult.status === "fulfilled") {
-          currrentUser = userResult.value;
-        } else {
-          setFormError(
-            getErrorMessage(userResult.reason, "Unable to load user."),
-          );
-        }
-
         if (!hasAuthToken) {
           if (!isMounted) {
             return;
           }
-          setAuthRequired(true);
-          setFinalMatches([])
-          setTeams([])
-          return;
         }
 
         setFinalMatches(finalMatches);
         setTeams(teams);
 
-        if (!currrentUser) {
-          setFormError("Unable to load user.");
-        } else if (currrentUser) {
-          setSelections({
-            1: currrentUser.winner_team_id,
-            2: currrentUser.runner_up_team_id,
-            3: currrentUser.third_place_team_id,
-          });
-          const isAlreadyPredicted = currrentUser.winner_team_id && currrentUser.runner_up_team_id && currrentUser.third_place_team_id
-          setIsUpdating(!!isAlreadyPredicted)
+        if (userResult.status === "fulfilled") {
+          currrentUser = userResult.value;
+          if (currrentUser) {
+            setSelections({
+              1: currrentUser.winner_team_id,
+              2: currrentUser.runner_up_team_id,
+              3: currrentUser.third_place_team_id,
+            });
+            const isAlreadyPredicted = currrentUser.winner_team_id && currrentUser.runner_up_team_id && currrentUser.third_place_team_id
+            setIsUpdating(!!isAlreadyPredicted)
+          }
         }
       } catch (error) {
         if (!isMounted) {
