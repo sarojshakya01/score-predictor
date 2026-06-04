@@ -352,6 +352,8 @@ const AdminMatchesPage = () => {
     setIsSubmitting(true);
 
     try {
+      // update winner based on goal scored
+      formState.winnerId = formState.team1Score > formState.team2Score ? formState.team1Id : (formState.team2Score > formState.team1Score ? formState.team2Id : "")
       const payload = buildMatchPayload(formState);
       const savedMatch = editingMatchId
         ? await updateMatch(editingMatchId, payload)
@@ -670,8 +672,8 @@ const AdminMatchesPage = () => {
             </label>
             <label className="block">
               <span className={labelCls}><p>Winner</p></span>
-              <select disabled={true} name="winner_id" value={formState.team1Score > formState.team2Score ? formState.team1Id : (formState.team2Score > formState.team1Score ? formState.team2Id : "")} onChange={(event) => updateField("winnerId", event.target.value)} className={selectCls}>
-                <option value="">{formState.matchLocked && formState.team1Score === formState.team2Score ? "Draw" : "Not set"}</option>
+              <select disabled={formState.matchStage === "GROUP"} name="winner_id" value={formState.team1Score > formState.team2Score ? formState.team1Id : (formState.team2Score > formState.team1Score ? formState.team2Id : "")} onChange={() => { }} className={selectCls}>
+                {formState.matchStage === "GROUP" && <option value="">{formState.matchLocked && formState.team1Score === formState.team2Score ? "Draw" : "Not set"}</option>}
                 {formState.matchLocked && formState.team1Score !== formState.team2Score ? selectedTeams.map((team) => (<option key={team.id} value={team.id}>{team.name}</option>)) : null}
               </select>
             </label>
