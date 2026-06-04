@@ -12,12 +12,13 @@ import {
   firstGoalInLabels,
   firstGoalIns,
   getCurrentMatchDay,
+  getHeadToHeadMatchHistory,
   listMatches,
   listUpcomingMatches,
   matchDurationLabels,
   matchDurations,
 } from "@/lib/matches";
-import type { MatchDuration, MatchResponse } from "@/lib/matches";
+import type { HeadToHeadMatchHistory, MatchDuration, MatchResponse } from "@/lib/matches";
 import {
   createPrediction,
   listCurrentUserPredictions,
@@ -37,8 +38,10 @@ import {
 } from "../ui/match-card";
 import Image from "next/image";
 import { IconChevronLeft, IconChevronRight, IconSave } from "../ui/icons";
+import { IconSparkles } from "@/components/ui/icons";
 import ImageWithFallback from "../ui/image-with-fallback";
 import { FirstGoalIn } from "@/lib/matches/types";
+import { listAllTeams, type TeamResponse } from "@/lib/teams";
 
 type PredictionFormState = {
   firstScoringTeamId: string;
@@ -49,6 +52,22 @@ type PredictionFormState = {
   team1Score: string;
   team2Score: string;
   yellowCardCount: string;
+};
+
+type HeadToHeadStats = {
+  averageRedCards: number;
+  averageTotalGoals: number;
+  averageYellowCards: number;
+  matchCount: number;
+  team1Goals: number;
+  team1Points: number;
+  team2Goals: number;
+  team2Points: number;
+};
+
+type AiPrediction = {
+  formState: PredictionFormState;
+  summary: string;
 };
 
 const emptyFormState: PredictionFormState = {
@@ -64,6 +83,292 @@ const emptyFormState: PredictionFormState = {
 
 const getMatchLabelText = (match: MatchResponse): string => {
   return `${match.team1_name} vs ${match.team2_name}`;
+};
+
+const getRankSortValue = (team: TeamResponse | undefined): number => {
+  if (!team || team.fifa_rank <= 0) {
+    return Number.POSITIVE_INFINITY;
+  }
+
+  return team.fifa_rank;
+};
+
+const clamp = (value: number, min: number, max: number): number => {
+  return Math.min(max, Math.max(min, value));
+};
+
+const getCompletedHeadToHeadMatches = (
+  selectedMatch: MatchResponse,
+  allMatches: MatchResponse[],
+): MatchResponse[] => {
+  const teamIds = new Set([selectedMatch.team1_id, selectedMatch.team2_id]);
+
+  return allMatches
+    .filter((match) => {
+      if (match.id === selectedMatch.id) return false;
+      if (!match.match_locked) return false;
+      if (match.team1_score === null || match.team2_score === null) return false;
+
+      return teamIds.has(match.team1_id) && teamIds.has(match.team2_id);
+    })
+    .sort(
+      (left, right) =>
+        new Date(right.match_datetime).getTime() -
+        new Date(left.match_datetime).getTime(),
+    )
+    .slice(0, 7);
+};
+
+const getHeadToHeadStats = (
+  selectedMatch: MatchResponse,
+  headToHeadMatches: MatchResponse[],
+): HeadToHeadStats => {
+  return headToHeadMatches.reduce<HeadToHeadStats>(
+    (stats, match, index) => {
+      const team1WasMatchTeam1 = match.team1_id === selectedMatch.team1_id;
+      const selectedTeam1Score = team1WasMatchTeam1
+        ? match.team1_score ?? 0
+        : match.team2_score ?? 0;
+      const selectedTeam2Score = team1WasMatchTeam1
+        ? match.team2_score ?? 0
+        : match.team1_score ?? 0;
+      const recencyWeight = 1 - index * 0.08;
+
+      stats.matchCount += 1;
+      stats.team1Goals += selectedTeam1Score * recencyWeight;
+      stats.team2Goals += selectedTeam2Score * recencyWeight;
+      stats.averageTotalGoals +=
+        (selectedTeam1Score + selectedTeam2Score) * recencyWeight;
+      stats.averageYellowCards += (match.yellow_card_count ?? 4) * recencyWeight;
+      stats.averageRedCards += (match.red_card_count ?? 0) * recencyWeight;
+
+      if (selectedTeam1Score > selectedTeam2Score) {
+        stats.team1Points += 3 * recencyWeight;
+      } else if (selectedTeam2Score > selectedTeam1Score) {
+        stats.team2Points += 3 * recencyWeight;
+      } else {
+        stats.team1Points += recencyWeight;
+        stats.team2Points += recencyWeight;
+      }
+
+      return stats;
+    },
+    {
+      averageRedCards: 0,
+      averageTotalGoals: 0,
+      averageYellowCards: 0,
+      matchCount: 0,
+      team1Goals: 0,
+      team1Points: 0,
+      team2Goals: 0,
+      team2Points: 0,
+    },
+  );
+};
+
+const getHeadToHeadHistoryStats = (
+  headToHeadMatchHistory: HeadToHeadMatchHistory[],
+): HeadToHeadStats => {
+  return headToHeadMatchHistory.reduce<HeadToHeadStats>(
+    (stats, match, index) => {
+      const recencyWeight = 1 - index * 0.08;
+
+      stats.matchCount += 1;
+      stats.team1Goals += match.team1_score * recencyWeight;
+      stats.team2Goals += match.team2_score * recencyWeight;
+      stats.averageTotalGoals +=
+        (match.team1_score + match.team2_score) * recencyWeight;
+      stats.averageYellowCards += 4.4 * recencyWeight;
+      stats.averageRedCards += 0.16 * recencyWeight;
+
+      if (match.team1_score > match.team2_score) {
+        stats.team1Points += 3 * recencyWeight;
+      } else if (match.team2_score > match.team1_score) {
+        stats.team2Points += 3 * recencyWeight;
+      } else {
+        stats.team1Points += recencyWeight;
+        stats.team2Points += recencyWeight;
+      }
+
+      return stats;
+    },
+    {
+      averageRedCards: 0,
+      averageTotalGoals: 0,
+      averageYellowCards: 0,
+      matchCount: 0,
+      team1Goals: 0,
+      team1Points: 0,
+      team2Goals: 0,
+      team2Points: 0,
+    },
+  );
+};
+
+const getRankStrength = (team: TeamResponse | undefined): number => {
+  const rank = getRankSortValue(team);
+
+  if (!Number.isFinite(rank)) {
+    return 0.4;
+  }
+
+  return clamp((80 - Math.min(rank, 79)) / 80, 0.06, 1);
+};
+
+const getRoundedGoalValue = (value: number): number => {
+  const noisyValue = value + (Math.random() - 0.5) * 0.65;
+
+  return clamp(Math.round(noisyValue), 0, 6);
+};
+
+const ensureKnockoutWinner = (
+  selectedMatch: MatchResponse,
+  team1Score: number,
+  team2Score: number,
+  team1Power: number,
+  team2Power: number,
+): [number, number] => {
+  if (selectedMatch.match_stage === "GROUP" || team1Score !== team2Score) {
+    return [team1Score, team2Score];
+  }
+
+  if (team1Power >= team2Power) {
+    return [team1Score + 1, team2Score];
+  }
+
+  return [team1Score, team2Score + 1];
+};
+
+const buildAiPrediction = (
+  selectedMatch: MatchResponse,
+  allMatches: MatchResponse[],
+  teamsById: Map<number, TeamResponse>,
+  headToHeadMatchHistory: HeadToHeadMatchHistory[] = [],
+): AiPrediction => {
+  const team1 = teamsById.get(selectedMatch.team1_id);
+  const team2 = teamsById.get(selectedMatch.team2_id);
+  const headToHeadMatches =
+    headToHeadMatchHistory.length > 0
+      ? []
+      : getCompletedHeadToHeadMatches(selectedMatch, allMatches);
+  const stats =
+    headToHeadMatchHistory.length > 0
+      ? getHeadToHeadHistoryStats(headToHeadMatchHistory)
+      : getHeadToHeadStats(selectedMatch, headToHeadMatches);
+  const h2hTotal = Math.max(1, stats.team1Points + stats.team2Points);
+  const h2hTeam1Score = stats.matchCount ? stats.team1Points / h2hTotal : 0.5;
+  const h2hTeam2Score = stats.matchCount ? stats.team2Points / h2hTotal : 0.5;
+  const rankTeam1Score = getRankStrength(team1);
+  const rankTeam2Score = getRankStrength(team2);
+  const goalDiffSignal = stats.matchCount
+    ? clamp((stats.team1Goals - stats.team2Goals) / 10, -0.18, 0.18)
+    : 0;
+  const variance = (Math.random() - 0.5) * 0.16;
+  const team1Power =
+    rankTeam1Score * 0.58 + h2hTeam1Score * 0.34 + goalDiffSignal + variance;
+  const team2Power =
+    rankTeam2Score * 0.58 + h2hTeam2Score * 0.34 - goalDiffSignal - variance;
+  const powerDifference = team1Power - team2Power;
+  const historyAverageGoals = stats.matchCount
+    ? stats.averageTotalGoals / stats.matchCount
+    : 2.45;
+  const expectedTotalGoals = clamp(historyAverageGoals, 1.4, 4.2);
+  const team1ExpectedGoals = clamp(
+    expectedTotalGoals / 2 + powerDifference * 1.4,
+    0.15,
+    4.8,
+  );
+  const team2ExpectedGoals = clamp(
+    expectedTotalGoals / 2 - powerDifference * 1.4,
+    0.15,
+    4.8,
+  );
+  let team1Score = getRoundedGoalValue(team1ExpectedGoals);
+  let team2Score = getRoundedGoalValue(team2ExpectedGoals);
+
+  if (team1Score === 0 && team2Score === 0 && expectedTotalGoals > 1.8) {
+    if (team1Power >= team2Power) {
+      team1Score = 1;
+    } else {
+      team2Score = 1;
+    }
+  }
+
+  [team1Score, team2Score] = ensureKnockoutWinner(
+    selectedMatch,
+    team1Score,
+    team2Score,
+    team1Power,
+    team2Power,
+  );
+
+  const hasGoals = team1Score + team2Score > 0;
+  const firstScoringTeamId = hasGoals
+    ? team1Score === 0
+      ? selectedMatch.team2_id
+      : team2Score === 0
+        ? selectedMatch.team1_id
+        : team1Power >= team2Power
+          ? selectedMatch.team1_id
+          : selectedMatch.team2_id
+    : "";
+  const firstGoalIn =
+    !hasGoals
+      ? ""
+      : selectedMatch.match_stage !== "GROUP" && Math.random() < 0.08
+        ? "ET"
+        : Math.random() < 0.68
+          ? "1H"
+          : "2H";
+  const averageYellowCards = stats.matchCount
+    ? stats.averageYellowCards / stats.matchCount
+    : selectedMatch.match_stage === "GROUP"
+      ? 4
+      : 5;
+  const averageRedCards = stats.matchCount
+    ? stats.averageRedCards / stats.matchCount
+    : 0.15;
+  const yellowCards = clamp(
+    Math.round(averageYellowCards + (Math.random() - 0.5) * 2),
+    1,
+    9,
+  );
+  const redCards = clamp(
+    Math.round(averageRedCards + (Math.random() < 0.18 ? 1 : 0)),
+    0,
+    3,
+  );
+  const matchDuration =
+    selectedMatch.match_stage === "GROUP"
+      ? "90"
+      : team1Score === team2Score
+        ? Math.random() < 0.45
+          ? "PENALTY"
+          : "120"
+        : Math.random() < 0.12
+          ? "120"
+          : "90";
+  const kickoffTeamId =
+    Math.random() < 0.5 ? selectedMatch.team1_id : selectedMatch.team2_id;
+
+  return {
+    formState: {
+      firstGoalIn,
+      firstScoringTeamId: firstScoringTeamId ? String(firstScoringTeamId) : "",
+      kickoffTeamId: String(kickoffTeamId),
+      matchDuration,
+      redCardCount: String(redCards),
+      team1Score: String(team1Score),
+      team2Score: String(team2Score),
+      yellowCardCount: String(yellowCards),
+    },
+    summary:
+      headToHeadMatchHistory.length > 0
+        ? `AI pick loaded using ${headToHeadMatchHistory.length} head-to-head result${headToHeadMatches.length === 1 ? "" : "s"} and FIFA ranking.`
+        : headToHeadMatches.length > 0
+          ? `AI pick loaded using ${headToHeadMatches.length} recent head-to-head match${headToHeadMatches.length === 1 ? "" : "es"} and FIFA ranking.`
+          : "AI pick loaded using FIFA ranking and tournament-stage trends.",
+  };
 };
 
 const getTeamNameById = (
@@ -177,11 +482,13 @@ export const PredictionsDashboard = () => {
   const [currentMatchDay, setCurrentMatchDay] = useState<number | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [formState, setFormState] = useState<PredictionFormState>(emptyFormState);
+  const [isAiPicking, setIsAiPicking] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [matches, setMatches] = useState<MatchResponse[]>([]);
   const [allMatches, setAllMatches] = useState<MatchResponse[]>([]);
+  const [teams, setTeams] = useState<TeamResponse[]>([]);
   const [predictions, setPredictions] = useState<PredictionResponse[]>([]);
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -199,6 +506,9 @@ export const PredictionsDashboard = () => {
         : undefined,
     [predictions, selectedMatch],
   );
+  const teamsById = useMemo(() => {
+    return new Map(teams.map((team) => [team.id, team]));
+  }, [teams]);
 
   const applyMatchSelection = useCallback((
     nextMatches: MatchResponse[],
@@ -242,6 +552,13 @@ export const PredictionsDashboard = () => {
           const allMatches = await listMatches({ limit: 1000 });
           if (allMatches?.items?.length) {
             setAllMatches(allMatches.items);
+          }
+        } catch { }
+
+        try {
+          const teamList = await listAllTeams({ limit: 500 });
+          if (teamList?.items?.length) {
+            setTeams(teamList.items);
           }
         } catch { }
 
@@ -450,6 +767,51 @@ export const PredictionsDashboard = () => {
     setPendingPredictionFields(null);
   };
 
+  const handleAiPick = async () => {
+    setFormError(null);
+    setSuccessMessage(null);
+
+    if (!selectedMatch) {
+      setFormError("Select a match before using AI pick.");
+      return;
+    }
+
+    if (selectedStatus === "Locked") {
+      setFormError("Prediction is locked for this match.");
+      return;
+    }
+
+    if (teams.length === 0) {
+      setFormError("Team ranking data is not available for AI pick.");
+      return;
+    }
+
+    setIsAiPicking(true);
+    try {
+      let headToHeadMatchHistory: HeadToHeadMatchHistory[] = [];
+
+      try {
+        const headToHeadMatch = await getHeadToHeadMatchHistory(selectedMatch.id, {
+          limit: 7,
+        });
+        headToHeadMatchHistory = headToHeadMatch.items;
+      } catch {
+        headToHeadMatchHistory = [];
+      }
+
+      const aiPrediction = buildAiPrediction(
+        selectedMatch,
+        allMatches,
+        teamsById,
+        headToHeadMatchHistory,
+      );
+      setFormState(aiPrediction.formState);
+      setSuccessMessage(aiPrediction.summary);
+    } finally {
+      setIsAiPicking(false);
+    }
+  };
+
   const handleCardClick = (match: MatchResponse) => {
     const clickedPrediction = predictions.find(
       (prediction) => prediction.match_id === match.id,
@@ -617,6 +979,18 @@ export const PredictionsDashboard = () => {
           className={(selectedStatus === "Locked" ? "opacity-50 pointer-events-none " : "") + "relative w-full lg:max-w-2xl rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 p-4 sm:p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900"}
           onSubmit={handleSubmit}
         >
+          <div className="absolute left-[20px] top-[20px]">
+            <button
+              type="button"
+              title="Scrape head-to-head scores, then blend them with FIFA ranking"
+              disabled={isFormDisabled || isAiPicking || teams.length === 0}
+              onClick={() => void handleAiPick()}
+              className="mt-0 inline-flex h-10 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:border-emerald-700 dark:hover:bg-emerald-900 dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500"
+            >
+              <IconSparkles className="h-4 w-4" />
+              <p className="hidden md:block">{isAiPicking ? "Picking ..." : "Auto pick with AI"}</p>
+            </button>
+          </div>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <div className="text-center">
               <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">

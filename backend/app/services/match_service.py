@@ -14,11 +14,13 @@ from app.repositories.setting_repository import SettingRepository
 from app.repositories.team_repository import TeamRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.match import (
+    HeadToHeadResponse,
     MatchCreate,
     MatchListResponse,
     MatchResponse,
     MatchUpdate,
 )
+from app.services.head_to_head_service import HeadToHeadService
 from app.services.team_service import TeamService
 
 logger = logging.getLogger(__name__)
@@ -184,6 +186,41 @@ class MatchService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An unexpected error occurred: could not read match",
+            )
+
+    async def get_head_to_head(
+        self,
+        *,
+        match_id: int,
+        limit: int,
+    ) -> HeadToHeadResponse:
+        """Return head-to-head snippets for a match."""
+        try:
+            match = await self._get_match_or_404(match_id)
+            team1_name = match.team1.name.replace("-H", "").replace("-A", "")
+            team2_name = match.team2.name.replace("-H", "").replace("-A", "")
+            scraper = HeadToHeadService()
+            return await scraper.search(
+                team1_name=team1_name,
+                team1_code=match.team1.fifa_code,
+                team2_name=team2_name,
+                team2_code=match.team2.fifa_code,
+                limit=limit,
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.exception("Unexpected error during get_head_to_head", e)
+            return HeadToHeadResponse(
+                items=[],
+                limit=limit,
+                query=(
+                    f"{team1_name} vs {team2_name} football head to head "
+                    "last 7 matches scores"
+                ),
+                team1_name=team1_name,
+                team2_name=team2_name,
+                total=0,
             )
 
     async def create_match(self, data: MatchCreate) -> MatchResponse:

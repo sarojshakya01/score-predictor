@@ -2,6 +2,7 @@ export {
   createMatch,
   deleteMatch,
   getCurrentMatchDay,
+  getHeadToHeadMatchHistory,
   listAdminMatches,
   listMatches,
   listMatchResults,
@@ -13,6 +14,8 @@ export {
 export { firstGoalIns, firstGoalInLabels, matchDurations, matchDurationLabels, matchStages, matchStageLabels } from "@/lib/matches/constants";
 export type {
   FirstGoalIn,
+  HeadToHeadMatchHistory,
+  HeadToHeadResponse,
   MatchDuration,
   MatchStage,
   ListMatchesParams,

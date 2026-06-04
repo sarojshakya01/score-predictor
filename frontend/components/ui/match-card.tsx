@@ -5,7 +5,7 @@ import { PredictionStatus } from "@/lib/matches/types";
 import Link from "next/link";
 import Image from "next/image";
 import { DEFAULT_TIMEZONE } from "@/lib/api/config";
-import { IconCheck, IconCross, IconWarning } from "./icons";
+import { IconCheck, IconCross, IconLocation, IconWarning } from "./icons";
 
 // ---------------------------------------------------------------------------
 // Lock-urgency helpers
@@ -133,7 +133,7 @@ export const getMatchLabelWithFlag = (match: MatchResponse, width: string = "w-f
 );
 
 const MatchTitle = (match: MatchResponse) => (
-  <dl className="items-start justify-between gap-3 min-h-[60px] content-center">
+  <dl className="items-start justify-between gap-3 min-h-[50px] content-center">
     <div className="flex items-center justify-center">
       <h2 className="w-full mt-2 text-md font-semibold text-zinc-950 dark:text-zinc-50">
         {getMatchLabelWithFlag(match)}
@@ -143,19 +143,16 @@ const MatchTitle = (match: MatchResponse) => (
 );
 
 export const MatchVenue = (match: MatchResponse) => (
-  <dl>
+  <dl className="mt-2">
     <div className="flex w-full flex-col items-center justify-center">
       <Link
         href={`https://google.com/search?q=${match.venue_name?.trim()}`}
         target="_blank"
         className="flex items-center justify-center cursor-pointer p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-300 transition"
       >
-        <svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="size-6">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
-        </svg>
+        <IconLocation />
       </Link>
-      <dd className="mt-2 font-medium text-zinc-950 dark:text-zinc-50">
+      <dd className="mt-1 font-medium text-zinc-950 dark:text-zinc-50">
         {match.venue_name
           ? <Link target="_blank" href={`https://google.com/search?q=${match.venue_name?.trim()}`} className="text-tournament-primary-light hover:text-tournament-primary">{match.venue_name?.trim()}</Link>
           : "TBA"}
@@ -220,15 +217,15 @@ export const SelectableMatchCard = (props: {
         {MatchTitle(match)}
         {MatchVenue(match)}
       </>
-      <dl className="mt-5 grid grid-cols-2 gap-4 text-sm">
+      <dl className="mt-1 grid grid-cols-2 gap-4 text-sm">
         <div>
           <dt className="text-zinc-500 dark:text-zinc-400">Kickoff</dt>
-          <dd className="mt-1 font-medium text-zinc-950 dark:text-zinc-50">
+          <dd className="font-medium text-zinc-950 dark:text-zinc-50">
             {formatDateTime(match.match_datetime)}
           </dd>
         </div>
-        <div className="flex items-center justify-self-end">
-          <dd className="mt-1 font-medium text-zinc-950 dark:text-zinc-50">
+        <div className="flex items-end justify-self-end">
+          <dd className="font-medium text-zinc-950 dark:text-zinc-50">
             {MatchSaveStatus(isPredictionAvailable, isSaved, match.match_locked)}
           </dd>
         </div>

@@ -142,3 +142,25 @@ class MatchListResponse(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+class HeadToHeadMatch(BaseModel):
+    """Parsed head-to-head result."""
+
+    date_text: str | None = None
+    raw_text: str
+    source: str = "google"
+    team1_score: int
+    team2_score: int
+
+
+class HeadToHeadResponse(BaseModel):
+    """Head-to-head search results for a match."""
+
+    items: list[HeadToHeadMatch]
+    limit: int
+    query: str
+    source: str = "google"
+    team1_name: str
+    team2_name: str
+    total: int

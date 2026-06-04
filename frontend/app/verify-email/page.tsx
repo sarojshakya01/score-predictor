@@ -1,4 +1,5 @@
 import { VerifyEmailPanel } from "@/components/auth/verify-email-panel";
+import Link from "next/link";
 
 type VerifyEmailPageProps = {
   searchParams: Promise<{
@@ -31,6 +32,13 @@ const VerifyEmailPage = async ({ searchParams }: VerifyEmailPageProps) => {
           </h1>
         </div>
         <VerifyEmailPanel token={token} />
+        <div className="flex flex-col gap-2 items-right text-right pt-5">
+          <div className="block">
+            <Link href="/resend-verification" className="font-semibold text-emerald-700 dark:text-emerald-400">
+              Resend verification
+            </Link>
+          </div>
+        </div>
       </section>
     </main>
   );

@@ -171,9 +171,11 @@ const Home = async () => {
       <section>
         <div className="mb-4 flex items-end justify-between gap-4">
           <div>
-            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
-              Predict Winners
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
+                Predict Winners
+              </h2>
+            </div>
             <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
               Predict your World Cup 2026 winner, runner-up and third place.
             </p>

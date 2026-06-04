@@ -21,9 +21,7 @@ _EMAIL_STYLE = """
   th { background: #0a3161; color: #fff; text-transform: capitalize; }
   tr:nth-child(even) { background: #f7f8f5; }
   .not-predicted { background: #f7c6c6; color: #7f1d1d; font-weight: bold; }
-	  .btn { display: inline-block; margin-top: 16px;
-	         color: #fff; border-radius: 6px;
-	         text-decoration: none; font-weight: bold; }
+  .btn { display: inline-block; color: #64748b; text-decoration: none; font-weight: bold; }
 </style>
 """
 

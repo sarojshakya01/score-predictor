@@ -16,6 +16,7 @@ import {
   IconLock,
   IconMedal,
   IconSearch,
+  IconSparkles,
   IconTrophy,
   IconX,
 } from "@/components/ui/icons";
@@ -26,6 +27,7 @@ import { Modal } from "../ui/modal";
 import { ApiError } from "@/lib/api";
 import { getErrorMessage } from "@/lib/forms/error-message";
 import { updateCurrentUserFinalist, UserCreate } from "@/lib/users";
+import { WorldCupHistoryTooltip } from "./world-cup-history-tooltip";
 
 type PlaceId = 1 | 2 | 3;
 
@@ -155,6 +157,131 @@ const emptySelections: Record<PlaceId, number | null> = {
 
 const getRankSortValue = (team: TeamResponse): number => {
   return team.fifa_rank > 0 ? team.fifa_rank : Number.POSITIVE_INFINITY;
+};
+
+const aiPredictionPriors: Record<string, number> = {
+  ARG: 1.45,
+  BEL: 1.04,
+  BRA: 1.22,
+  CRO: 1.02,
+  ENG: 1.24,
+  ESP: 1.28,
+  FRA: 1.4,
+  GER: 1.12,
+  ITA: 1.06,
+  MAR: 0.98,
+  NED: 1.14,
+  POR: 1.18,
+  URU: 1.02,
+};
+
+const getAiCandidateTeams = (teams: TeamResponse[]): TeamResponse[] => {
+  const rankedTeams = [...teams].sort((left, right) => {
+    const rankDifference = getRankSortValue(left) - getRankSortValue(right);
+
+    if (rankDifference !== 0) {
+      return rankDifference;
+    }
+
+    return left.name.localeCompare(right.name);
+  });
+  const candidateCount = Math.min(
+    rankedTeams.length,
+    Math.max(8, Math.ceil(rankedTeams.length * 0.42)),
+  );
+
+  return rankedTeams.slice(0, candidateCount);
+};
+
+const getAiPredictionWeight = (team: TeamResponse, placeId: PlaceId): number => {
+  const rank = getRankSortValue(team);
+  const rankScore = Number.isFinite(rank)
+    ? Math.max(0.06, (80 - Math.min(rank, 79)) / 80)
+    : 0.06;
+  const prior = aiPredictionPriors[team.fifa_code.trim().toUpperCase()] ?? 1;
+  const placeExponent = placeId === 1 ? 1.7 : placeId === 2 ? 1.35 : 1.15;
+
+  return Math.pow(rankScore, placeExponent) * prior;
+};
+
+const pickAiTeam = (
+  teams: TeamResponse[],
+  excludedTeamIds: Set<number>,
+  placeId: PlaceId,
+): TeamResponse | null => {
+  const candidates = teams.filter((team) => !excludedTeamIds.has(team.id));
+
+  if (candidates.length === 0) {
+    return null;
+  }
+
+  const weightedCandidates = candidates.map((team) => ({
+    team,
+    weight: getAiPredictionWeight(team, placeId),
+  }));
+  const totalWeight = weightedCandidates.reduce(
+    (total, candidate) => total + candidate.weight,
+    0,
+  );
+
+  if (totalWeight <= 0) {
+    return candidates[0];
+  }
+
+  let threshold = Math.random() * totalWeight;
+
+  for (const candidate of weightedCandidates) {
+    threshold -= candidate.weight;
+    if (threshold <= 0) {
+      return candidate.team;
+    }
+  }
+
+  return weightedCandidates[weightedCandidates.length - 1]?.team ?? null;
+};
+
+const buildAiSelections = (
+  teams: TeamResponse[],
+): Record<PlaceId, number | null> | null => {
+  if (teams.length < 3) {
+    return null;
+  }
+
+  const candidateTeams = getAiCandidateTeams(teams);
+  const excludedTeamIds = new Set<number>();
+  const pickedTeams: TeamResponse[] = [];
+  const winner = pickAiTeam(candidateTeams, excludedTeamIds, 1);
+
+  if (!winner) {
+    return null;
+  }
+
+  excludedTeamIds.add(winner.id);
+  pickedTeams.push(winner);
+  const runnerUp = pickAiTeam(candidateTeams, excludedTeamIds, 2);
+
+  if (!runnerUp) {
+    return null;
+  }
+
+  excludedTeamIds.add(runnerUp.id);
+  pickedTeams.push(runnerUp);
+  const thirdPlace = pickAiTeam(candidateTeams, excludedTeamIds, 3);
+
+  if (!thirdPlace) {
+    return null;
+  }
+
+  pickedTeams.push(thirdPlace);
+  const [rankedWinner, rankedRunnerUp, rankedThirdPlace] = pickedTeams.sort(
+    (left, right) => getAiPredictionWeight(right, 1) - getAiPredictionWeight(left, 1),
+  );
+
+  return {
+    1: rankedWinner?.id ?? null,
+    2: rankedRunnerUp?.id ?? null,
+    3: rankedThirdPlace?.id ?? null,
+  };
 };
 
 const formatGroup = (group: string): string => {
@@ -408,6 +535,27 @@ export const FinalsWinnerSelector = () => {
     });
   };
 
+  const handleAiPick = () => {
+    setFormError(null);
+    setSuccessMessage(null);
+
+    if (predictionLocked) {
+      return;
+    }
+
+    const aiSelections = buildAiSelections(sortedTeams);
+
+    if (!aiSelections) {
+      setFormError("At least three teams are required for AI pick.");
+      return;
+    }
+
+    setSelections(aiSelections);
+    setActivePlaceId(1);
+    setSearchTerm("");
+    setSuccessMessage("Teams are picked by AI automatically.");
+  };
+
   const handleConfirmClick = async () => {
     if (isAuthenticated()) {
       setFormError(null);
@@ -481,7 +629,17 @@ export const FinalsWinnerSelector = () => {
           </div>
         </div>
 
-        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+        <div className="flex flex-row items-start gap-3 sm:items-center">
+          <button
+            type="button"
+            onClick={handleAiPick}
+            disabled={isLoading || predictionLocked || teams.length < 3}
+            className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:border-emerald-700 dark:hover:bg-emerald-900 dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500"
+          >
+            <IconSparkles className="h-4 w-4" />
+            <p className="hidden lg:block">Auto pick with AI</p>
+          </button>
+          <WorldCupHistoryTooltip />
           {(!predictionLocked && predictionStatus) ? (
             <StatusPill
               tone={getStatusTone(predictionStatus)}
@@ -506,7 +664,7 @@ export const FinalsWinnerSelector = () => {
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search team, code, group..."
-              className="h-10 w-full rounded-md border border-zinc-300 bg-white pl-9 pr-9 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500 dark:focus:ring-emerald-900 sm:w-72"
+              className="h-10 w-full rounded-md border border-zinc-300 bg-white pl-9 pr-9 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500 dark:focus:ring-emerald-900"
             />
             {searchTerm ? (
               <button

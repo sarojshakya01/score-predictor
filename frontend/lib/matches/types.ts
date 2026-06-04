@@ -67,6 +67,24 @@ export type MatchListResponse = {
   total: number;
 };
 
+export type HeadToHeadMatchHistory = {
+  date_text: string | null;
+  raw_text: string;
+  source: "google" | string;
+  team1_score: number;
+  team2_score: number;
+};
+
+export type HeadToHeadResponse = {
+  items: HeadToHeadMatchHistory[];
+  limit: number;
+  query: string;
+  source: "google" | string;
+  team1_name: string;
+  team2_name: string;
+  total: number;
+};
+
 export type ListUpcomingMatchesParams = {
   includeLocked?: boolean;
   limit?: number;

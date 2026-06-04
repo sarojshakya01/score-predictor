@@ -77,9 +77,6 @@ export const LoginForm = () => {
           <Link href="/forgot-password" className="font-semibold text-emerald-700 dark:text-emerald-400">
             Forgot password?
           </Link>
-          {/* <Link href="/resend-verification" className="font-semibold text-emerald-700 dark:text-emerald-400">
-            Resend verification
-          </Link> */}
         </div>
 
         {errorMessage ? (
