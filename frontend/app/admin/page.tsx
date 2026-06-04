@@ -29,7 +29,7 @@ const AdminPage = () => {
           listAdminUsers({ limit: 1000 }),
           listAdminMatches({ limit: 1000 }),
           listAdminTeams({ limit: 1000 }),
-          listUpcomingMatches({ limit: 1000 })
+          listUpcomingMatches({ limit: 500 })
         ]);
 
         if (isMounted) {
