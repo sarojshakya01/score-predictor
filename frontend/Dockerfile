@@ -31,7 +31,7 @@ ENV NEXT_PUBLIC_API_BASE_URL=$NEXT_PUBLIC_API_BASE_URL
 RUN pnpm build
 
 # ── Stage 3: runner ───────────────────────────────────────────────────────────
-FROM node:22-alpine AS runner
+FROM node:23-alpine AS runner
 
 WORKDIR /app
 
