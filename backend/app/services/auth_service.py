@@ -77,7 +77,7 @@ class AuthService:
             if not user.is_active:
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Account has been deactivated",
+                    detail="Account has been not active. Please contact admin to renew your account.",
                 )
 
             return self._generate_tokens(user)

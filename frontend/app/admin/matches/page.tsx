@@ -472,8 +472,8 @@ const AdminMatchesPage = () => {
           <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
             <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
               <tr>
-                <th className="sticky left-0 top-0 z-40 w-16 min-w-[64px] max-w-[64px] bg-zinc-100 dark:bg-zinc-900 px-3 py-3 border-b border-zinc-200 dark:border-zinc-800">S.N.</th>
-                <th className="sticky left-[64px] top-0 z-40 w-[320px] min-w-[320px] max-w-[320px] bg-zinc-100 dark:bg-zinc-900 px-3 py-3 text-center font-semibold text-sm border-b border-zinc-200 dark:border-zinc-800" colSpan={3}>Match</th>
+                <th className="static md:sticky left-0 top-0 z-40 w-16 min-w-[64px] max-w-[64px] bg-zinc-100 dark:bg-zinc-900 px-3 py-3 border-b border-zinc-200 dark:border-zinc-800">S.N.</th>
+                <th className="static md:sticky left-[64px] top-0 z-40 w-[320px] min-w-[320px] max-w-[320px] bg-zinc-100 dark:bg-zinc-900 px-3 py-3 text-center font-semibold text-sm border-b border-zinc-200 dark:border-zinc-800" colSpan={3}>Match</th>
                 <th className="px-3 py-3 min-w-[140px]">Time</th>
                 <th className="px-3 py-3">Score</th>
                 <th className="px-3 py-3 min-w-[120px]">Winner</th>
@@ -495,14 +495,14 @@ const AdminMatchesPage = () => {
               ) : pagedMatches.length > 0 ? (
                 pagedMatches.map((match, idx) => (
                   <tr key={match.id} className="transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40">
-                    <td className="sticky left-0 z-20 w-16 min-w-[64px] max-w-[64px] bg-white dark:bg-zinc-950 px-3 py-3 text-left text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-800">{idx + 1}</td>
-                    <td className="sticky left-[64px] z-20 w-32 min-w-[128px] max-w-[128px] bg-white dark:bg-zinc-950 pl-3 pr-0 py-3 font-medium text-zinc-950 dark:text-zinc-50 border-b border-zinc-200 dark:border-zinc-800">
+                    <td className="static md:sticky left-0 z-20 w-16 min-w-[64px] max-w-[64px] bg-white dark:bg-zinc-950 px-3 py-3 text-left text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-800">{idx + 1}</td>
+                    <td className="static md:sticky left-[64px] z-20 w-32 min-w-[128px] max-w-[128px] bg-white dark:bg-zinc-950 pl-3 pr-0 py-3 font-medium text-zinc-950 dark:text-zinc-50 border-b border-zinc-200 dark:border-zinc-800">
                       {getTeam1WithFlag(match, "sm")}
                     </td>
-                    <td className="sticky left-[192px] z-20 w-16 min-w-[64px] max-w-[64px] bg-white dark:bg-zinc-950 px-3 py-3 text-center font-medium text-zinc-950 dark:text-zinc-50 border-b border-zinc-200 dark:border-zinc-800">
+                    <td className="static md:sticky left-[192px] z-20 w-16 min-w-[64px] max-w-[64px] bg-white dark:bg-zinc-950 px-3 py-3 text-center font-medium text-zinc-950 dark:text-zinc-50 border-b border-zinc-200 dark:border-zinc-800">
                       {getVs("sm")}
                     </td>
-                    <td className="sticky left-[256px] z-20 w-32 min-w-[128px] max-w-[128px] bg-white dark:bg-zinc-950 pl-0 pr-3 py-3 font-medium text-zinc-950 dark:text-zinc-50 border-b border-zinc-200 dark:border-zinc-800">
+                    <td className="static md:sticky left-[256px] z-20 w-32 min-w-[128px] max-w-[128px] bg-white dark:bg-zinc-950 pl-0 pr-3 py-3 font-medium text-zinc-950 dark:text-zinc-50 border-b border-zinc-200 dark:border-zinc-800">
                       {getTeam2WithFlag(match, "sm")}
                     </td>
                     <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{formatDateTime(match.match_datetime)}</td>
