@@ -274,12 +274,12 @@ const AdminUsersPage = () => {
                     </td>
                     <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{user.email}</td>
                     <td className="px-5 py-4">
-                      <StatusPill tone={user.role === "ADMIN" ? "primary" : "secondary"}>
+                      <StatusPill tone={user.role === "ADMIN" ? "yellow" : "primary"}>
                         {user.role === "ADMIN" ? "Admin" : "Player"}
                       </StatusPill>
                     </td>
                     <td className="px-5 py-4">
-                      <StatusPill tone={user.is_active ? "primary" : "accent"}>
+                      <StatusPill tone={user.is_active ? "secondary" : "accent"}>
                         {user.is_active ? "Active" : "Inactive"}
                       </StatusPill>
                     </td>
