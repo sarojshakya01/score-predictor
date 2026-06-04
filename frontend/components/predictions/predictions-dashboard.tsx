@@ -572,12 +572,12 @@ export const PredictionsDashboard = () => {
         </div>
       </section>
 
-      <section className="grid gap-4 lg:grid-cols-3">
+      <section className="flex gap-4 overflow-x-auto pb-2">
         {isLoading ? (
           Array.from({ length: 3 }, (_, index) => (
             <div
               key={index}
-              className="h-64 animate-pulse rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 shadow-sm dark:border-zinc-700 dark:bg-zinc-800"
+              className="h-64 w-[280px] shrink-0 animate-pulse rounded-md border border-zinc-200 shadow-sm dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-zinc-950 sm:w-80 lg:w-[360px]"
             />
           ))
         ) : matches.length > 0 ? (
@@ -595,11 +595,12 @@ export const PredictionsDashboard = () => {
                 isPredictionAvailable={predictions.length > 0}
                 isSelected={isSelected}
                 handleCardClick={handleCardClick}
+                className="w-[280px] shrink-0 sm:w-80 lg:w-[360px]"
               />
             );
           })
         ) : (
-          <div className="rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 lg:col-span-3">
+          <div className="w-full rounded-md border border-zinc-200 p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:shadow-zinc-950">
             No upcoming matches are available.
           </div>
         )}

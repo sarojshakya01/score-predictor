@@ -200,8 +200,9 @@ export const SelectableMatchCard = (props: {
   isSaved: boolean;
   isPredictionAvailable: boolean;
   handleCardClick: (match: MatchResponse) => void;
+  className?: string;
 }) => {
-  const { match, isSelected, isSaved, isPredictionAvailable, handleCardClick } = props;
+  const { match, isSelected, isSaved, isPredictionAvailable, handleCardClick, className } = props;
 
   return (
     <article
@@ -210,6 +211,7 @@ export const SelectableMatchCard = (props: {
         match.match_locked ? "opacity-70" : "",
         isSelected ? "border-tournament" : "border-zinc-200 dark:border-zinc-700",
         "relative overflow-hidden cursor-pointer rounded-md border bg-white p-4 shadow-sm dark:bg-zinc-900 dark:shadow-zinc-950",
+        className,
       ].join(" ")}
       onClick={() => handleCardClick(match)}
     >
@@ -235,8 +237,8 @@ export const SelectableMatchCard = (props: {
   );
 };
 
-export const MatchCard = (props: { match: MatchResponse }) => {
-  const { match } = props;
+export const MatchCard = (props: { match: MatchResponse; className?: string }) => {
+  const { match, className } = props;
 
   return (
     <article
@@ -244,6 +246,7 @@ export const MatchCard = (props: { match: MatchResponse }) => {
         match.match_locked ? "opacity-70 mouse-events-none" : "",
         "border-zinc-200 dark:border-zinc-700",
         "relative overflow-hidden rounded-md border bg-white p-4 shadow-sm dark:bg-zinc-900 dark:shadow-zinc-950",
+        className,
       ].join(" ")}
     >
       <>

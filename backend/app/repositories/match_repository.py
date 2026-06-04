@@ -190,11 +190,16 @@ class MatchRepository:
         if first_match is None:
             return []
 
-        service = SettingService(self._db)
-        current_match_day = await service.get_current_match_day()
+        # for upcooming matches with more than 10 (intentional multiple matches), do not bound by current match day
+        if limit > 10:
+            service = SettingService(self._db)
+            current_match_day = await service.get_current_match_day()
+        else:
+            current_match_day = None
+        
 
         match_day = None
-        if current_match_day.value:
+        if current_match_day and current_match_day.value:
             match_day = int(current_match_day.value)
 
         statement = (
@@ -211,7 +216,7 @@ class MatchRepository:
 
         if match_day:
             statement = statement.where(Match.match_day == match_day)
-        else:
+        elif limit is None:
             # Convert naive datetime to local timezone-aware datetime
             # from_datetime = from_datetime.astimezone()
 

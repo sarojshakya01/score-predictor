@@ -35,7 +35,7 @@ const loadHomePageData = async (): Promise<HomePageData> => {
   const [summaryResult, matchesResult, resultsResult] =
     await Promise.allSettled([
       getHomeSummary(),
-      listUpcomingMatches({ includeLocked: true, limit: 6 }),
+      listUpcomingMatches({ includeLocked: false, limit: 10 }),
       listMatchResults({ limit: 8 }),
     ]);
   const errors: string[] = [];
@@ -245,9 +245,13 @@ const Home = async () => {
           </Link>
         </div>
         {matches.length > 0 ? (
-          <div className="grid gap-4 lg:grid-cols-3">
+          <div className="flex gap-4 overflow-x-auto pb-2">
             {matches.map((match) => (
-              <MatchCard key={match.id} match={match} />
+              <MatchCard
+                key={match.id}
+                match={match}
+                className="w-[280px] shrink-0 sm:w-80 lg:w-[360px]"
+              />
             ))}
           </div>
         ) : (
