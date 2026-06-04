@@ -480,6 +480,7 @@ const AdminMatchesPage = () => {
               <tr>
                 <th className="static md:sticky left-0 top-0 z-40 w-16 min-w-[64px] max-w-[64px] bg-zinc-100 dark:bg-zinc-900 px-3 py-3 border-b border-zinc-200 dark:border-zinc-800">S.N.</th>
                 <th className="static md:sticky left-[64px] top-0 z-40 w-[320px] min-w-[320px] max-w-[320px] bg-zinc-100 dark:bg-zinc-900 px-3 py-3 text-center font-semibold text-sm border-b border-zinc-200 dark:border-zinc-800" colSpan={3}>Match</th>
+                <th className="px-3 py-3">Day</th>
                 <th className="px-3 py-3 min-w-[140px]">Time</th>
                 <th className="px-3 py-3">Score</th>
                 <th className="px-3 py-3 min-w-[120px]">Winner</th>
@@ -494,7 +495,7 @@ const AdminMatchesPage = () => {
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {isLoading ? (
                 <tr>
-                  <td className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400" colSpan={13}>
+                  <td className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400" colSpan={14}>
                     Loading matches…
                   </td>
                 </tr>
@@ -511,6 +512,7 @@ const AdminMatchesPage = () => {
                     <td className="static md:sticky left-[256px] z-20 w-32 min-w-[128px] max-w-[128px] bg-white dark:bg-zinc-950 pl-0 pr-3 py-3 font-medium text-zinc-950 dark:text-zinc-50 border-b border-zinc-200 dark:border-zinc-800">
                       {getTeam2WithFlag(match, "sm")}
                     </td>
+                    <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.match_day}</td>
                     <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{formatDateTime(match.match_datetime)}</td>
                     <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{formatScore(match)}</td>
                     <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{getWinnerLabel(match, teams)}</td>
@@ -550,7 +552,7 @@ const AdminMatchesPage = () => {
                 ))
               ) : (
                 <tr>
-                  <td className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400" colSpan={13}>
+                  <td className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400" colSpan={14}>
                     {isSearchActive ? `No matches match "${searchQuery}".` : "No matches found."}
                   </td>
                 </tr>
