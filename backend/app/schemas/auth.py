@@ -58,6 +58,43 @@ class RefreshTokenRequest(BaseModel):
     refresh_token: str = Field(..., min_length=1)
 
 
+class EmailRequest(BaseModel):
+    """Schema for account email actions."""
+
+    email: EmailStr
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: EmailStr) -> str:
+        """Normalize email for consistent lookup."""
+        return str(value).strip().lower()
+
+
+class TokenRequest(BaseModel):
+    """Schema for one-time token actions."""
+
+    token: str = Field(..., min_length=1)
+
+
+class ResetPasswordRequest(TokenRequest):
+    """Schema for setting a new password with a reset token."""
+
+    password: str = Field(..., min_length=8, max_length=128)
+
+
+class ChangePasswordRequest(BaseModel):
+    """Schema for changing the current user's password."""
+
+    current_password: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=8, max_length=128)
+
+
+class MessageResponse(BaseModel):
+    """Schema for non-token auth responses."""
+
+    message: str
+
+
 class TokenResponse(BaseModel):
     """Schema for JWT token pair response."""
 

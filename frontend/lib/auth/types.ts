@@ -20,6 +20,27 @@ export type RefreshTokenRequest = {
   refresh_token: string;
 };
 
+export type EmailRequest = {
+  email: string;
+};
+
+export type TokenRequest = {
+  token: string;
+};
+
+export type ResetPasswordRequest = TokenRequest & {
+  password: string;
+};
+
+export type ChangePasswordRequest = {
+  current_password: string;
+  new_password: string;
+};
+
+export type MessageResponse = {
+  message: string;
+};
+
 export type TokenResponse = {
   access_token: string;
   refresh_token: string;

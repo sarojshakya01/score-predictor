@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_EXPIRE_MINUTES: int = 30
     JWT_REFRESH_EXPIRE_MINUTES: int = 10080  # 7 days
+    EMAIL_VERIFICATION_EXPIRE_MINUTES: int = 1440  # 24 hours
+    PASSWORD_RESET_EXPIRE_MINUTES: int = 60
 
     # ── EMAIL ───────────────────────────────────────────────────
     EMAIL_FROM: str = "[EMAIL_ADDRESS]"

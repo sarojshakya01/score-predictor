@@ -6,13 +6,14 @@ import { useEffect, useState } from "react";
 
 import { getCurrentUser, isAuthenticated, logout } from "@/lib/auth";
 import type { UserResponse } from "@/lib/auth";
-import { IconLogin, IconLogout, IconUserPlus } from "@/components/ui/icons";
+import { IconChevronDown, IconKey, IconLogin, IconLogout, IconUserPlus } from "@/components/ui/icons";
 
 export const AuthActions = () => {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<UserResponse | null>(null);
   const [isChecking, setIsChecking] = useState(true);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -65,18 +66,38 @@ export const AuthActions = () => {
 
   if (user) {
     return (
-      <div className="flex items-center gap-2">
-        <span className="hidden max-w-40 truncate text-sm font-medium text-zinc-600 dark:text-zinc-400 sm:inline">
-          {user.first_name}
-        </span>
+      <div className="relative">
         <button
           type="button"
-          onClick={handleLogout}
-          className="inline-flex cursor-pointer h-10 items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
+          onMouseOver={() => setIsMenuOpen(true)}
+          className="inline-flex h-10 items-center gap-2 rounded-md border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700 px-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300"
         >
-          <IconLogout className="h-4 w-4" />
-          Logout
+          <span className="max-w-40 truncate">
+            {user.first_name}
+          </span>
+          <IconChevronDown className="h-4 w-4" />
         </button>
+
+        {isMenuOpen && (
+          <div onMouseLeave={() => setIsMenuOpen(false)} className="absolute right-0 z-50 mt-2 w-48 overflow-hidden rounded-md border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+            <Link
+              href="/change-password"
+              className="flex items-center gap-2 px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700"
+            >
+              <IconKey className="h-4 w-4" />
+              Change Password
+            </Link>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-red-600 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+            >
+              <IconLogout className="h-4 w-4" />
+              Logout
+            </button>
+          </div>
+        )}
       </div>
     );
   }

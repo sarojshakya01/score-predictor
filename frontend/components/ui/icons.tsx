@@ -61,6 +61,59 @@ export const IconUserPlus = ({ className = "h-4 w-4" }: IconProps) => (
   </svg>
 );
 
+export const IconMail = ({ className = "h-4 w-4" }: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="m3 7 9 6 9-6" />
+  </svg>
+);
+
+export const IconKey = ({ className = "h-4 w-4" }: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <circle cx="7.5" cy="14.5" r="4.5" />
+    <path d="m11 11 8-8" />
+    <path d="m15 7 2 2" />
+    <path d="m17 5 2 2" />
+  </svg>
+);
+
+export const IconShieldCheck = ({ className = "h-4 w-4" }: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    <path d="m9 12 2 2 4-5" />
+  </svg>
+);
+
 export const IconPlus = ({ className = "h-4 w-4" }: IconProps) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -251,6 +304,21 @@ export const IconChevronsRight = ({ className = "h-4 w-4" }: IconProps) => (
   </svg>
 );
 
+export const IconChevronDown = ({ className = "h-4 w-4" }: IconProps) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <polyline points="6 9 12 15 18 9" />
+  </svg>
+);
 
 export const IconDashboard = ({ className = "h-4 w-4" }: IconProps) => (
   <svg

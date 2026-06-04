@@ -1,6 +1,8 @@
-"""Password hashing and JWT token utilities."""
+"""Password hashing, random token, and JWT token utilities."""
 
 import enum
+import hashlib
+import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -25,6 +27,19 @@ def hash_password(password: str) -> str:
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain-text password against a bcrypt hash."""
     return _pwd_context.verify(plain_password, hashed_password)
+
+
+# ── One-time URL Tokens ───────────────────────────────────────────
+
+
+def create_url_safe_token() -> str:
+    """Create a URL-safe random token for email links."""
+    return secrets.token_urlsafe(32)
+
+
+def hash_token(token: str) -> str:
+    """Hash a one-time token before storing or looking it up."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
 # ── JWT Tokens ──────────────────────────────────────────────────

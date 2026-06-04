@@ -73,6 +73,14 @@ export const LoginForm = () => {
             className={inputCls}
           />
         </label>
+        <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+          <Link href="/forgot-password" className="font-semibold text-emerald-700 dark:text-emerald-400">
+            Forgot password?
+          </Link>
+          {/* <Link href="/resend-verification" className="font-semibold text-emerald-700 dark:text-emerald-400">
+            Resend verification
+          </Link> */}
+        </div>
 
         {errorMessage ? (
           <p aria-live="polite" className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-300">

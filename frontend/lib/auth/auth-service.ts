@@ -7,10 +7,15 @@ import {
   setAuthTokens,
 } from "@/lib/auth/token-storage";
 import type {
+  ChangePasswordRequest,
+  EmailRequest,
   LoginRequest,
+  MessageResponse,
   RefreshTokenRequest,
+  ResetPasswordRequest,
   SignupRequest,
   TokenResponse,
+  TokenRequest,
   UserResponse,
 } from "@/lib/auth/types";
 
@@ -86,6 +91,52 @@ export const refresh = async (
   }
 };
 
+export const verifyEmail = async (data: TokenRequest): Promise<MessageResponse> => {
+  return apiFetch<MessageResponse, TokenRequest>("/auth/verify-email", {
+    body: data,
+    method: "POST",
+  });
+};
+
+export const resendVerification = async (
+  data: EmailRequest,
+): Promise<MessageResponse> => {
+  return apiFetch<MessageResponse, EmailRequest>("/auth/resend-verification", {
+    body: data,
+    method: "POST",
+  });
+};
+
+export const forgotPassword = async (
+  data: EmailRequest,
+): Promise<MessageResponse> => {
+  return apiFetch<MessageResponse, EmailRequest>("/auth/forgot-password", {
+    body: data,
+    method: "POST",
+  });
+};
+
+export const resetPassword = async (
+  data: ResetPasswordRequest,
+): Promise<MessageResponse> => {
+  return apiFetch<MessageResponse, ResetPasswordRequest>("/auth/reset-password", {
+    body: data,
+    method: "POST",
+  });
+};
+
+export const changePassword = async (
+  data: ChangePasswordRequest,
+): Promise<MessageResponse> => {
+  return authenticatedApiFetch<MessageResponse, ChangePasswordRequest>(
+    "/auth/change-password",
+    {
+      body: data,
+      method: "POST",
+    },
+  );
+};
+
 export const getCurrentUser = async (
   accessToken: string | null = getAccessToken(),
 ): Promise<UserResponse> => {
@@ -141,10 +192,15 @@ export const isAuthenticated = (): boolean => {
 
 export const authService = {
   authenticatedApiFetch,
+  changePassword,
+  forgotPassword,
   getCurrentUser,
   isAuthenticated,
   login,
   logout,
   refresh,
+  resendVerification,
+  resetPassword,
   signup,
+  verifyEmail,
 };

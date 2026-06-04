@@ -28,6 +28,26 @@ class UserRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_by_email_verification_token_hash(
+        self,
+        token_hash: str,
+    ) -> User | None:
+        """Fetch a user by email verification token hash."""
+        result = await self._db.execute(
+            select(User).where(User.email_verification_token_hash == token_hash),
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_password_reset_token_hash(
+        self,
+        token_hash: str,
+    ) -> User | None:
+        """Fetch a user by password reset token hash."""
+        result = await self._db.execute(
+            select(User).where(User.password_reset_token_hash == token_hash),
+        )
+        return result.scalar_one_or_none()
+
     async def list_active_users(self) -> list[User]:
         """Fetch active users for public leaderboard rankings."""
         result = await self._db.execute(

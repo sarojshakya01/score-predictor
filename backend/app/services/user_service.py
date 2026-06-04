@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
 from sqlalchemy.exc import IntegrityError
@@ -26,6 +27,11 @@ FINALIST_TEAM_ID_FIELDS = (
     "runner_up_team_id",
     "third_place_team_id",
 )
+
+
+def _now() -> datetime:
+    """Return the current UTC time."""
+    return datetime.now(timezone.utc)
 
 
 class UserService:
@@ -127,7 +133,8 @@ class UserService:
             mobile_no=data.mobile_no,
             password=hash_password(data.password),
             role=data.role,
-            is_active=False, # do not activate by default
+            is_active=data.is_active,
+            email_verified_at=_now() if data.is_active else None,
             winner_team_id=data.winner_team_id,
             runner_up_team_id=data.runner_up_team_id,
             third_place_team_id=data.third_place_team_id,
@@ -192,6 +199,9 @@ class UserService:
         password = values.pop("password", None)
         if isinstance(password, str):
             values["password"] = hash_password(password)
+
+        if values.get("is_active") is True and user.email_verified_at is None:
+            values["email_verified_at"] = _now()
 
         await self._validate_team_ids(values)
 

@@ -352,9 +352,15 @@ const AdminMatchesPage = () => {
     setIsSubmitting(true);
 
     try {
-      // update winner based on goal scored
-      formState.winnerId = formState.team1Score > formState.team2Score ? formState.team1Id : (formState.team2Score > formState.team1Score ? formState.team2Id : "")
-      const payload = buildMatchPayload(formState);
+      const team1Score = Number(formState.team1Score);
+      const team2Score = Number(formState.team2Score);
+      const winnerId =
+        team1Score > team2Score
+          ? formState.team1Id
+          : team2Score > team1Score
+            ? formState.team2Id
+            : "";
+      const payload = buildMatchPayload({ ...formState, winnerId });
       const savedMatch = editingMatchId
         ? await updateMatch(editingMatchId, payload)
         : await createMatch(payload);

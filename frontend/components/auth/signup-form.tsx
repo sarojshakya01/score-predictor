@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 import { signup } from "@/lib/auth";
@@ -12,6 +11,7 @@ const inputCls = "mt-2 h-11 w-full rounded-md border border-zinc-300 px-3 text-z
 const labelCls = "text-sm font-medium text-zinc-700 dark:text-zinc-300";
 
 type SignupFormState = {
+  confirmPassword: string;
   email: string;
   firstName: string;
   lastName: string;
@@ -21,6 +21,7 @@ type SignupFormState = {
 };
 
 const initialState: SignupFormState = {
+  confirmPassword: "",
   email: "",
   firstName: "",
   lastName: "",
@@ -30,10 +31,10 @@ const initialState: SignupFormState = {
 };
 
 export const SignupForm = () => {
-  const router = useRouter();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [formState, setFormState] = useState<SignupFormState>(initialState);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const updateField = (field: keyof SignupFormState, value: string) => {
     setFormState((current) => ({ ...current, [field]: value }));
@@ -42,9 +43,16 @@ export const SignupForm = () => {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setErrorMessage(null);
+    setSuccessMessage(null);
     setIsSubmitting(true);
 
     try {
+      if (formState.password !== formState.confirmPassword) {
+        setErrorMessage("Passwords do not match.");
+        setIsSubmitting(false);
+        return;
+      }
+
       const newUser = await signup({
         email: formState.email.trim().toLowerCase(),
         first_name: formState.firstName.trim(),
@@ -53,11 +61,8 @@ export const SignupForm = () => {
         mobile_no: formState.mobileNo.trim(),
         password: formState.password,
       });
-      setErrorMessage(newUser.message || "Account created successfully.");
-      setTimeout(() => {
-        router.replace("/");
-        router.refresh();
-      }, 5000);
+      setFormState(initialState);
+      setSuccessMessage(newUser.message || "Account created successfully.");
     } catch (error) {
       setErrorMessage(getErrorMessage(error, "Unable to create your account. Please try again."));
     } finally {
@@ -66,7 +71,7 @@ export const SignupForm = () => {
   };
 
   const handleMatchPassword = (value: string) => {
-    if (value && formState.password.length && (value !== formState.password)) {
+    if (value && formState.password.length && value !== formState.password) {
       setErrorMessage("Passwords do not match.");
     } else {
       setErrorMessage(null);
@@ -102,8 +107,16 @@ export const SignupForm = () => {
         </label>
         <label className="block col-span-3">
           <span className={labelCls}>Confirm Password</span>
-          <input autoComplete="confirm-password" minLength={8} name="confirm_password" required type="password" onBlur={(e) => handleMatchPassword(e.target.value)} className={inputCls} />
+          <input autoComplete="new-password" minLength={8} name="confirm_password" required type="password" value={formState.confirmPassword} onChange={(e) => updateField("confirmPassword", e.target.value)} onBlur={(e) => handleMatchPassword(e.target.value)} className={inputCls} />
         </label>
+
+        {successMessage ? (
+          <label className="block col-span-6">
+            <p aria-live="polite" className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 sm:col-span-2">
+              {successMessage}
+            </p>
+          </label>
+        ) : null}
 
         {errorMessage ? (
           <label className="block col-span-6">

@@ -21,9 +21,9 @@ _EMAIL_STYLE = """
   th { background: #0a3161; color: #fff; text-transform: capitalize; }
   tr:nth-child(even) { background: #f7f8f5; }
   .not-predicted { background: #f7c6c6; color: #7f1d1d; font-weight: bold; }
-  .btn { display: inline-block; margin-top: 16px; padding: 10px 10px;
-         color: #fff; border-radius: 6px;
-         text-decoration: none; font-weight: bold; }
+	  .btn { display: inline-block; margin-top: 16px;
+	         color: #fff; border-radius: 6px;
+	         text-decoration: none; font-weight: bold; }
 </style>
 """
 
@@ -86,6 +86,60 @@ def build_base_html(body_content: str) -> str:
 
 
 # ── Notification helpers ──────────────────────────────────────────────────────
+
+async def send_account_verification_email(
+    *,
+    email: str,
+    first_name: str,
+    verification_url: str,
+) -> None:
+    """Send an account verification link to a newly registered user."""
+    body = f"""
+<h2 style="margin-bottom:4px;">Verify your account</h2>
+<p>Hi {first_name},</p>
+<p>
+  Confirm your email address to activate your Match Predictor account.
+</p>
+<p>
+  <a class="btn" href="{verification_url}" target="_blank">Verify email</a>
+</p>
+<p style="font-size:13px;color:#64748b;">
+  This link expires soon. If you did not create this account, you can ignore this email.
+</p>
+"""
+    await send_email(
+        subject="Verify your Match Predictor account",
+        html_body=_build_base_html(body),
+        recipients=[email],
+    )
+
+
+async def send_password_reset_email(
+    *,
+    email: str,
+    first_name: str,
+    reset_url: str,
+) -> None:
+    """Send a password reset link to a user."""
+    body = f"""
+<h2 style="margin-bottom:4px;">Reset your password</h2>
+<p>Hi {first_name},</p>
+<p>
+  Use the secure link below to set a new password for your Match Predictor account.
+</p>
+<p>
+  <a class="btn" href="{reset_url}" target="_blank">Reset password</a>
+</p>
+<p style="font-size:13px;color:#64748b;">
+  If you did not request this, you can ignore this email.
+</p>
+"""
+    await send_email(
+        subject="Reset your Match Predictor password",
+        html_body=_build_base_html(body),
+        recipients=[email],
+    )
+
 
 async def send_user_activation_email(
     *,

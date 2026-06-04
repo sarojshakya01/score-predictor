@@ -63,9 +63,14 @@ async def get_current_user(
         raise _unauthorized("User not found")
 
     if not user.is_active:
+        detail = (
+            "Please verify your email before continuing."
+            if user.email_verified_at is None
+            else "Account is not active. Please contact admin to renew your account."
+        )
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account has been not active. Please contact admin to renew your account.",
+            detail=detail,
         )
 
     return user

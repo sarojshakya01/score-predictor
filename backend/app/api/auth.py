@@ -15,9 +15,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import CurrentUser
 from app.db.session import get_db
 from app.schemas.auth import (
+    ChangePasswordRequest,
+    EmailRequest,
     LoginRequest,
+    MessageResponse,
     RefreshTokenRequest,
+    ResetPasswordRequest,
     SignupRequest,
+    TokenRequest,
     TokenResponse,
 )
 from app.schemas.user import UserResponse
@@ -67,6 +72,77 @@ async def refresh(
     """Exchange a valid refresh token for a new token pair."""
     service = AuthService(db)
     return await service.refresh(data)
+
+
+@router.post(
+    "/verify-email",
+    response_model=MessageResponse,
+    summary="Verify account email",
+)
+async def verify_email(
+    data: TokenRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> MessageResponse:
+    """Verify an account from an email verification token."""
+    service = AuthService(db)
+    return await service.verify_email(data)
+
+
+@router.post(
+    "/resend-verification",
+    response_model=MessageResponse,
+    summary="Resend account verification email",
+)
+async def resend_verification(
+    data: EmailRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> MessageResponse:
+    """Send a fresh account verification link when needed."""
+    service = AuthService(db)
+    return await service.resend_verification(data)
+
+
+@router.post(
+    "/forgot-password",
+    response_model=MessageResponse,
+    summary="Request a password reset email",
+)
+async def forgot_password(
+    data: EmailRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> MessageResponse:
+    """Send a password reset link when the email belongs to an active account."""
+    service = AuthService(db)
+    return await service.forgot_password(data)
+
+
+@router.post(
+    "/reset-password",
+    response_model=MessageResponse,
+    summary="Reset password with token",
+)
+async def reset_password(
+    data: ResetPasswordRequest,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> MessageResponse:
+    """Reset a password using a valid one-time token."""
+    service = AuthService(db)
+    return await service.reset_password(data)
+
+
+@router.post(
+    "/change-password",
+    response_model=MessageResponse,
+    summary="Change current user's password",
+)
+async def change_password(
+    data: ChangePasswordRequest,
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> MessageResponse:
+    """Change the authenticated user's password."""
+    service = AuthService(db)
+    return await service.change_password(user=current_user, data=data)
 
 
 @router.get(

@@ -8,6 +8,11 @@ CREATE TABLE users (
     mobile_no VARCHAR(20) NOT NULL,
 
     password VARCHAR(255) NOT NULL,
+    email_verified_at TIMESTAMP NULL DEFAULT NULL,
+    email_verification_token_hash VARCHAR(64) NULL DEFAULT NULL,
+    email_verification_expires_at TIMESTAMP NULL DEFAULT NULL,
+    password_reset_token_hash VARCHAR(64) NULL DEFAULT NULL,
+    password_reset_expires_at TIMESTAMP NULL DEFAULT NULL,
 
     role ENUM('ADMIN', 'USER') NOT NULL DEFAULT 'USER',
 
@@ -36,6 +41,8 @@ CREATE TABLE users (
     INDEX ix_users_email (email),
     INDEX ix_users_role (role),
     INDEX ix_users_is_active (is_active),
+    INDEX ix_users_email_verification_token_hash (email_verification_token_hash),
+    INDEX ix_users_password_reset_token_hash (password_reset_token_hash),
     INDEX ix_users_winner_team_id (winner_team_id),
     INDEX ix_users_runner_up_team_id (runner_up_team_id),
     INDEX ix_users_third_place_team_id (third_place_team_id)
