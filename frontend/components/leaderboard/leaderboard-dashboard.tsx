@@ -510,11 +510,17 @@ const LeaderboardRow = ({
       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.first_goal_in_points}</td>
       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.first_scoring_team_points}</td>
       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.yellow_card_points}</td>
-      <td className="px-5 py-4">
+      {/* <td className="px-5 py-4">
+        <StatusPill tone={"yellow"}>
+          {formatSignedNumber(row.red_card_points)}
+        </StatusPill>
+      </td> */}
+      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.red_card_points}</td>
+      {/* <td className="px-5 py-4">
         <StatusPill tone={getPointsTone(row.red_card_points)}>
           {formatSignedNumber(row.red_card_points)}
         </StatusPill>
-      </td>
+      </td> */}
       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.kick_off_team_points}</td>
       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.match_duration_points}</td>
       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300 text-right">
