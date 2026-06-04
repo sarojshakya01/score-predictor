@@ -86,7 +86,7 @@ class UserRepository:
         self,
         *,
         offset: int = 0,
-        limit: int = 50,
+        limit: int = 500,
         role: UserRole | None = None,
         is_active: bool | None = None,
         search: str | None = None,

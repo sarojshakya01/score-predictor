@@ -77,7 +77,7 @@ async def get_leaderboard(
     _current_user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_db)],
     offset: Annotated[int, Query(ge=0)] = 0,
-    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    limit: Annotated[int, Query(ge=1, le=10000)] = 1000,
 ) -> LeaderboardResponse:
     """Return leaderboard standings for authenticated users."""
     service = LeaderboardService(db)
@@ -108,7 +108,7 @@ async def list_users(
     _current_admin: CurrentAdminUser,
     db: Annotated[AsyncSession, Depends(get_db)],
     offset: Annotated[int, Query(ge=0)] = 0,
-    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    limit: Annotated[int, Query(ge=1, le=500)] = 100,
     role: UserRole | None = None,
     is_active: bool | None = None,
     search: Annotated[str | None, Query(min_length=1, max_length=255)] = None,

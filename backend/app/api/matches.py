@@ -31,7 +31,7 @@ admin_router = APIRouter(
 async def list_upcoming_matches(
     db: Annotated[AsyncSession, Depends(get_db)],
     offset: Annotated[int, Query(ge=0)] = 0,
-    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
     include_locked: bool = None,
 ) -> MatchListResponse:
     """Return upcoming matches for prediction and home-page flows."""
@@ -65,7 +65,7 @@ async def list_final_matches(
 async def list_match_results(
     db: Annotated[AsyncSession, Depends(get_db)],
     offset: Annotated[int, Query(ge=0)] = 0,
-    limit: Annotated[int, Query(ge=1, le=100)] = 6,
+    limit: Annotated[int, Query(ge=1, le=500)] = 10,
 ) -> MatchListResponse:
     """Return completed matches for home-page results."""
     service = MatchService(db)
@@ -82,7 +82,7 @@ async def list_match_results(
 async def list_asked_matches(
     db: Annotated[AsyncSession, Depends(get_db)],
     offset: Annotated[int, Query(ge=0)] = 0,
-    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    limit: Annotated[int, Query(ge=1, le=1000)] = 500,
     match_day: Annotated[int | None, Query(gt=0)] = None,
     match_stage: Annotated[str | None, Query(min_length=1)] = None,
 ) -> MatchListResponse:
@@ -105,7 +105,7 @@ async def list_asked_matches(
 async def list_matches(
     db: Annotated[AsyncSession, Depends(get_db)],
     offset: Annotated[int, Query(ge=0)] = 0,
-    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    limit: Annotated[int, Query(ge=1, le=500)] = 50,
     match_locked: bool | None = None,
 ) -> MatchListResponse:
     """Return paginated matches for admin management."""

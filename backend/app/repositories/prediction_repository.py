@@ -58,7 +58,7 @@ class PredictionRepository:
         self,
         *,
         offset: int = 0,
-        limit: int = 50,
+        limit: int = 500,
         user_id: int | None = None,
         match_id: int | None = None,
     ) -> list[Prediction]:

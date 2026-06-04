@@ -708,7 +708,7 @@ export const LeaderboardDashboard = () => {
       }
 
       try {
-        const leaderboardResponse = await listLeaderboard({ limit: 100 });
+        const leaderboardResponse = await listLeaderboard({ limit: 10000 });
 
         if (!isMounted) {
           return;

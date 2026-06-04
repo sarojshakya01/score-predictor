@@ -26,10 +26,10 @@ const AdminPage = () => {
 
       try {
         const [userList, matchList, teamList, upcomingMatchList] = await Promise.all([
-          listAdminUsers({ limit: 100 }),
-          listAdminMatches({ limit: 100 }),
-          listAdminTeams({ limit: 100 }),
-          listUpcomingMatches({ limit: 100 })
+          listAdminUsers({ limit: 1000 }),
+          listAdminMatches({ limit: 1000 }),
+          listAdminTeams({ limit: 1000 }),
+          listUpcomingMatches({ limit: 1000 })
         ]);
 
         if (isMounted) {

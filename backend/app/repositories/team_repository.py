@@ -54,7 +54,7 @@ class TeamRepository:
         self,
         *,
         offset: int = 0,
-        limit: int = 50,
+        limit: int = 100,
         group: str | None = None,
         search: str | None = None,
     ) -> list[Team]:

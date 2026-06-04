@@ -36,7 +36,7 @@ const loadHomePageData = async (): Promise<HomePageData> => {
     await Promise.allSettled([
       getHomeSummary(),
       listUpcomingMatches({ includeLocked: false, limit: 10 }),
-      listMatchResults({ limit: 8 }),
+      listMatchResults({ limit: 10 }),
     ]);
   const errors: string[] = [];
   let summary: HomeSummaryResponse | null = null;

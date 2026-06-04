@@ -236,7 +236,7 @@ export const PredictionsDashboard = () => {
         });
 
         try {
-          const allMatches = await listMatches();
+          const allMatches = await listMatches({ limit: 1000 });
           if (allMatches?.items?.length) {
             setAllMatches(allMatches.items);
           }
@@ -262,7 +262,7 @@ export const PredictionsDashboard = () => {
           return;
         }
 
-        const predictionList = await listCurrentUserPredictions({ limit: 100 });
+        const predictionList = await listCurrentUserPredictions({ limit: 500 });
 
         if (!isMounted) {
           return;

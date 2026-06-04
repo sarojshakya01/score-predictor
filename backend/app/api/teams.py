@@ -30,7 +30,7 @@ admin_router = APIRouter(
 async def list_all_teams(
     db: Annotated[AsyncSession, Depends(get_db)],
     offset: Annotated[int, Query(ge=0)] = 0,
-    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    limit: Annotated[int, Query(ge=1, le=500)] = 100,
 ) -> TeamListResponse:
     """Return all teams for admin final/runnerup and third place predictions."""
     service = TeamService(db)
@@ -63,7 +63,7 @@ async def list_group_tables(
 async def list_teams(
     db: Annotated[AsyncSession, Depends(get_db)],
     offset: Annotated[int, Query(ge=0)] = 0,
-    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    limit: Annotated[int, Query(ge=1, le=500)] = 100,
     group: Annotated[str | None, Query(min_length=1, max_length=20)] = None,
     search: Annotated[str | None, Query(min_length=1, max_length=100)] = None,
 ) -> TeamListResponse:

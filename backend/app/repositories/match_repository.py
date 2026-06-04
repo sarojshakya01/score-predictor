@@ -34,7 +34,7 @@ class MatchRepository:
         self,
         *,
         offset: int = 0,
-        limit: int = 50,
+        limit: int = 500,
         match_day: int | None = None,
         match_stage: str | None = None,
         match_locked: bool | None = None,
@@ -181,7 +181,7 @@ class MatchRepository:
         from_datetime: datetime,
         to_datetime: datetime,
         offset: int = 0,
-        limit: int = 50,
+        limit: int = 100,
         include_locked: bool = True,
     ) -> list[Match]:
         """Fetch upcoming matches ordered by match date."""
