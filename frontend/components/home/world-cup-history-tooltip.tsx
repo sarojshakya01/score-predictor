@@ -57,7 +57,7 @@ export const WorldCupHistoryTooltip = () => {
       </button>
       <span
         role="tooltip"
-        className="absolute left-0 top-10 z-30 hidden w-[40%] rounded-md border border-zinc-200 bg-white p-4 text-left shadow-xl group-focus-within:block group-hover:block dark:border-zinc-700 dark:bg-zinc-900 lg:left-auto lg:right-0"
+        className="absolute left-0 top-10 z-30 hidden w-[200px] sm:w-[300px] rounded-md border border-zinc-200 bg-white p-4 text-left shadow-xl group-focus-within:block group-hover:block dark:border-zinc-700 dark:bg-zinc-900 lg:left-auto lg:right-0"
       >
         <span className="block text-sm font-semibold text-zinc-950 dark:text-zinc-50">
           Recent World Cup editions
