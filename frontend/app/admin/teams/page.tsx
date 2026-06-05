@@ -114,6 +114,9 @@ const AdminTeamsPage = () => {
   };
 
   const updateField = (field: keyof TeamCreate, value: string) => {
+    if (['fifa_rank'].includes(field)) {
+      value = Number(value).toString();
+    }
     setFormState((prev) => ({ ...prev, [field]: value }));
   };
 
