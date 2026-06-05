@@ -652,15 +652,13 @@ export const PredictionsDashboard = () => {
       formState.team2Score,
       "Team 2",
     );
-    const hasPredictedGoalsFromBothTeams = team1Score > 0 && team2Score > 0;
-    const hasPredictedGoals = team1Score + team2Score > 0;
 
     return {
-      first_scoring_team_id: hasPredictedGoalsFromBothTeams
-        ? parsePositiveInteger(formState.firstScoringTeamId, "First Score by")
-        : null,
-      first_goal_in: hasPredictedGoals && isFirstGoalIn(formState.firstGoalIn)
+      first_goal_in: formState.firstGoalIn && isFirstGoalIn(formState.firstGoalIn)
         ? formState.firstGoalIn
+        : null,
+      first_scoring_team_id: formState.firstScoringTeamId
+        ? parseNonNegativeInteger(formState.firstScoringTeamId, "First Score by")
         : null,
       kick_off_team_id: formState.kickoffTeamId ? parsePositiveInteger(
         formState.kickoffTeamId,
@@ -875,27 +873,6 @@ export const PredictionsDashboard = () => {
 
   return (
     <>
-      {loadError ? (
-        <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-300">
-          {loadError}
-        </div>
-      ) : null}
-
-      {authRequired ? (
-        <div className="flex flex-col gap-3 rounded-md border border-yellow-200 px-4 py-4 text-sm text-yellow-900 dark:text-zinc-400 dark:border-yellow-700 bg-yellow-50 dark:bg-amber-950 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold">Login required</h2>
-            <p className="mt-1 text-sm">Log in to submit your predictions.</p>
-          </div>
-          <Link
-            href="/login"
-            className="inline-flex h-10 items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
-          >
-            Login
-          </Link>
-        </div>
-      ) : null}
-
       <section className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
@@ -970,6 +947,27 @@ export const PredictionsDashboard = () => {
           </div>
         )}
       </section >
+
+      {loadError ? (
+        <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-300">
+          {loadError}
+        </div>
+      ) : null}
+
+      {authRequired ? (
+        <div className="flex flex-col gap-3 rounded-md border border-yellow-200 px-4 py-4 text-sm text-yellow-900 dark:text-zinc-400 dark:border-yellow-700 bg-yellow-50 dark:bg-amber-950 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-lg font-semibold">Login required</h2>
+            <p className="mt-1 text-sm">Log in to submit your predictions.</p>
+          </div>
+          <Link
+            href="/login"
+            className="inline-flex h-10 items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
+          >
+            Login
+          </Link>
+        </div>
+      ) : null}
 
       <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
         <div className="hidden lg:flex w-40 h-[525px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48">
@@ -1137,6 +1135,7 @@ export const PredictionsDashboard = () => {
           <ImageWithFallback width={525} height={525} src={"/images/players/" + selectedMatch?.team2_name_short?.toLowerCase() + ".png"} alt={selectedMatch?.team2_name || "Captain Image"} />
         </div>
       </section >
+
       <section className="overflow-hidden rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 shadow-sm grid gap-6 dark:border-zinc-700 dark:bg-zinc-900">
         <div className="border-b border-zinc-200 px-5 py-4 dark:border-zinc-700">
           <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">

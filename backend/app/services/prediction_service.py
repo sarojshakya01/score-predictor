@@ -77,8 +77,8 @@ class PredictionService:
                 match=match,
                 team1_score=values["team1_score"],
                 team2_score=values["team2_score"],
-                first_scoring_team_id=values.get("first_scoring_team_id"),
                 first_goal_in=values.get("first_goal_in"),
+                first_scoring_team_id=values.get("first_scoring_team_id"),
             )
             if self._scores_have_no_goals(
                 team1_score=values["team1_score"],
@@ -149,8 +149,8 @@ class PredictionService:
                 match=match,
                 team1_score=team1_score,
                 team2_score=team2_score,
-                first_scoring_team_id=first_scoring_team_id,
                 first_goal_in=first_goal_in,
+                first_scoring_team_id=first_scoring_team_id,
             )
             if self._scores_have_no_goals(
                 team1_score=team1_score,
@@ -254,8 +254,8 @@ class PredictionService:
         match: Match,
         team1_score: int,
         team2_score: int,
-        first_scoring_team_id: int | None,
         first_goal_in: FirstGoalIn | None,
+        first_scoring_team_id: int | None,
     ) -> None:
         """Validate fields that only apply when goals are predicted."""
         if team1_score + team2_score == 0:

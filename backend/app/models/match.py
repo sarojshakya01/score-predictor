@@ -111,17 +111,7 @@ class Match(TimestampMixin, Base):
         default=None,
     )
 
-    # ── Kick off Team ─────────────────────────────────────────────
-    kick_off_team_id: Mapped[int | None] = mapped_column(
-        ForeignKey("teams.id"),
-        nullable=True,
-        default=None,
-    )
-    first_scoring_team_id: Mapped[int | None] = mapped_column(
-        ForeignKey("teams.id"),
-        nullable=True,
-        default=None,
-    )
+    # ── First Goal Information ─────────────────────────────────────
     first_goal_in: Mapped[FirstGoalIn | None] = mapped_column(
         Enum(
             FirstGoalIn,
@@ -131,6 +121,18 @@ class Match(TimestampMixin, Base):
             values_callable=first_goal_in_values,
             validate_strings=True,
         ),
+        nullable=True,
+        default=None,
+    )
+    first_scoring_team_id: Mapped[int | None] = mapped_column(
+        ForeignKey("teams.id"),
+        nullable=True,
+        default=None,
+    )
+
+    # ── Kick off Team ─────────────────────────────────────────────
+    kick_off_team_id: Mapped[int | None] = mapped_column(
+        ForeignKey("teams.id"),
         nullable=True,
         default=None,
     )

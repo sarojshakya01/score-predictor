@@ -582,29 +582,35 @@ class LeaderboardService:
             match=match,
             rules=rules.goal_difference,
         )
-        kick_off_team_points = LeaderboardService._score_kick_off_team(
-            prediction, match, rules.kick_off_team,
-        )
+        
         yellow_card_points, red_card_points = LeaderboardService._score_cards(
             prediction, match, rules,
-        )
-        match_duration_points = LeaderboardService._score_duration(
-            prediction, match, rules.duration,
         )
 
         has_predicted_goals = (
             (prediction.team1_score or 0) + (prediction.team2_score or 0) > 0
         )
-        first_scoring_team_points = (
-            rules.first_score_by
-            if has_predicted_goals and prediction.first_scoring_team_id == match.first_scoring_team_id
-            else 0
-        )
+
         first_goal_in_points = (
             rules.first_goal_in
             if has_predicted_goals and prediction.first_goal_in == match.first_goal_in
             else 0
         )
+
+        first_scoring_team_points = (
+            rules.first_score_by
+            if has_predicted_goals and prediction.first_scoring_team_id == match.first_scoring_team_id
+            else 0
+        )
+
+        kick_off_team_points = LeaderboardService._score_kick_off_team(
+            prediction, match, rules.kick_off_team,
+        )
+
+        match_duration_points = LeaderboardService._score_duration(
+            prediction, match, rules.duration,
+        )
+
 
         return PredictionScore(
             score_points=score_points,

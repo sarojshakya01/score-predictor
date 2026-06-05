@@ -230,8 +230,8 @@ class MatchService:
             self._validate_goal_timeline_fields(
                 team1_score=values.get("team1_score"),
                 team2_score=values.get("team2_score"),
-                first_scoring_team_id=values.get("first_scoring_team_id"),
                 first_goal_in=values.get("first_goal_in"),
+                first_scoring_team_id=values.get("first_scoring_team_id"),
             )
             if self._scores_have_no_goals(
                 team1_score=values.get("team1_score"),
@@ -244,8 +244,8 @@ class MatchService:
                 team1_id=data.team1_id,
                 team2_id=data.team2_id,
                 winner_id=values.get("winner_id"),
-                kick_off_team_id=data.kick_off_team_id,
                 first_scoring_team_id=values.get("first_scoring_team_id"),
+                kick_off_team_id=data.kick_off_team_id,
             )
 
             match = Match(**values)
@@ -296,8 +296,8 @@ class MatchService:
             self._validate_goal_timeline_fields(
                 team1_score=team1_score,
                 team2_score=team2_score,
-                first_scoring_team_id=first_scoring_team_id,
                 first_goal_in=is_goal_in_first_half,
+                first_scoring_team_id=first_scoring_team_id,
             )
             if self._scores_have_no_goals(
                 team1_score=team1_score,
@@ -312,8 +312,8 @@ class MatchService:
                 team1_id=team1_id,
                 team2_id=team2_id,
                 winner_id=winner_id,
-                kick_off_team_id=kick_off_team_id,
                 first_scoring_team_id=first_scoring_team_id,
+                kick_off_team_id=kick_off_team_id,
             )
 
             updated_match = await self._match_repository.update(match, values)
@@ -380,8 +380,8 @@ class MatchService:
         team1_id: Any,
         team2_id: Any,
         winner_id: Any,
-        kick_off_team_id: Any,
         first_scoring_team_id: Any,
+        kick_off_team_id: Any,
     ) -> None:
         """Validate match team relationships and references."""
         if not isinstance(team1_id, int) or not isinstance(team2_id, int):
@@ -400,15 +400,6 @@ class MatchService:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="winner_id must match one of the match teams",
-            )
-
-        if kick_off_team_id is not None and kick_off_team_id not in {
-            team1_id,
-            team2_id,
-        }:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="kick_off_team_id must match one of the match teams",
             )
 
         if first_scoring_team_id is not None and first_scoring_team_id not in {
@@ -435,6 +426,15 @@ class MatchService:
             if team is None:
                 missing_team_ids.append(team_id)
 
+        if kick_off_team_id is not None and kick_off_team_id not in {
+            team1_id,
+            team2_id,
+        }:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="kick_off_team_id must match one of the match teams",
+            )
+
         if missing_team_ids:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -446,8 +446,8 @@ class MatchService:
         *,
         team1_score: Any,
         team2_score: Any,
-        first_scoring_team_id: Any,
         first_goal_in: Any,
+        first_scoring_team_id: Any,
     ) -> None:
         """Validate fields that only apply when a match has goals."""
         if team1_score is None or team2_score is None:

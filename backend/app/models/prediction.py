@@ -57,16 +57,6 @@ class Prediction(TimestampMixin, Base):
         nullable=False,
     )
 
-    kick_off_team_id: Mapped[int] = mapped_column(
-        ForeignKey("teams.id"),
-        nullable=True,
-        default=None,
-    )
-    first_scoring_team_id: Mapped[int | None] = mapped_column(
-        ForeignKey("teams.id"),
-        nullable=True,
-        default=None,
-    )
     first_goal_in: Mapped[FirstGoalIn | None] = mapped_column(
         Enum(
             FirstGoalIn,
@@ -79,6 +69,19 @@ class Prediction(TimestampMixin, Base):
         nullable=True,
         default=None,
     )
+
+    first_scoring_team_id: Mapped[int | None] = mapped_column(
+        ForeignKey("teams.id"),
+        nullable=True,
+        default=None,
+    )
+
+    kick_off_team_id: Mapped[int] = mapped_column(
+        ForeignKey("teams.id"),
+        nullable=True,
+        default=None,
+    )
+
     match_duration: Mapped[MatchDuration] = mapped_column(
         Enum(
             MatchDuration,
