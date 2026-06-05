@@ -421,7 +421,6 @@ export const FinalsWinnerSelector = () => {
         let teams: TeamResponse[] = [];
         let currrentUser: UserResponse | null = null;
 
-
         if (matchDayResult.status === "fulfilled") {
           matchDay = matchDayResult.value.value;
         } else {
@@ -630,16 +629,6 @@ export const FinalsWinnerSelector = () => {
         </div>
 
         <div className="flex flex-row items-start gap-3 sm:items-center">
-          <button
-            type="button"
-            onClick={handleAiPick}
-            disabled={isLoading || predictionLocked || teams.length < 3}
-            className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:border-emerald-700 dark:hover:bg-emerald-900 dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500"
-          >
-            <IconSparkles className="h-4 w-4" />
-            <p className="hidden lg:block">Auto pick with AI</p>
-          </button>
-          <WorldCupHistoryTooltip />
           {(!predictionLocked && predictionStatus) ? (
             <StatusPill
               tone={getStatusTone(predictionStatus)}
@@ -650,8 +639,19 @@ export const FinalsWinnerSelector = () => {
           ) : (
             <StatusPill tone="primary">Final picks</StatusPill>
           )}
+          <button
+            type="button"
+            onClick={handleAiPick}
+            disabled={isLoading || predictionLocked || teams.length < 3}
+            className="inline-flex h-8 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-2 text-sm font-semibold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:border-emerald-700 dark:hover:bg-emerald-900 dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500"
+          >
+            <IconSparkles className="h-4 w-4" />
+            <p className="hidden sm:hidden lg:block text-sm">Auto pick with AI</p>
+            <p className="hidden md:block lg:hidden xl:hidden 2xl:hidden text-sm">AI Pick</p>
+          </button>
+          <WorldCupHistoryTooltip />
 
-          <div className="relative w-full sm:w-auto">
+          <div className="relative w-full sm:w-auto text-sm">
             <label className="sr-only" htmlFor="winner-team-search">
               Search teams
             </label>
@@ -663,8 +663,8 @@ export const FinalsWinnerSelector = () => {
               autoComplete="off"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
-              placeholder="Search team, code, group..."
-              className="h-10 w-full rounded-md border border-zinc-300 bg-white pl-9 pr-9 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500 dark:focus:ring-emerald-900"
+              placeholder="Search team..."
+              className="h-8 w-full rounded-md border border-zinc-300 text-sm bg-white pl-9 pr-5 text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500 dark:focus:ring-emerald-900"
             />
             {searchTerm ? (
               <button

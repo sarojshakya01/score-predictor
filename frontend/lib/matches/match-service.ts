@@ -143,7 +143,7 @@ export const getHeadToHeadMatchHistory = async (
 };
 
 export const getCurrentMatchDay = async (): Promise<MatchDayResponse> => {
-  return authenticatedApiFetch<MatchDayResponse>("/matchday", {
+  return apiFetch<MatchDayResponse>("/matchday", {
     method: "GET",
   });
 }
