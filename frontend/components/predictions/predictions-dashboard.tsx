@@ -622,6 +622,11 @@ export const PredictionsDashboard = () => {
   }, [applyMatchSelection]);
 
   const updateField = (field: keyof PredictionFormState, value: string) => {
+
+    if (['team1Score', 'team2Score', 'redCardCount', 'yellowCardCount'].includes(field)) {
+      value = Number(value).toString();
+    }
+
     setFormState((current) => {
       const nextState = {
         ...current,

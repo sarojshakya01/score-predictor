@@ -305,6 +305,11 @@ const AdminMatchesPage = () => {
   };
 
   const updateField = (field: keyof MatchFormState, value: string | boolean) => {
+
+    if (['matchDay', 'team1Score', 'team2Score', 'redCardCount', 'yellowCardCount'].includes(field)) {
+      value = Number(value).toString();
+    }
+
     setFormState((current) => {
       const nextState = { ...current, [field]: value };
       const validTeamIds = new Set([nextState.team1Id, nextState.team2Id]);
