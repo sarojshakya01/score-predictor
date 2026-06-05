@@ -17,6 +17,7 @@ import type { UserCreate, UserResponse } from "@/lib/users";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { IconCancel, IconPencil, IconPlus, IconSave, IconSearch, IconTrash, IconX } from "@/components/ui/icons";
 import { Pagination } from "@/components/ui/pagination";
+import { formatDateTime } from "@/components/ui/match-card";
 
 const emptyFormState: UserCreate = {
   email: "",
@@ -252,8 +253,9 @@ const AdminUsersPage = () => {
                 <th className="px-5 py-3">Name</th>
                 <th className="px-5 py-3">Email</th>
                 <th className="px-5 py-3">Mobile No.</th>
-                <th className="px-5 py-3">Role</th>
-                <th className="px-5 py-3">Status</th>
+                <th className="px-5 py-3 text-center">Role</th>
+                <th className="px-5 py-3 text-center">Status</th>
+                <th className="px-5 py-3 min-w-[140px]">Created At</th>
                 <th className="px-5 py-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -275,15 +277,18 @@ const AdminUsersPage = () => {
                     </td>
                     <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{user.email}</td>
                     <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{user.mobile_no}</td>
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-4 text-center">
                       <StatusPill tone={user.role === "ADMIN" ? "yellow" : "primary"}>
                         {user.role === "ADMIN" ? "Admin" : "Player"}
                       </StatusPill>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="px-5 py-4 text-center">
                       <StatusPill tone={user.is_active ? "secondary" : "accent"}>
                         {user.is_active ? "Active" : "Inactive"}
                       </StatusPill>
+                    </td>
+                    <td className="px-5 py-4">
+                      {formatDateTime(user.created_at)}
                     </td>
                     <td className="px-5 py-4 text-right">
                       <div className="flex justify-end gap-1">

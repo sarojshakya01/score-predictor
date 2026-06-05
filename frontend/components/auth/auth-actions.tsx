@@ -69,7 +69,7 @@ export const AuthActions = () => {
       <div className="relative">
         <button
           type="button"
-          onMouseOver={() => setIsMenuOpen(true)}
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
           className="inline-flex h-10 items-center gap-2 rounded-md border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-700 px-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300"
         >
           <span className="max-w-40 truncate">
@@ -79,7 +79,7 @@ export const AuthActions = () => {
         </button>
 
         {isMenuOpen && (
-          <div onMouseLeave={() => setIsMenuOpen(false)} className="absolute right-0 z-50 mt-2 w-48 overflow-hidden rounded-md border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+          <div className="absolute right-0 z-50 mt-2 w-48 overflow-hidden rounded-md border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
             <Link
               href="/change-password"
               className="flex items-center gap-2 px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700"

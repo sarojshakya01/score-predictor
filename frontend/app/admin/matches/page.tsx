@@ -168,6 +168,7 @@ const parseOptionalNonNegativeInteger = (value: string, label: string): number |
   if (!Number.isInteger(parsedValue) || parsedValue < 0) {
     throw new Error(`${label} must be zero or greater.`);
   }
+
   return parsedValue;
 };
 
@@ -213,14 +214,14 @@ const buildMatchPayload = (state: MatchFormState): MatchCreate => {
     match_reminder_sent: state.matchReminderSent,
     match_stage: state.matchStage,
     kick_off_team_id: parseOptionalPositiveInteger(state.kickoffTeamId),
-    red_card_count: parseOptionalNonNegativeInteger(state.redCardCount, "Red cards"),
+    red_card_count: state.matchLocked ? parseOptionalNonNegativeInteger(state.redCardCount || "0", "Red cards") : parseOptionalNonNegativeInteger(state.redCardCount, "Red cards"),
     team1_id: team1Id,
     winner_id: parseOptionalPositiveInteger(state.winnerId),
     team1_score: team1Score,
     team2_id: team2Id,
     team2_score: team2Score,
     venue_name: state.venueName.trim() || null,
-    yellow_card_count: parseOptionalNonNegativeInteger(state.yellowCardCount, "Yellow cards"),
+    yellow_card_count: state.matchLocked ? parseOptionalNonNegativeInteger(state.yellowCardCount || "0", "Yellow cards") : parseOptionalNonNegativeInteger(state.yellowCardCount, "Yellow cards"),
   };
 };
 

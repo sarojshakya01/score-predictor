@@ -1,5 +1,6 @@
 """Leaderboard scoring business logic."""
 
+from app.api.deps import CurrentUser
 import logging
 from dataclasses import dataclass, field
 
@@ -297,6 +298,7 @@ class LeaderboardService:
     async def get_user_points_details(
         self,
         *,
+        current_user: CurrentUser,
         user_id: int,
     ) -> UserPointsDetailsListResponse:
         """Return scored points details for a user across all completed matches."""
@@ -310,8 +312,10 @@ class LeaderboardService:
                     detail="User not found",
                 )
 
+            locked_matches = await self._match_repository.list_locked_matches()
+
             points_from_predictions = await self._prediction_repository.list_points_from_predictions_of_user(
-                user_id=user_id,
+                current_user=current_user, user_id=user_id, locked_matches=locked_matches
             )
 
             items: list[UserPointsDetailsResponse] = []
@@ -323,6 +327,7 @@ class LeaderboardService:
                 running_total += score.total_points
                 team1_name = match.team1.name
                 team2_name = match.team2.name
+
                 items.append(
                     UserPointsDetailsResponse(
                         match_id=match.id,
@@ -344,7 +349,7 @@ class LeaderboardService:
                         red_card_points=score.red_card_points,
                         # Kick-off team
                         kick_off_team=match.kick_off_team.name if match.kick_off_team else None,
-                        predicted_kick_off_team=point_from_prediction.kick_off_team.name,
+                        predicted_kick_off_team=point_from_prediction.kick_off_team.name if point_from_prediction.kick_off_team else None,
                         kick_off_team_points=score.kick_off_team_points,
                         # First scoring team
                         first_scoring_team=match.first_scoring_team.name if match.first_scoring_team else None,
@@ -356,7 +361,7 @@ class LeaderboardService:
                         first_goal_in_points=score.first_goal_in_points,
                         # Match duration
                         match_duration=match.match_duration.value if match.match_duration else None,
-                        predicted_match_duration=point_from_prediction.match_duration.value,
+                        predicted_match_duration=point_from_prediction.match_duration.value if point_from_prediction.match_duration else None,
                         match_duration_points=score.match_duration_points,
                         # Summary
                         score_points=score.score_points,
@@ -560,6 +565,21 @@ class LeaderboardService:
     @staticmethod
     def _score_prediction(prediction: Prediction, rules: ScoringRules) -> PredictionScore:
         """Score a prediction against its completed match using live scoring rules."""
+
+        # for not predicted match, return 0 points
+        if prediction.id is None or not prediction.match.match_locked:
+            return PredictionScore(
+                score_points=0,
+                goal_difference_points=0,
+                kick_off_team_points=0,
+                yellow_card_points=0,
+                red_card_points=0,
+                first_scoring_team_points=0,
+                first_goal_in_points=0,
+                match_duration_points=0,
+                total_points=0,
+            )
+
         match = prediction.match
         perfect_prediction = (
             prediction.team1_score == match.team1_score
@@ -661,6 +681,13 @@ class LeaderboardService:
 
         predicted_diff = prediction.team1_score - prediction.team2_score
         actual_diff = match.team1_score - match.team2_score
+
+        # if winning team is not correct, return 0 points
+        if predicted_diff < 0 and actual_diff > 0:
+            return 0
+        if predicted_diff > 0 and actual_diff < 0:
+            return 0
+
         delta = abs(predicted_diff - actual_diff)
 
         if delta == 0:

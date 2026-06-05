@@ -57,7 +57,6 @@ export const getPredictionStatus = (
   const deadline = kickoff - 60 * 60 * 1000;
   const now = Date.now();
 
-  if (Number.isFinite(deadline) && now >= deadline) return "Locked";
   if (Number.isFinite(deadline) && deadline - now <= 3 * 60 * 60 * 1000) return "Locking soon";
   return "Open";
 };

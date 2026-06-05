@@ -1,5 +1,6 @@
 """Repository for match database operations."""
 
+from app.models.match import MatchStage
 from app.services.setting_service import SettingService
 from collections.abc import Mapping
 from datetime import datetime, timedelta, timezone
@@ -101,6 +102,30 @@ class MatchRepository:
             .where(Match.match_locked.is_(True))
             .where(Match.team1_score.is_not(None))
             .where(Match.team2_score.is_not(None))
+            .order_by(Match.match_datetime.asc(), Match.id.asc())
+        )
+
+        if limit is not None:
+            statement = statement.offset(offset).limit(limit)
+
+        result = await self._db.execute(statement)
+        return list(result.scalars().all())
+
+    async def list_locked_matches(
+        self,
+        *,
+        offset: int = 0,
+        limit: int | None = None,
+    ) -> list[Match]:
+        """Fetch matches with final scores for standings calculations."""
+        statement = (
+            select(Match)
+            .options(
+                selectinload(Match.team1),
+                selectinload(Match.team2),
+                selectinload(Match.winner),
+            )
+            .where(Match.match_locked.is_(True))
             .order_by(Match.match_datetime.asc(), Match.id.asc())
         )
 
@@ -257,8 +282,8 @@ class MatchRepository:
             statement = statement.where(Match.match_locked.is_(False))
 
         statement = statement.where(
-            (Match.match_stage == '3P') |
-            (Match.match_stage == "F")
+            (Match.match_stage == MatchStage.THIRD_PLACE) |
+            (Match.match_stage == MatchStage.FINAL)
         )
 
         result = await self._db.execute(

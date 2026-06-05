@@ -91,12 +91,12 @@ async def get_leaderboard(
 )
 async def get_user_points_details(
     user_id: Annotated[int, Path(gt=0)],
-    _current_user: CurrentUser,
+    current_user: CurrentUser,
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> UserPointsDetailsListResponse:
     """Return scored prediction details for a specific user across completed matches."""
     service = LeaderboardService(db)
-    return await service.get_user_points_details(user_id=user_id)
+    return await service.get_user_points_details(current_user=current_user, user_id=user_id)
 
 
 @admin_router.get(

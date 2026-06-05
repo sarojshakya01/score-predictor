@@ -82,17 +82,17 @@ class UserPointsDetailsResponse(BaseModel):
     match_day: int
     team1_name: str
     team2_name: str
-    team1_score: int
-    team2_score: int
-    predicted_team1_score: int
-    predicted_team2_score: int
+    team1_score: int | None
+    team2_score: int | None
+    predicted_team1_score: int | None
+    predicted_team2_score: int | None
     # Yellow cards
     yellow_card_count: int | None
-    predicted_yellow_card_count: int
+    predicted_yellow_card_count: int | None
     yellow_card_points: int
     # Red cards
     red_card_count: int | None
-    predicted_red_card_count: int
+    predicted_red_card_count: int | None
     red_card_points: int
     # Kick-off team
     kick_off_team: str | None

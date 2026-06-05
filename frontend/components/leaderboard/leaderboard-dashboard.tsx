@@ -72,6 +72,12 @@ const fmtFirstGoalIn = (v: string | null): string => {
   return v ? (firstGoalInLabels[v as FirstGoalIn] ?? v) : "—";
 };
 
+const fmtGoalDiff = (v1: number | null, v2: number | null): string => {
+  if (v1 === null || v2 === null) return "—";
+  const diff = v1 - v2;
+  return diff > 0 ? `+${diff}` : String(diff);
+};
+
 const fmtVal = (v: string | number | null | undefined): string =>
   v === null || v === undefined ? "—" : String(v);
 
@@ -107,6 +113,15 @@ const PtsCell = ({ points }: { points: number }) => {
   );
 };
 
+const totalColor = (totalPoints: number) => {
+  const totalColor =
+    totalPoints > 0
+      ? "bg-emerald-600 text-white"
+      : totalPoints < 0
+        ? "bg-rose-600 text-white"
+        : "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300";
+  return totalColor;
+}
 // ── Score row ─────────────────────────────────────────────────────────────────
 
 const ScoreRow = ({
@@ -116,12 +131,6 @@ const ScoreRow = ({
   index: number;
   item: UserPointsDetailsResponse;
 }) => {
-  const totalColor =
-    item.total_points > 0
-      ? "bg-emerald-600 text-white"
-      : item.total_points < 0
-        ? "bg-rose-600 text-white"
-        : "bg-zinc-200 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300";
 
   return (
     <tr className="group border-b border-zinc-100 dark:border-zinc-800 transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/50">
@@ -140,7 +149,7 @@ const ScoreRow = ({
       {/* Total */}
       <td className="whitespace-nowrap px-3 py-2.5 text-center">
         <span
-          className={`inline-flex h-8 w-12 items-center justify-center rounded-lg text-sm font-bold ${totalColor}`}
+          className={`inline-flex h-8 w-12 items-center justify-center rounded-lg text-sm font-bold ${totalColor(item.total_points)}`}
         >
           {formatSignedNumber(item.total_points)}
         </span>
@@ -153,14 +162,14 @@ const ScoreRow = ({
         </span>
       </ActualCell>
       <PredCell>
-        {item.predicted_team1_score} – {item.predicted_team2_score}
+        {item.predicted_team1_score === null && item.predicted_team2_score === null ? "—" : `${item.predicted_team1_score} - ${item.predicted_team2_score}`}
       </PredCell>
       <PtsCell points={item.score_points} />
 
       {/* Goal diff */}
-      <ActualCell>{Math.abs(item.team1_score - item.team2_score)}</ActualCell>
+      <ActualCell>{fmtGoalDiff(item.team1_score, item.team2_score)}</ActualCell>
       <PredCell>
-        {Math.abs(item.predicted_team1_score - item.predicted_team2_score)}
+        {fmtGoalDiff(item.predicted_team1_score, item.predicted_team2_score)}
       </PredCell>
       <PtsCell points={item.goal_difference_points} />
 
@@ -176,7 +185,7 @@ const ScoreRow = ({
 
       {/* Yellow cards */}
       <ActualCell>{fmtVal(item.yellow_card_count)}</ActualCell>
-      <PredCell>{item.predicted_yellow_card_count}</PredCell>
+      <PredCell>{fmtVal(item.predicted_yellow_card_count)}</PredCell>
       <PtsCell points={item.yellow_card_points} />
 
       {/* Red cards */}
@@ -186,7 +195,7 @@ const ScoreRow = ({
 
       {/* Kick-off team */}
       <ActualCell>{fmtVal(item.kick_off_team)}</ActualCell>
-      <PredCell>{item.predicted_kick_off_team}</PredCell>
+      <PredCell>{fmtVal(item.predicted_kick_off_team)}</PredCell>
       <PtsCell points={item.kick_off_team_points} />
 
       {/* Duration */}
@@ -425,8 +434,16 @@ const UserPointsDetailModal = ({
                       <td colSpan={21} />
                     </tr></>)}
                   <tr>
-                    <td colSpan={3} className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                    <td colSpan={2} className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                       Totals
+                    </td>
+                    {/* Total pts */}
+                    <td className="whitespace-nowrap px-3 py-2.5 text-center">
+                      <span
+                        className={`inline-flex h-8 w-12 items-center justify-center rounded-lg text-sm font-bold ${totalColor(data.total_points)}`}
+                      >
+                        {data.total_points}
+                      </span>
                     </td>
                     {/* Score pts */}
                     <td colSpan={2} />

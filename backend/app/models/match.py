@@ -38,12 +38,12 @@ class MatchStage(str, enum.Enum):
     """Possible stages of a football match."""
 
     GROUP = "GROUP"
-    R32 = "R32"
-    R16 = "R16"
-    QF = "QF"
-    SF = "SF"
-    TP = "3P"
-    F = "F"
+    ROUND_OF_32 = "R32"
+    ROUND_OF_16 = "R16"
+    QUARTER_FINAL = "QF"
+    SEMI_FINAL = "SF"
+    THIRD_PLACE = "3P"
+    FINAL = "F"
 
 
 def match_duration_values(enum_type: type[MatchDuration]) -> list[str]:

@@ -1,5 +1,6 @@
 """Repository for prediction database operations."""
 
+from app.api.deps import CurrentUser
 from collections.abc import Mapping
 
 from sqlalchemy import func, select
@@ -105,8 +106,9 @@ class PredictionRepository:
         result = await self._db.execute(statement)
         return int(result.scalar_one())
 
-    async def list_points_from_predictions_of_user(self, user_id: int) -> list[Prediction]:
+    async def list_points_from_predictions_of_user(self, current_user: CurrentUser, user_id: int, locked_matches: list[Match]) -> list[Prediction]:
         """Fetch scored predictions for a specific user where the match has a final score."""
+
         statement = (
             select(Prediction)
             .join(Prediction.match)
@@ -116,14 +118,29 @@ class PredictionRepository:
                 selectinload(Prediction.user),
             )
             .where(Prediction.user_id == user_id)
-            .where(User.is_active.is_(True))
-            .where(Match.team1_score.is_not(None))
-            .where(Match.team2_score.is_not(None))
             .order_by(Prediction.match_id.asc())
         )
 
         result = await self._db.execute(statement)
-        return list(result.scalars().all())
+
+        final_result = list(result.scalars().all())
+
+        # hide other users' predictions if the match is not locked
+        for idx, prediction in enumerate(final_result):
+            if current_user.id != user_id and not prediction.match.match_locked:
+                prediction = self.to_dummy_prediction_for_match(user_id, prediction.match)
+                final_result[idx] = prediction
+
+        # if prediction is not made for a locked match, add dummy prediction
+        for locked_match in locked_matches:
+            if locked_match.id not in [p.match_id for p in final_result]:
+                prediction = self.to_dummy_prediction_for_match(user_id, locked_match)
+                final_result.append(prediction)
+
+        final_result.sort(key=lambda x: x.match_id)
+
+        return final_result
+
 
     async def list_scored_predictions(self) -> list[Prediction]:
         """Fetch predictions for active users where the match has a final score."""
@@ -180,3 +197,22 @@ class PredictionRepository:
         """Delete an existing prediction."""
         await self._db.delete(prediction)
         await self._db.commit()
+
+    @staticmethod
+    def to_dummy_prediction_for_match(user_id: int, match: Match) -> Prediction:
+        """Returns a dummy prediction of the user for a given match."""
+        return Prediction(
+            id=None,
+            user_id=user_id,
+            match_id=match.id,
+            team1_score=None,
+            team2_score=None,
+            yellow_card_count=None,
+            red_card_count=None,
+            first_goal_in=None,
+            first_scoring_team_id=None,
+            kick_off_team_id=None,
+            match_duration=None,
+
+            match=match
+        )
