@@ -767,7 +767,7 @@ export const LeaderboardDashboard = () => {
       <section className="flex flex-col gap-3 rounded-md border border-yellow-200 px-4 py-4 text-sm text-yellow-900 dark:text-zinc-400 dark:border-yellow-700 bg-yellow-50 dark:bg-amber-950 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-lg font-semibold">Login required</h2>
-          <p className="mt-1 text-sm">Log in to view tournament leaderboard and the racing charts..</p>
+          <p className="mt-1 text-sm">Log in to view tournament leaderboard and the racing charts.</p>
         </div>
         <Link
           href="/login"
