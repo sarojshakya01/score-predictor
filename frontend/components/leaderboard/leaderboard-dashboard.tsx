@@ -158,7 +158,7 @@ const ScoreRow = ({
       <PtsCell points={item.score_points} />
 
       {/* Goal diff */}
-      <ActualCell>{item.team1_score - item.team2_score}</ActualCell>
+      <ActualCell>{Math.abs(item.team1_score - item.team2_score)}</ActualCell>
       <PredCell>
         {Math.abs(item.predicted_team1_score - item.predicted_team2_score)}
       </PredCell>
@@ -438,6 +438,16 @@ const UserPointsDetailModal = ({
                     <PtsCell
                       points={data.items.reduce((s, i) => s + i.goal_difference_points, 0)}
                     />
+                    {/* First Goal In pts */}
+                    <td colSpan={2} />
+                    <PtsCell
+                      points={data.items.reduce((s, i) => s + i.first_goal_in_points, 0)}
+                    />
+                    {/* First Score By pts */}
+                    <td colSpan={2} />
+                    <PtsCell
+                      points={data.items.reduce((s, i) => s + i.first_scoring_team_points, 0)}
+                    />
                     {/* Yellow card pts */}
                     <td colSpan={2} />
                     <PtsCell
@@ -452,16 +462,6 @@ const UserPointsDetailModal = ({
                     <td colSpan={2} />
                     <PtsCell
                       points={data.items.reduce((s, i) => s + i.kick_off_team_points, 0)}
-                    />
-                    {/* First Goal In pts */}
-                    <td colSpan={2} />
-                    <PtsCell
-                      points={data.items.reduce((s, i) => s + i.first_goal_in_points, 0)}
-                    />
-                    {/* First Score By pts */}
-                    <td colSpan={2} />
-                    <PtsCell
-                      points={data.items.reduce((s, i) => s + i.first_scoring_team_points, 0)}
                     />
                     {/* Duration pts */}
                     <td colSpan={2} />

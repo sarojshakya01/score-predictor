@@ -32,11 +32,18 @@ export const AppShell = ({ children }: AppShellProps) => {
               className="flex shrink-0 items-center gap-2.5"
             >
               <Image
-                src="/images/football.png"
+                src="/images/wc2026.png"
                 width={36}
                 height={36}
                 alt="Football Icon"
-                className="h-[35px] w-auto"
+                className="hidden dark:block h-[35px] w-auto"
+              />
+              <Image
+                src="/images/wc2026_black.png"
+                width={36}
+                height={36}
+                alt="Football Icon"
+                className="dark:hidden h-[35px] w-auto"
               />
               <span className="hidden sm:block">
                 <span className="block text-sm font-semibold text-zinc-950 dark:text-zinc-50 leading-tight">

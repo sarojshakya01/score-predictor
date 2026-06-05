@@ -96,6 +96,10 @@ textarea {
   background: linear-gradient(to bottom, #721411, #d60303);
 }
 
+.bg-prediction {
+  background-color: linear-gradient(to bottom, #721411, #d60303);
+}
+
 .bg-tournament-light {
   background-color: rgb(239, 235, 235)
 }
