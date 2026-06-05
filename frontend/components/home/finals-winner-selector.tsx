@@ -895,13 +895,15 @@ export const FinalsWinnerSelector = () => {
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             Please login to submit your prediction.
           </p>
-          <Link href="/login">
-            <button
-              className="inline-flex h-10 justify-center items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
-            >
-              Login
-            </button>
-          </Link>
+          <div className="flex justify-end">
+            <Link href="/login">
+              <button
+                className="inline-flex h-10 cursor-pointer justify-center items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
+              >
+                Login
+              </button>
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="flex flex-col gap-5">

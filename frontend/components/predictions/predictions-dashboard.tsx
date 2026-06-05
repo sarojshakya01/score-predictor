@@ -729,12 +729,6 @@ export const PredictionsDashboard = () => {
       return;
     }
 
-    if (!isAuthenticated()) {
-      setAuthRequired(true);
-      setFormError("Please log in before saving a prediction.");
-      return;
-    }
-
     if (getPredictionStatus(selectedMatch) === "Locked") {
       setFormError("Prediction is locked for this match.");
       return;
@@ -954,21 +948,6 @@ export const PredictionsDashboard = () => {
         </div>
       ) : null}
 
-      {authRequired ? (
-        <div className="flex flex-col gap-3 rounded-md border border-yellow-200 px-4 py-4 text-sm text-yellow-900 dark:text-zinc-400 dark:border-yellow-700 bg-yellow-50 dark:bg-amber-950 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h2 className="text-lg font-semibold">Login required</h2>
-            <p className="mt-1 text-sm">Log in to submit your predictions.</p>
-          </div>
-          <Link
-            href="/login"
-            className="inline-flex h-10 items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
-          >
-            Login
-          </Link>
-        </div>
-      ) : null}
-
       <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
         <div className="hidden lg:flex w-40 h-[525px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48">
           <ImageWithFallback width={525} height={525} src={"/images/players/" + selectedMatch?.team1_name_short?.toLowerCase() + ".png"} alt={selectedMatch?.team1_name || "Captain Image"} />
@@ -983,10 +962,10 @@ export const PredictionsDashboard = () => {
               title="Scrape head-to-head scores, then blend them with FIFA ranking"
               disabled={isFormDisabled || isAiPicking || teams.length === 0}
               onClick={() => void handleAiPick()}
-              className="mt-0 inline-flex h-10 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:border-emerald-700 dark:hover:bg-emerald-900 dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500"
+              className="mt-0 inline-flex h-8 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:border-emerald-700 dark:hover:bg-emerald-900 dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500"
             >
               <IconSparkles className="h-4 w-4" />
-              <p className="hidden md:block">{isAiPicking ? "Picking ..." : "Auto pick with AI"}</p>
+              <p className="hidden md:block text-sm">{isAiPicking ? "Picking ..." : "Auto pick with AI"}</p>
             </button>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-3">
@@ -1119,8 +1098,8 @@ export const PredictionsDashboard = () => {
           <div className="grid place-items-center w-full">
             <button
               type="submit"
-              disabled={isFormDisabled}
-              className="inline-flex h-11 px-4 items-center gap-2 mt-6 cursor-pointer justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400 sm:w-auto"
+              disabled={false}
+              className="inline-flex h-10 px-4 items-center gap-2 mt-5 cursor-pointer justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400 sm:w-auto"
             >
               <IconSave className="h-4 w-4" />
               {isSubmitting
@@ -1227,83 +1206,100 @@ export const PredictionsDashboard = () => {
       <Modal
         isOpen={showUpdateConfirm}
         onClose={handleCancelSubmit}
-        title={selectedPrediction ? "Update Prediction" : "Confirm Prediction"}
+        title={authRequired ? "Login required" : (selectedPrediction ? "Update Prediction" : "Confirm Prediction")}
       >
-        <div className="flex flex-col gap-5">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {selectedPrediction ? (
-              <>
-                You are about to{" "}
-                <span className="font-semibold text-zinc-900 dark:text-zinc-100">change</span>{" "}
-                your prediction for{" "}
-                <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                  {selectedMatch ? getMatchLabelText(selectedMatch) : "this match"}
-                </span>
-                . This will overwrite your existing prediction.
-              </>
-            ) : (
-              <>
-                You are about to{" "}
-                <span className="font-semibold text-zinc-900 dark:text-zinc-100">submit</span>{" "}
-                your prediction for{" "}
-                <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                  {selectedMatch ? getMatchLabelText(selectedMatch) : "this match"}
-                </span>
-                . Please review before confirming.
-              </>
-            )}
-          </p>
-
-          {pendingPredictionFields && selectedMatch && (
-            <div className="rounded-md border border-zinc-200 dark:border-zinc-700 overflow-hidden">
-              <div className="bg-zinc-50 dark:bg-zinc-800 px-4 py-2 border-b border-zinc-200 dark:border-zinc-700">
-                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                  Your Prediction
-                </p>
-              </div>
-              <dl className="grid grid-cols-2 gap-px bg-zinc-200 dark:bg-zinc-700">
-                {([
-                  [`${selectedMatch.team1_name} Score`, pendingPredictionFields.team1_score],
-                  [`${selectedMatch.team2_name} Score`, pendingPredictionFields.team2_score],
-                  ["First Goal In", pendingPredictionFields.first_goal_in ? firstGoalInLabels[pendingPredictionFields.first_goal_in] : "Not Predicted"],
-                  ["First Score By", pendingPredictionFields.first_scoring_team_id
-                    ? getTeamNameById(selectedMatch, pendingPredictionFields.first_scoring_team_id)
-                    : "Not Predicted"],
-                  ["Yellow Cards", String(pendingPredictionFields.yellow_card_count)],
-                  ["Red Cards", String(pendingPredictionFields.red_card_count)],
-                  ["Kick-off Team", pendingPredictionFields.kick_off_team_id ? getTeamNameById(selectedMatch, pendingPredictionFields.kick_off_team_id) : "Not Predicted"],
-                  ["Duration", pendingPredictionFields.match_duration ? matchDurationLabels[pendingPredictionFields.match_duration] : "Not Predicted"],
-
-                ] as [string, string][]).map(([label, value]) => (
-                  <div key={label} className="flex flex-col gap-0.5 bg-white dark:bg-zinc-900 px-4 py-3">
-                    <dt className="text-xs text-zinc-500 dark:text-zinc-400">{label}</dt>
-                    <dd className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{value}</dd>
-                  </div>
-                ))}
-              </dl>
+        {authRequired ? (
+          <div className="flex flex-col gap-5">
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              Please login to submit your prediction.
+            </p>
+            <div className="flex justify-end">
+              <Link href="/login">
+                <button
+                  className="inline-flex h-10 cursor-pointer justify-center items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
+                >
+                  Login
+                </button>
+              </Link>
             </div>
-          )}
-
-          <div className="flex justify-end gap-3 pt-1">
-            <button
-              type="button"
-              onClick={handleCancelSubmit}
-              className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleConfirmSubmit()}
-              disabled={isSubmitting}
-              className="inline-flex h-10 items-center gap-2 justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400"
-            >
-              {isSubmitting
-                ? (selectedPrediction ? "Updating..." : "Submitting...")
-                : (selectedPrediction ? "Confirm Update" : "Confirm & Submit")}
-            </button>
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col gap-5">
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              {selectedPrediction ? (
+                <>
+                  You are about to{" "}
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">change</span>{" "}
+                  your prediction for{" "}
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                    {selectedMatch ? getMatchLabelText(selectedMatch) : "this match"}
+                  </span>
+                  . This will overwrite your existing prediction.
+                </>
+              ) : (
+                <>
+                  You are about to{" "}
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">submit</span>{" "}
+                  your prediction for{" "}
+                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                    {selectedMatch ? getMatchLabelText(selectedMatch) : "this match"}
+                  </span>
+                  . Please review before confirming.
+                </>
+              )}
+            </p>
+
+            {pendingPredictionFields && selectedMatch && (
+              <div className="rounded-md border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+                <div className="bg-zinc-50 dark:bg-zinc-800 px-4 py-2 border-b border-zinc-200 dark:border-zinc-700">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                    Your Prediction
+                  </p>
+                </div>
+                <dl className="grid grid-cols-2 gap-px bg-zinc-200 dark:bg-zinc-700">
+                  {([
+                    [`${selectedMatch.team1_name} Score`, pendingPredictionFields.team1_score],
+                    [`${selectedMatch.team2_name} Score`, pendingPredictionFields.team2_score],
+                    ["First Goal In", pendingPredictionFields.first_goal_in ? firstGoalInLabels[pendingPredictionFields.first_goal_in] : "Not Predicted"],
+                    ["First Score By", pendingPredictionFields.first_scoring_team_id
+                      ? getTeamNameById(selectedMatch, pendingPredictionFields.first_scoring_team_id)
+                      : "Not Predicted"],
+                    ["Yellow Cards", String(pendingPredictionFields.yellow_card_count)],
+                    ["Red Cards", String(pendingPredictionFields.red_card_count)],
+                    ["Kick-off Team", pendingPredictionFields.kick_off_team_id ? getTeamNameById(selectedMatch, pendingPredictionFields.kick_off_team_id) : "Not Predicted"],
+                    ["Duration", pendingPredictionFields.match_duration ? matchDurationLabels[pendingPredictionFields.match_duration] : "Not Predicted"],
+
+                  ] as [string, string][]).map(([label, value]) => (
+                    <div key={label} className="flex flex-col gap-0.5 bg-white dark:bg-zinc-900 px-4 py-3">
+                      <dt className="text-xs text-zinc-500 dark:text-zinc-400">{label}</dt>
+                      <dd className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{value}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 pt-1">
+              <button
+                type="button"
+                onClick={handleCancelSubmit}
+                className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleConfirmSubmit()}
+                disabled={isSubmitting}
+                className="inline-flex h-10 items-center gap-2 justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400"
+              >
+                {isSubmitting
+                  ? (selectedPrediction ? "Updating..." : "Submitting...")
+                  : (selectedPrediction ? "Confirm Update" : "Confirm & Submit")}
+              </button>
+            </div>
+          </div>
+        )}
       </Modal>
     </>
   );
