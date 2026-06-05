@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Match Predictor",
-  description: "Tournament predictions, rankings, groups, and admin tools.",
+  description: "Tournament predictions, rankings, groups, and brackets.",
   icons: {
     icon: '/favicon.ico',
     apple: '/favicon.ico',
