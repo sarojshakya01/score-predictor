@@ -251,6 +251,7 @@ const AdminUsersPage = () => {
                 <th className="px-5 py-3">S.N.</th>
                 <th className="px-5 py-3">Name</th>
                 <th className="px-5 py-3">Email</th>
+                <th className="px-5 py-3">Mobile No.</th>
                 <th className="px-5 py-3">Role</th>
                 <th className="px-5 py-3">Status</th>
                 <th className="px-5 py-3 text-right">Actions</th>
@@ -273,6 +274,7 @@ const AdminUsersPage = () => {
                         .join(" ")}
                     </td>
                     <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{user.email}</td>
+                    <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{user.mobile_no}</td>
                     <td className="px-5 py-4">
                       <StatusPill tone={user.role === "ADMIN" ? "yellow" : "primary"}>
                         {user.role === "ADMIN" ? "Admin" : "Player"}
@@ -310,7 +312,7 @@ const AdminUsersPage = () => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400">
+                  <td colSpan={7} className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400">
                     {isSearchActive ? `No users match "${searchQuery}".` : "No users found."}
                   </td>
                 </tr>
