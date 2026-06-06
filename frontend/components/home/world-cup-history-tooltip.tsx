@@ -51,7 +51,7 @@ export const WorldCupHistoryTooltip = () => {
       <button
         type="button"
         aria-label="Recent World Cup finalists and quarterfinalists"
-        className="grid h-8 w-8 place-items-center rounded-md border border-zinc-200 bg-white text-zinc-500 transition hover:border-tournament-primary hover:text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:border-tournament-primary dark:hover:text-emerald-300 dark:focus:ring-emerald-900"
+        className="grid h-8 w-8 place-items-center cursor-pointer rounded-md border border-zinc-200 bg-white text-zinc-500 transition hover:border-tournament-primary hover:text-emerald-700 focus:outline-none focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:hover:border-tournament-primary dark:hover:text-emerald-300 dark:focus:ring-emerald-900"
       >
         <IconInfo className="h-4 w-4" />
       </button>
