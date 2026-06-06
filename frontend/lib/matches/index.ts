@@ -1,6 +1,7 @@
 export {
   createMatch,
   deleteMatch,
+  getAdminMatch,
   getCurrentMatchDay,
   getHeadToHeadMatchHistory,
   listAdminMatches,

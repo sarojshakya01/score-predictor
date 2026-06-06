@@ -72,6 +72,20 @@ async def list_settings(
     return await service.list_settings(offset=offset, limit=limit, search=search)
 
 
+@admin_router.get(
+    "/{setting_id}",
+    response_model=SettingResponse,
+    summary="Get setting",
+)
+async def get_setting(
+    setting_id: Annotated[int, Path(gt=0)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> SettingResponse:
+    """Return a single setting by id."""
+    service = SettingService(db)
+    return await service.get_setting(setting_id)
+
+
 @admin_router.post(
     "",
     response_model=SettingResponse,

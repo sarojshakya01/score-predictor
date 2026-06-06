@@ -170,6 +170,12 @@ export const listAdminMatches = async (
   });
 };
 
+export const getAdminMatch = async (matchId: number): Promise<MatchResponse> => {
+  return authenticatedApiFetch<MatchResponse>(`/admin/matches/${matchId}`, {
+    method: "GET",
+  });
+};
+
 export const createMatch = async (data: MatchCreate): Promise<MatchResponse> => {
   return authenticatedApiFetch<MatchResponse, MatchCreate>("/admin/matches", {
     body: data,
@@ -199,6 +205,7 @@ export const deleteMatch = async (matchId: number): Promise<void> => {
 export const matchService = {
   createMatch,
   deleteMatch,
+  getAdminMatch,
   getHeadToHeadMatchHistory,
   listAdminMatches,
   listMatches,

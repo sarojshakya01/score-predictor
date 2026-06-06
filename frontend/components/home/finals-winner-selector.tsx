@@ -10,6 +10,7 @@ import {
   getStatusTone,
 } from "@/components/ui/match-card";
 import { StatusPill } from "@/components/ui/status-pill";
+import { ToastViewport, useToast } from "@/components/ui/toast";
 import {
   IconAward,
   IconCheck,
@@ -316,13 +317,12 @@ export const FinalsWinnerSelector = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [teams, setTeams] = useState<TeamResponse[]>([]);
   const [finalMatches, setFinalMatches] = useState<MatchResponse[]>([]);
   const [activePlaceId, setActivePlaceId] = useState<PlaceId>(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { dismissToast, showToast, toasts } = useToast();
   const [selections, setSelections] =
     useState<Record<PlaceId, number | null>>({ ...emptySelections });
 
@@ -424,25 +424,28 @@ export const FinalsWinnerSelector = () => {
         if (matchDayResult.status === "fulfilled") {
           matchDay = matchDayResult.value.value;
         } else {
-          setFormError(
-            getErrorMessage(matchDayResult.reason, "Unable to get data. Please try again."),
-          );
+          showToast({
+            message: getErrorMessage(matchDayResult.reason, "Unable to get data. Please try again."),
+            tone: "error",
+          });
         }
 
         if (finalMatchesResult.status === "fulfilled") {
           finalMatches = finalMatchesResult.value.items;
         } else {
-          setFormError(
-            getErrorMessage(finalMatchesResult.reason, "Unable to save prediction. Please try again."),
-          );
+          showToast({
+            message: getErrorMessage(finalMatchesResult.reason, "Unable to save prediction. Please try again."),
+            tone: "error",
+          });
         }
 
         if (teamsResult.status === "fulfilled") {
           teams = teamsResult.value.items;
         } else {
-          setFormError(
-            getErrorMessage(teamsResult.reason, "Unable to load teams."),
-          );
+          showToast({
+            message: getErrorMessage(teamsResult.reason, "Unable to load teams."),
+            tone: "error",
+          });
         }
 
         if (!hasAuthToken || !matchDay) {
@@ -478,9 +481,10 @@ export const FinalsWinnerSelector = () => {
         ) {
           setAuthRequired(true);
         } else {
-          setFormError(
-            getErrorMessage(error, "Unable to load user."),
-          );
+          showToast({
+            message: getErrorMessage(error, "Unable to load user."),
+            tone: "error",
+          });
         }
       } finally {
         if (isMounted) {
@@ -494,7 +498,25 @@ export const FinalsWinnerSelector = () => {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [showToast]);
+
+  const showAuthRequiredToast = () => {
+    showToast({
+      action: (
+        <Link
+          href="/login"
+          className="inline-flex h-8 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 text-xs font-semibold text-zinc-800 transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+        >
+          Login
+        </Link>
+      ),
+      durationMs: 7000,
+      id: "finals-auth-required",
+      message: "Please login to submit your prediction.",
+      title: "Login required",
+      tone: "info",
+    });
+  };
 
   const activePlace =
     placeDefinitions.find((place) => place.id === activePlaceId) ??
@@ -510,7 +532,6 @@ export const FinalsWinnerSelector = () => {
   const ActivePlaceIcon = activePlace.icon;
 
   const selectTeam = (teamId: number) => {
-    setFormError(null);
     if (predictionLocked) {
       return;
     }
@@ -535,9 +556,6 @@ export const FinalsWinnerSelector = () => {
   };
 
   const handleAiPick = () => {
-    setFormError(null);
-    setSuccessMessage(null);
-
     if (predictionLocked) {
       return;
     }
@@ -545,20 +563,24 @@ export const FinalsWinnerSelector = () => {
     const aiSelections = buildAiSelections(sortedTeams);
 
     if (!aiSelections) {
-      setFormError("At least three teams are required for AI pick.");
+      showToast({
+        message: "At least three teams are required for AI pick.",
+        tone: "error",
+      });
       return;
     }
 
     setSelections(aiSelections);
     setActivePlaceId(1);
     setSearchTerm("");
-    setSuccessMessage("Teams are picked by AI automatically.");
+    showToast({
+      message: "Teams are picked by AI automatically.",
+      tone: "success",
+    });
   };
 
   const handleConfirmClick = async () => {
     if (isAuthenticated()) {
-      setFormError(null);
-      setSuccessMessage(null);
       setIsSubmitting(true);
       try {
 
@@ -577,25 +599,29 @@ export const FinalsWinnerSelector = () => {
           3: savedSelections.third_place_team_id !== undefined ? savedSelections.third_place_team_id : null,
         });
 
-        setSuccessMessage(
-          savedPrediction
+        showToast({
+          message: savedPrediction
             ? "Prediction updated successfully."
             : "Prediction submitted successfully.",
-        );
+          tone: "success",
+        });
       } catch (error) {
         if (error instanceof MissingAuthTokenError) {
-          setFormError("Please login first and try again.");
+          setAuthRequired(true);
+          showAuthRequiredToast();
         } else {
-          setFormError(
-            getErrorMessage(error, "Unable to save prediction. Please try again."),
-          );
+          showToast({
+            message: getErrorMessage(error, "Unable to save prediction. Please try again."),
+            tone: "error",
+          });
         }
       } finally {
         setIsSubmitting(false);
         setShowConfirm(false);
       }
     } else {
-      setFormError("You must be logged in to predict.");
+      setAuthRequired(true);
+      showAuthRequiredToast();
       setShowConfirm(false);
     }
   };
@@ -605,6 +631,7 @@ export const FinalsWinnerSelector = () => {
   };
 
   return (<>
+    <ToastViewport onDismiss={dismissToast} toasts={toasts} />
     <article className={(predictionLocked ? "opacity-70 " : "") + "overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-zinc-950"}>
       <div className="flex flex-row items-center justify-between gap-4 border-b border-zinc-200 p-4 dark:border-zinc-800">
         <div className="flex min-w-0 items-center gap-3">
@@ -835,25 +862,6 @@ export const FinalsWinnerSelector = () => {
         )}
       </div>
 
-      {formError ? (
-        <label className="flex col-span-1 justify-center">
-          <p
-            aria-live="polite"
-            className="mb-4 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-300"
-          >
-            {formError}
-          </p></label>
-      ) : null}
-      {successMessage ? (
-        <label className="flex col-span-1 justify-center">
-          <p
-            aria-live="polite"
-            className="mb-4 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
-          >
-            {successMessage}
-          </p></label>
-      ) : null}
-
       <div className="flex flex-col gap-3 border-t border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-950/50 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 text-sm text-zinc-600 dark:text-zinc-400">
           {activeMatch ? (
@@ -867,9 +875,15 @@ export const FinalsWinnerSelector = () => {
         </div>
         {!predictionLocked && (<button
           onClick={() => {
-            setFormError(null);
+            if (authRequired) {
+              showAuthRequiredToast();
+              return;
+            }
             if (Object.values(selections).some((val) => val === null)) {
-              setFormError("All places are not selected. Please select a winner, runner up, and third place.")
+              showToast({
+                message: "All places are not selected. Please select a winner, runner up, and third place.",
+                tone: "error",
+              });
               return;
             }
             setShowConfirm(true)
@@ -888,24 +902,8 @@ export const FinalsWinnerSelector = () => {
     <Modal
       isOpen={showConfirm}
       onClose={handleCancelSubmit}
-      title={authRequired ? "Login required" : "Confirm Prediction"}
+      title="Confirm Prediction"
     >
-      {authRequired ? (
-        <div className="flex flex-col gap-5">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Please login to submit your prediction.
-          </p>
-          <div className="flex justify-end">
-            <Link href="/login">
-              <button
-                className="inline-flex h-10 cursor-pointer justify-center items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
-              >
-                Login
-              </button>
-            </Link>
-          </div>
-        </div>
-      ) : (
         <div className="flex flex-col gap-5">
           <p className="text-sm text-zinc-600 dark:text-zinc-400">
             {Object.values(selections).filter(Boolean).length === 3 ? (
@@ -988,7 +986,6 @@ export const FinalsWinnerSelector = () => {
             </button>
           </div>
         </div >
-      )}
     </Modal >
   </>
   );

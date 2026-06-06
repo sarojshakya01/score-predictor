@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import React, { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Modal } from "@/components/ui/modal";
 import { StatusPill } from "@/components/ui/status-pill";
+import { ToastViewport, useToast } from "@/components/ui/toast";
 import { ApiError } from "@/lib/api";
 import { isAuthenticated, MissingAuthTokenError } from "@/lib/auth";
 import { getErrorMessage } from "@/lib/forms/error-message";
@@ -480,7 +481,6 @@ const getReferenceMatchDay = (matches: MatchResponse[]): number | null => {
 export const PredictionsDashboard = () => {
   const [authRequired, setAuthRequired] = useState(false);
   const [currentMatchDay, setCurrentMatchDay] = useState<number | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
   const [formState, setFormState] = useState<PredictionFormState>(emptyFormState);
   const [isAiPicking, setIsAiPicking] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -491,9 +491,12 @@ export const PredictionsDashboard = () => {
   const [teams, setTeams] = useState<TeamResponse[]>([]);
   const [predictions, setPredictions] = useState<PredictionResponse[]>([]);
   const [selectedMatchId, setSelectedMatchId] = useState<number | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [showUpdateConfirm, setShowUpdateConfirm] = useState(false);
   const [pendingPredictionFields, setPendingPredictionFields] = useState<PredictionFields | null>(null);
+  const { dismissToast, showToast, toasts } = useToast();
+
+  // ref for the horizontal card scroll container
+  const cardStripRef = useRef<HTMLElement>(null);
 
   const selectedMatch = useMemo(
     () => matches.find((match) => match.id === selectedMatchId) ?? null,
@@ -509,6 +512,16 @@ export const PredictionsDashboard = () => {
   const teamsById = useMemo(() => {
     return new Map(teams.map((team) => [team.id, team]));
   }, [teams]);
+
+  // Scroll the selected card into view whenever selectedMatchId changes
+  useEffect(() => {
+    if (!selectedMatchId || !cardStripRef.current) return;
+    const card = cardStripRef.current.querySelector<HTMLElement>(
+      `[data-match-id="${selectedMatchId}"]`,
+    );
+    if (!card) return;
+    card.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [selectedMatchId]);
 
   const applyMatchSelection = useCallback((
     nextMatches: MatchResponse[],
@@ -541,7 +554,6 @@ export const PredictionsDashboard = () => {
       setLoadError(null);
       const hasAuthToken = isAuthenticated();
       setAuthRequired(!hasAuthToken);
-
       try {
         const matchList = await listUpcomingMatches({
           includeLocked: true,
@@ -684,6 +696,24 @@ export const PredictionsDashboard = () => {
     };
   };
 
+  const showAuthRequiredToast = () => {
+    showToast({
+      action: (
+        <Link
+          href="/login"
+          className="inline-flex h-8 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 text-xs font-semibold text-zinc-800 transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+        >
+          Login
+        </Link>
+      ),
+      durationMs: 7000,
+      id: "prediction-auth-required",
+      message: "Please login to submit your prediction.",
+      title: "Login required",
+      tone: "info",
+    });
+  };
+
   const submitPrediction = async (predictionFields: PredictionFields) => {
     if (!selectedMatch) return;
     setIsSubmitting(true);
@@ -707,18 +737,25 @@ export const PredictionsDashboard = () => {
         );
       });
       setAuthRequired(false);
-      setSuccessMessage(
-        selectedPrediction
+      showToast({
+        message: selectedPrediction
           ? "Prediction updated successfully."
           : "Prediction submitted successfully.",
-      );
+        tone: "success",
+      });
     } catch (error) {
-      if (error instanceof MissingAuthTokenError) {
+      if (
+        error instanceof MissingAuthTokenError ||
+        (error instanceof ApiError && error.status === 401)
+      ) {
         setAuthRequired(true);
+        showAuthRequiredToast();
+      } else {
+        showToast({
+          message: getErrorMessage(error, "Unable to save prediction. Please try again."),
+          tone: "error",
+        });
       }
-      setFormError(
-        getErrorMessage(error, "Unable to save prediction. Please try again."),
-      );
     } finally {
       setIsSubmitting(false);
     }
@@ -726,16 +763,26 @@ export const PredictionsDashboard = () => {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setFormError(null);
-    setSuccessMessage(null);
+
+    if (authRequired || !isAuthenticated()) {
+      setAuthRequired(true);
+      showAuthRequiredToast();
+      return;
+    }
 
     if (!selectedMatch) {
-      setFormError("Select a match before saving a prediction.");
+      showToast({
+        message: "Select a match before saving a prediction.",
+        tone: "error",
+      });
       return;
     }
 
     if (getPredictionStatus(selectedMatch) === "Locked") {
-      setFormError("Prediction is locked for this match.");
+      showToast({
+        message: "Prediction is locked for this match.",
+        tone: "error",
+      });
       return;
     }
 
@@ -743,7 +790,10 @@ export const PredictionsDashboard = () => {
     try {
       predictionFields = buildPredictionFields();
     } catch (error) {
-      setFormError(getErrorMessage(error, "Invalid prediction values."));
+      showToast({
+        message: getErrorMessage(error, "Invalid prediction values."),
+        tone: "error",
+      });
       return;
     }
 
@@ -765,21 +815,33 @@ export const PredictionsDashboard = () => {
   };
 
   const handleAiPick = async () => {
-    setFormError(null);
-    setSuccessMessage(null);
+    if (authRequired || !isAuthenticated()) {
+      setAuthRequired(true);
+      showAuthRequiredToast();
+      return;
+    }
 
     if (!selectedMatch) {
-      setFormError("Select a match before using AI pick.");
+      showToast({
+        message: "Select a match before using AI pick.",
+        tone: "error",
+      });
       return;
     }
 
     if (selectedStatus === "Locked") {
-      setFormError("Prediction is locked for this match.");
+      showToast({
+        message: "Prediction is locked for this match.",
+        tone: "error",
+      });
       return;
     }
 
     if (teams.length === 0) {
-      setFormError("Team ranking data is not available for AI pick.");
+      showToast({
+        message: "Team ranking data is not available for AI pick.",
+        tone: "error",
+      });
       return;
     }
 
@@ -803,7 +865,10 @@ export const PredictionsDashboard = () => {
         headToHeadMatchHistory,
       );
       setFormState(aiPrediction.formState);
-      setSuccessMessage(aiPrediction.summary);
+      showToast({
+        message: aiPrediction.summary,
+        tone: "success",
+      });
     } finally {
       setIsAiPicking(false);
     }
@@ -813,17 +878,14 @@ export const PredictionsDashboard = () => {
     const clickedPrediction = predictions.find(
       (prediction) => prediction.match_id === match.id,
     );
+
     setSelectedMatchId(match.id);
     setFormState(buildFormState(match, clickedPrediction));
-    setFormError(null);
-    setSuccessMessage(null);
   };
 
   const handleMatchDayChange = async (matchDay: number) => {
     setIsLoading(true);
     setLoadError(null);
-    setFormError(null);
-    setSuccessMessage(null);
 
     try {
       let matchList = allMatches.filter((match) => match.match_day === matchDay);
@@ -872,6 +934,7 @@ export const PredictionsDashboard = () => {
 
   return (
     <>
+      <ToastViewport onDismiss={dismissToast} toasts={toasts} />
       <section className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
@@ -913,12 +976,13 @@ export const PredictionsDashboard = () => {
         </div>
       </section>
 
-      <section className="flex gap-4 overflow-x-auto pb-2">
+      {/* Card strip — ref attached so scroll-into-view can target it */}
+      <section ref={cardStripRef} className="flex gap-4 overflow-x-auto pb-2">
         {isLoading ? (
           Array.from({ length: 3 }, (_, index) => (
             <div
               key={index}
-              className="h-64 w-[280px] shrink-0 animate-pulse rounded-md border border-zinc-200 shadow-sm dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-zinc-950 sm:w-80 lg:w-[360px]"
+              className="h-57 w-[280px] shrink-0 animate-pulse rounded-md border border-zinc-200 shadow-sm dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-zinc-950 sm:w-80 lg:w-[360px]"
             />
           ))
         ) : matches.length > 0 ? (
@@ -936,7 +1000,8 @@ export const PredictionsDashboard = () => {
                 isPredictionAvailable={predictions.length > 0}
                 isSelected={isSelected}
                 handleCardClick={handleCardClick}
-                className="w-[280px] shrink-0 sm:w-80 lg:w-[360px]"
+                className="h-57 w-[280px] shrink-0 sm:w-80 lg:w-[360px]"
+                data-match-id={match.id}
               />
             );
           })
@@ -1082,29 +1147,10 @@ export const PredictionsDashboard = () => {
             </label>
           </div>
 
-          {formError ? (
-            <label className="block col-span-2">
-              <p
-                aria-live="polite"
-                className="mt-5 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-300"
-              >
-                {formError}
-              </p></label>
-          ) : null}
-          {successMessage ? (
-            <label className="block col-span-2">
-              <p
-                aria-live="polite"
-                className="mt-5 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
-              >
-                {successMessage}
-              </p></label>
-          ) : null}
-
           <div className="grid place-items-center w-full">
             <button
               type="submit"
-              disabled={false}
+              disabled={isAiPicking ? true : false}
               className="inline-flex h-10 px-4 items-center gap-2 mt-5 cursor-pointer justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400 sm:w-auto"
             >
               <IconSave className="h-4 w-4" />
@@ -1212,100 +1258,82 @@ export const PredictionsDashboard = () => {
       <Modal
         isOpen={showUpdateConfirm}
         onClose={handleCancelSubmit}
-        title={authRequired ? "Login required" : (selectedPrediction ? "Update Prediction" : "Confirm Prediction")}
+        title={selectedPrediction ? "Update Prediction" : "Confirm Prediction"}
       >
-        {authRequired ? (
-          <div className="flex flex-col gap-5">
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              Please login to submit your prediction.
-            </p>
-            <div className="flex justify-end">
-              <Link href="/login">
-                <button
-                  className="inline-flex h-10 cursor-pointer justify-center items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
-                >
-                  Login
-                </button>
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-5">
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">
-              {selectedPrediction ? (
-                <>
-                  You are about to{" "}
-                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">change</span>{" "}
-                  your prediction for{" "}
-                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                    {selectedMatch ? getMatchLabelText(selectedMatch) : "this match"}
-                  </span>
-                  . This will overwrite your existing prediction.
-                </>
-              ) : (
-                <>
-                  You are about to{" "}
-                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">submit</span>{" "}
-                  your prediction for{" "}
-                  <span className="font-semibold text-zinc-900 dark:text-zinc-100">
-                    {selectedMatch ? getMatchLabelText(selectedMatch) : "this match"}
-                  </span>
-                  . Please review before confirming.
-                </>
-              )}
-            </p>
-
-            {pendingPredictionFields && selectedMatch && (
-              <div className="rounded-md border border-zinc-200 dark:border-zinc-700 overflow-hidden">
-                <div className="bg-zinc-50 dark:bg-zinc-800 px-4 py-2 border-b border-zinc-200 dark:border-zinc-700">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                    Your Prediction
-                  </p>
-                </div>
-                <dl className="grid grid-cols-2 gap-px bg-zinc-200 dark:bg-zinc-700">
-                  {([
-                    [`${selectedMatch.team1_name} Score`, pendingPredictionFields.team1_score],
-                    [`${selectedMatch.team2_name} Score`, pendingPredictionFields.team2_score],
-                    ["First Goal In", pendingPredictionFields.first_goal_in ? firstGoalInLabels[pendingPredictionFields.first_goal_in] : "Not Predicted"],
-                    ["First Score By", pendingPredictionFields.first_scoring_team_id
-                      ? getTeamNameById(selectedMatch, pendingPredictionFields.first_scoring_team_id)
-                      : "Not Predicted"],
-                    ["Yellow Cards", String(pendingPredictionFields.yellow_card_count)],
-                    ["Red Cards", String(pendingPredictionFields.red_card_count)],
-                    ["Kick-off Team", pendingPredictionFields.kick_off_team_id ? getTeamNameById(selectedMatch, pendingPredictionFields.kick_off_team_id) : "Not Predicted"],
-                    ["Duration", pendingPredictionFields.match_duration ? matchDurationLabels[pendingPredictionFields.match_duration] : "Not Predicted"],
-
-                  ] as [string, string][]).map(([label, value]) => (
-                    <div key={label} className="flex flex-col gap-0.5 bg-white dark:bg-zinc-900 px-4 py-3">
-                      <dt className="text-xs text-zinc-500 dark:text-zinc-400">{label}</dt>
-                      <dd className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{value}</dd>
-                    </div>
-                  ))}
-                </dl>
-              </div>
+        <div className="flex flex-col gap-5">
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            {selectedPrediction ? (
+              <>
+                You are about to{" "}
+                <span className="font-semibold text-zinc-900 dark:text-zinc-100">change</span>{" "}
+                your prediction for{" "}
+                <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                  {selectedMatch ? getMatchLabelText(selectedMatch) : "this match"}
+                </span>
+                . This will overwrite your existing prediction.
+              </>
+            ) : (
+              <>
+                You are about to{" "}
+                <span className="font-semibold text-zinc-900 dark:text-zinc-100">submit</span>{" "}
+                your prediction for{" "}
+                <span className="font-semibold text-zinc-900 dark:text-zinc-100">
+                  {selectedMatch ? getMatchLabelText(selectedMatch) : "this match"}
+                </span>
+                . Please review before confirming.
+              </>
             )}
+          </p>
 
-            <div className="flex justify-end gap-3 pt-1">
-              <button
-                type="button"
-                onClick={handleCancelSubmit}
-                className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleConfirmSubmit()}
-                disabled={isSubmitting}
-                className="inline-flex h-10 items-center gap-2 justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400"
-              >
-                {isSubmitting
-                  ? (selectedPrediction ? "Updating..." : "Submitting...")
-                  : (selectedPrediction ? "Confirm Update" : "Confirm & Submit")}
-              </button>
+          {pendingPredictionFields && selectedMatch && (
+            <div className="rounded-md border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+              <div className="bg-zinc-50 dark:bg-zinc-800 px-4 py-2 border-b border-zinc-200 dark:border-zinc-700">
+                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                  Your Prediction
+                </p>
+              </div>
+              <dl className="grid grid-cols-2 gap-px bg-zinc-200 dark:bg-zinc-700">
+                {([
+                  [`${selectedMatch.team1_name} Score`, pendingPredictionFields.team1_score],
+                  [`${selectedMatch.team2_name} Score`, pendingPredictionFields.team2_score],
+                  ["First Goal In", pendingPredictionFields.first_goal_in ? firstGoalInLabels[pendingPredictionFields.first_goal_in] : "Not Predicted"],
+                  ["First Score By", pendingPredictionFields.first_scoring_team_id
+                    ? getTeamNameById(selectedMatch, pendingPredictionFields.first_scoring_team_id)
+                    : "Not Predicted"],
+                  ["Yellow Cards", String(pendingPredictionFields.yellow_card_count)],
+                  ["Red Cards", String(pendingPredictionFields.red_card_count)],
+                  ["Kick-off Team", pendingPredictionFields.kick_off_team_id ? getTeamNameById(selectedMatch, pendingPredictionFields.kick_off_team_id) : "Not Predicted"],
+                  ["Duration", pendingPredictionFields.match_duration ? matchDurationLabels[pendingPredictionFields.match_duration] : "Not Predicted"],
+                ] as [string, string][]).map(([label, value]) => (
+                  <div key={label} className="flex flex-col gap-0.5 bg-white dark:bg-zinc-900 px-4 py-3">
+                    <dt className="text-xs text-zinc-500 dark:text-zinc-400">{label}</dt>
+                    <dd className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{value}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-1">
+            <button
+              type="button"
+              onClick={handleCancelSubmit}
+              className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleConfirmSubmit()}
+              disabled={isSubmitting}
+              className="inline-flex h-10 items-center gap-2 justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400"
+            >
+              {isSubmitting
+                ? (selectedPrediction ? "Updating..." : "Submitting...")
+                : (selectedPrediction ? "Confirm Update" : "Confirm & Submit")}
+            </button>
           </div>
-        )}
+        </div>
       </Modal>
     </>
   );

@@ -4,12 +4,14 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { Modal } from "@/components/ui/modal";
 import { StatusPill } from "@/components/ui/status-pill";
+import { ToastViewport, useToast } from "@/components/ui/toast";
 import { getErrorMessage } from "@/lib/forms/error-message";
 import {
   createMatch,
   deleteMatch,
   firstGoalInLabels,
   firstGoalIns,
+  getAdminMatch,
   listAdminMatches,
   matchDurationLabels,
   matchDurations,
@@ -69,35 +71,26 @@ const emptyFormState: MatchFormState = {
 
 function convertTimeZone(isoString: string, fromZone: string, toZone: string) {
   if (!isoString) return "";
-  // 1. Parse the string as a date in the source time zone
   const formatterFrom = new Intl.DateTimeFormat('en-US', {
     timeZone: fromZone,
     year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
   });
-
-  // Create a temporary date and shift it based on the source zone offset
   const date = new Date(isoString + 'Z');
-
   const parts = formatterFrom.formatToParts(date);
   const map = Object.fromEntries(parts.map(p => [p.type, p.value]));
   const utcFrom = Date.UTC(Number(map.year), Number(map.month) - 1, Number(map.day), Number(map.hour), Number(map.minute), Number(map.second));
   const correctedDate = new Date(date.getTime() + (date.getTime() - utcFrom));
-
-  // Format the corrected date into the target time zone
-  const formatterTo = new Intl.DateTimeFormat('sv-SE', { // 'sv-SE' uses ISO format naturally
+  const formatterTo = new Intl.DateTimeFormat('sv-SE', {
     timeZone: toZone,
     year: 'numeric', month: '2-digit', day: '2-digit',
     hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
   });
-
   return formatterTo.format(correctedDate).replace(' ', 'T');
 }
 
 const formatScore = (match: MatchResponse): string => {
-  if (match.team1_score === null || match.team2_score === null) {
-    return "Not set";
-  }
+  if (match.team1_score === null || match.team2_score === null) return "Not set";
   return `${match.team1_score} - ${match.team2_score}`;
 };
 
@@ -105,33 +98,20 @@ const getMatchStatus = (match: MatchResponse): "Open" | "Locked" => {
   return match.match_locked ? "Locked" : "Open";
 };
 
-const getTeamNameById = (
-  teams: TeamResponse[],
-  teamId: number | null | undefined,
-): string => {
+const getTeamNameById = (teams: TeamResponse[], teamId: number | null | undefined): string => {
   if (teamId === null || teamId === undefined) return "None";
   return teams.find((team) => team.id === teamId)?.name ?? `Team #${teamId}`;
 };
 
 const getWinnerLabel = (match: MatchResponse, teams: TeamResponse[]): string => {
-  if (match.winner_id !== null) {
-    return getTeamNameById(teams, match.winner_id);
-  }
-
-  if (match.match_locked) {
-    return "DRAW";
-  }
-
+  if (match.winner_id !== null) return getTeamNameById(teams, match.winner_id);
+  if (match.match_locked) return "DRAW";
   return "--";
 };
 
-const getMatchLabelText = (match: MatchResponse): string => {
-  return `${match.team1_name} vs ${match.team2_name}`;
-};
+const getMatchLabelText = (match: MatchResponse): string => `${match.team1_name} vs ${match.team2_name}`;
 
-const toDateTimeInputValue = (value: string): string => {
-  return value ? value.slice(0, 16) : "";
-};
+const toDateTimeInputValue = (value: string): string => value ? value.slice(0, 16) : "";
 
 const toFormState = (match: MatchResponse): MatchFormState => ({
   firstScoringTeamId: match.first_scoring_team_id === null ? "" : String(match.first_scoring_team_id),
@@ -155,9 +135,7 @@ const toFormState = (match: MatchResponse): MatchFormState => ({
 
 const parseRequiredInteger = (value: string, label: string): number => {
   const parsedValue = Number(value);
-  if (!Number.isInteger(parsedValue) || parsedValue <= 0) {
-    throw new Error(`${label} is required.`);
-  }
+  if (!Number.isInteger(parsedValue) || parsedValue <= 0) throw new Error(`${label} is required.`);
   return parsedValue;
 };
 
@@ -165,10 +143,7 @@ const parseOptionalNonNegativeInteger = (value: string, label: string): number |
   const normalizedValue = value.trim();
   if (!normalizedValue) return null;
   const parsedValue = Number(normalizedValue);
-  if (!Number.isInteger(parsedValue) || parsedValue < 0) {
-    throw new Error(`${label} must be zero or greater.`);
-  }
-
+  if (!Number.isInteger(parsedValue) || parsedValue < 0) throw new Error(`${label} must be zero or greater.`);
   return parsedValue;
 };
 
@@ -176,38 +151,27 @@ const parseOptionalPositiveInteger = (value: string): number | null => {
   return value ? parseRequiredInteger(value, "Team") : null;
 };
 
-const isFirstGoalIn = (value: string): value is FirstGoalIn => {
-  return firstGoalIns.includes(value as FirstGoalIn);
-};
-
-const isMatchDuration = (value: string): value is MatchDuration => {
-  return matchDurations.includes(value as MatchDuration);
-};
+const isFirstGoalIn = (value: string): value is FirstGoalIn => firstGoalIns.includes(value as FirstGoalIn);
+const isMatchDuration = (value: string): value is MatchDuration => matchDurations.includes(value as MatchDuration);
 
 const hasGoals = (state: Pick<MatchFormState, "team1Score" | "team2Score">): boolean => {
   const team1Score = Number(state.team1Score);
   const team2Score = Number(state.team2Score);
-  return (
-    (Number.isFinite(team1Score) && team1Score > 0) ||
-    (Number.isFinite(team2Score) && team2Score > 0)
-  );
+  return (Number.isFinite(team1Score) && team1Score > 0) || (Number.isFinite(team2Score) && team2Score > 0);
 };
 
 const buildMatchPayload = (state: MatchFormState): MatchCreate => {
   const team1Id = parseRequiredInteger(state.team1Id, "Team 1");
   const team2Id = parseRequiredInteger(state.team2Id, "Team 2");
   if (team1Id === team2Id) throw new Error("Team 1 and Team 2 must be different.");
-
   const team1Score = parseOptionalNonNegativeInteger(state.team1Score, "Team 1 score");
   const team2Score = parseOptionalNonNegativeInteger(state.team2Score, "Team 2 score");
   const matchHasGoals = (team1Score ?? 0) > 0 || (team2Score ?? 0) > 0;
-
   if (!state.matchDatetime) throw new Error("Kickoff time is required.");
-
   return {
     first_goal_in: matchHasGoals && isFirstGoalIn(state.firstGoalIn) ? state.firstGoalIn : null,
     first_scoring_team_id: matchHasGoals ? parseRequiredInteger(state.firstScoringTeamId, "First Scored by") : null,
-    match_duration: isMatchDuration(state.matchDuration) ? state.matchDuration : null, // change to UTC TZ
+    match_duration: isMatchDuration(state.matchDuration) ? state.matchDuration : null,
     match_datetime: state.matchDatetime,
     match_day: parseRequiredInteger(state.matchDay, "Match Day"),
     match_locked: state.matchLocked,
@@ -232,15 +196,17 @@ const selectCls = "mt-2 h-11 w-full rounded-md border border-zinc-300 bg-white p
 const labelCls = "text-sm font-medium text-zinc-700 dark:text-zinc-300";
 
 const AdminMatchesPage = () => {
+  const { dismissToast, showToast, toasts } = useToast();
+
   const [editingMatchId, setEditingMatchId] = useState<number | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [formState, setFormState] = useState<MatchFormState>(emptyFormState);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [openingEditMatchId, setOpeningEditMatchId] = useState<number | null>(null);
   const [isDeletingId, setIsDeletingId] = useState<number | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<MatchResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [matches, setMatches] = useState<MatchResponse[]>([]);
   const [teams, setTeams] = useState<TeamResponse[]>([]);
   const [page, setPage] = useState(1);
@@ -261,7 +227,6 @@ const AdminMatchesPage = () => {
 
     const loadInitialPageData = async () => {
       setIsLoading(true);
-      setLoadError(null);
 
       try {
         const [matchList, teamList] = await Promise.all([
@@ -274,7 +239,7 @@ const AdminMatchesPage = () => {
         }
       } catch (error) {
         if (isMounted) {
-          setLoadError(getErrorMessage(error, "Unable to load matches."));
+          showToast({ tone: "error", message: getErrorMessage(error, "Unable to load matches.") });
         }
       } finally {
         if (isMounted) setIsLoading(false);
@@ -283,6 +248,7 @@ const AdminMatchesPage = () => {
 
     void loadInitialPageData();
     return () => { isMounted = false; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filteredMatches = useMemo(() => {
@@ -291,10 +257,6 @@ const AdminMatchesPage = () => {
     return matches.filter((m) =>
       m.team1_name.toLowerCase().includes(q) ||
       m.team2_name.toLowerCase().includes(q) ||
-      // (m.venue_name ?? "").toLowerCase().includes(q) ||
-      // String(m.match_day).includes(q) ||
-      // (m.match_stage ?? "").toLowerCase().includes(q) ||
-      // (matchStageLabels[m.match_stage as MatchStage] ?? "").toLowerCase().includes(q) ||
       formatDateTime(m.match_datetime).toLowerCase().includes(q) ||
       (m.match_locked ? "locked" : "open").includes(q)
     );
@@ -306,7 +268,6 @@ const AdminMatchesPage = () => {
   };
 
   const updateField = (field: keyof MatchFormState, value: string | boolean) => {
-
     if (['matchDay', 'team1Score', 'team2Score', 'redCardCount', 'yellowCardCount'].includes(field)) {
       value = Number(value).toString();
     }
@@ -319,17 +280,10 @@ const AdminMatchesPage = () => {
       }
       if (!validTeamIds.has(nextState.kickoffTeamId)) nextState.kickoffTeamId = "";
       if (!validTeamIds.has(nextState.winnerId)) nextState.winnerId = "";
-      if (
-        !isFirstGoalIn(nextState.firstGoalIn) ||
-        ((field === "team1Score" || field === "team2Score") && !hasGoals(nextState))
-      ) {
+      if (!isFirstGoalIn(nextState.firstGoalIn) || ((field === "team1Score" || field === "team2Score") && !hasGoals(nextState))) {
         nextState.firstGoalIn = "";
       }
-
-      if (
-        !validTeamIds.has(nextState.firstScoringTeamId) ||
-        ((field === "team1Score" || field === "team2Score") && !hasGoals(nextState))
-      ) {
+      if (!validTeamIds.has(nextState.firstScoringTeamId) || ((field === "team1Score" || field === "team2Score") && !hasGoals(nextState))) {
         nextState.firstScoringTeamId = "";
       }
       return nextState;
@@ -343,11 +297,25 @@ const AdminMatchesPage = () => {
     setIsModalOpen(true);
   };
 
-  const startEditingMatch = (match: MatchResponse) => {
-    setEditingMatchId(match.id);
-    setFormState(toFormState(match));
+  const startEditingMatch = async (match: MatchResponse) => {
     setFormError(null);
-    setIsModalOpen(true);
+    setOpeningEditMatchId(match.id);
+
+    try {
+      const freshMatch = await getAdminMatch(match.id);
+      setMatches((currentMatches) =>
+        currentMatches.map((currentMatch) =>
+          currentMatch.id === freshMatch.id ? freshMatch : currentMatch,
+        ),
+      );
+      setEditingMatchId(freshMatch.id);
+      setFormState(toFormState(freshMatch));
+      setIsModalOpen(true);
+    } catch (error) {
+      showToast({ tone: "error", message: getErrorMessage(error, "Unable to load the latest match details.") });
+    } finally {
+      setOpeningEditMatchId(null);
+    }
   };
 
   const handleCloseModal = () => setIsModalOpen(false);
@@ -361,10 +329,8 @@ const AdminMatchesPage = () => {
       const team1Score = Number(formState.team1Score);
       const team2Score = Number(formState.team2Score);
       const winnerId =
-        team1Score > team2Score
-          ? formState.team1Id
-          : team2Score > team1Score
-            ? formState.team2Id
+        team1Score > team2Score ? formState.team1Id
+          : team2Score > team1Score ? formState.team2Id
             : "";
       const payload = buildMatchPayload({ ...formState, winnerId });
       const savedMatch = editingMatchId
@@ -373,19 +339,20 @@ const AdminMatchesPage = () => {
 
       setMatches((currentMatches) => {
         if (editingMatchId) {
-          return currentMatches.map((match) =>
-            match.id === savedMatch.id ? savedMatch : match,
-          );
+          return currentMatches.map((match) => match.id === savedMatch.id ? savedMatch : match);
         }
         return [...currentMatches, savedMatch].sort(
-          (a, b) =>
-            new Date(a.match_datetime).getTime() -
-            new Date(b.match_datetime).getTime() || a.id - b.id,
+          (a, b) => new Date(a.match_datetime).getTime() - new Date(b.match_datetime).getTime() || a.id - b.id,
         );
       });
       setEditingMatchId(savedMatch.id);
       setFormState(toFormState(savedMatch));
       setIsModalOpen(false);
+      showToast({
+        tone: "success",
+        title: editingMatchId ? "Match updated" : "Match created",
+        message: `${savedMatch.team1_name} vs ${savedMatch.team2_name} has been ${editingMatchId ? "updated" : "created"}.`,
+      });
     } catch (error) {
       setFormError(getErrorMessage(error, "Unable to save match."));
     } finally {
@@ -393,9 +360,7 @@ const AdminMatchesPage = () => {
     }
   };
 
-  const handleDeleteClick = (match: MatchResponse) => {
-    setDeleteTarget(match);
-  };
+  const handleDeleteClick = (match: MatchResponse) => setDeleteTarget(match);
 
   const handleDeleteConfirm = async () => {
     if (!deleteTarget) return;
@@ -405,11 +370,14 @@ const AdminMatchesPage = () => {
     setFormError(null);
     try {
       await deleteMatch(match.id);
-      setMatches((currentMatches) =>
-        currentMatches.filter((currentMatch) => currentMatch.id !== match.id),
-      );
+      setMatches((currentMatches) => currentMatches.filter((m) => m.id !== match.id));
+      showToast({
+        tone: "success",
+        title: "Match deleted",
+        message: `${match.team1_name} vs ${match.team2_name} has been deleted.`,
+      });
     } catch (error) {
-      setFormError(getErrorMessage(error, "Unable to delete match."));
+      showToast({ tone: "error", message: getErrorMessage(error, "Unable to delete match.") });
     } finally {
       setIsDeletingId(null);
     }
@@ -419,309 +387,262 @@ const AdminMatchesPage = () => {
   const isSearchActive = searchQuery.trim().length > 0;
 
   return (
-    <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-      <section className="flex flex-wrap items-center justify-between gap-3">
-        <div><h2 className="text-zinc-950 dark:text-zinc-50">Tournament Matches</h2></div>
-        <button
-          className="inline-flex h-10 items-center gap-2 rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition cursor-pointer hover:bg-tournament-primary"
-          type="button"
-          onClick={startNewMatch}
-        >
-          <IconPlus className="h-4 w-4" />
-          New Match
-        </button>
-      </section>
+    <>
+      <ToastViewport onDismiss={dismissToast} toasts={toasts} />
 
-      {/* Search bar */}
-      <div className="relative">
-        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-zinc-400 dark:text-zinc-500">
-          <IconSearch className="h-4 w-4" />
-        </span>
-        <input
-          type="search"
-          value={searchQuery}
-          onChange={(e) => handleSearch(e.target.value)}
-          placeholder="Search by team, time, status..."
-          className="h-10 w-full rounded-md border border-zinc-200 bg-white pl-9 pr-9 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:ring-emerald-900"
-        />
-        {isSearchActive && (
+      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+        <section className="flex flex-wrap items-center justify-between gap-3">
+          <div><h2 className="text-zinc-950 dark:text-zinc-50">Tournament Matches</h2></div>
           <button
+            className="inline-flex h-10 items-center gap-2 rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition cursor-pointer hover:bg-tournament-primary"
             type="button"
-            aria-label="Clear search"
-            onClick={() => handleSearch("")}
-            className="absolute inset-y-0 right-3 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+            onClick={startNewMatch}
           >
-            <IconX className="h-4 w-4" />
+            <IconPlus className="h-4 w-4" />
+            New Match
           </button>
-        )}
-      </div>
-
-      {loadError ? (
-        <section
-          className="rounded-md border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-800 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-300"
-          role="alert"
-        >
-          {loadError}
         </section>
-      ) : null}
 
-      <Pagination
-        page={page}
-        pageSize={PAGE_SIZE}
-        total={filteredMatches.length}
-        onChange={setPage}
-      />
+        <div className="relative">
+          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-zinc-400 dark:text-zinc-500">
+            <IconSearch className="h-4 w-4" />
+          </span>
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            placeholder="Search by team, time, status..."
+            className="h-10 w-full rounded-md border border-zinc-200 bg-white pl-9 pr-9 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:ring-emerald-900"
+          />
+          {isSearchActive && (
+            <button
+              type="button"
+              aria-label="Clear search"
+              onClick={() => handleSearch("")}
+              className="absolute inset-y-0 right-3 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+            >
+              <IconX className="h-4 w-4" />
+            </button>
+          )}
+        </div>
 
-      <section className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-        {isSearchActive && (
-          <div className="border-b border-zinc-100 px-5 py-2.5 text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-            {filteredMatches.length === 0
-              ? `No matches match "${searchQuery}"`
-              : `${filteredMatches.length} of ${matches.length} match${matches.length !== 1 ? "es" : ""} match "${searchQuery}"`}
-          </div>
-        )}
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
-            <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
-              <tr>
-                <th className="static md:sticky left-0 top-0 z-40 w-16 min-w-[64px] max-w-[64px] bg-zinc-100 dark:bg-zinc-900 px-3 py-3 border-b border-zinc-200 dark:border-zinc-800">S.N.</th>
-                <th className="static md:sticky left-[64px] top-0 z-40 w-[320px] min-w-[320px] max-w-[320px] bg-zinc-100 dark:bg-zinc-900 px-3 py-3 text-center font-semibold text-sm border-b border-zinc-200 dark:border-zinc-800" colSpan={3}>Match</th>
-                <th className="px-3 py-3">Day</th>
-                <th className="px-3 py-3 min-w-[140px]">Time</th>
-                <th className="px-3 py-3">Score</th>
-                <th className="px-3 py-3 min-w-[120px]">Winner</th>
-                <th className="px-3 py-3 min-w-[140px]">Kickoff Team</th>
-                <th className="px-3 py-3 min-w-[135px]">First Goal in</th>
-                <th className="px-3 py-3 min-w-[145px]">First Score by</th>
-                <th className="px-3 py-3 min-w-[155px]">Match Duration</th>
-                <th className="px-3 py-3">Status</th>
-                <th className="px-3 py-3 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-              {isLoading ? (
+        <Pagination page={page} pageSize={PAGE_SIZE} total={filteredMatches.length} onChange={setPage} />
+
+        <section className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
+          {isSearchActive && (
+            <div className="border-b border-zinc-100 px-5 py-2.5 text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+              {filteredMatches.length === 0
+                ? `No matches match "${searchQuery}"`
+                : `${filteredMatches.length} of ${matches.length} match${matches.length !== 1 ? "es" : ""} match "${searchQuery}"`}
+            </div>
+          )}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
+              <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
                 <tr>
-                  <td className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400" colSpan={14}>
-                    Loading matches…
-                  </td>
+                  <th className="static md:sticky left-0 top-0 z-40 w-16 min-w-[64px] max-w-[64px] bg-zinc-100 dark:bg-zinc-900 px-3 py-3 border-b border-zinc-200 dark:border-zinc-800">S.N.</th>
+                  <th className="static md:sticky left-[64px] top-0 z-40 w-[320px] min-w-[320px] max-w-[320px] bg-zinc-100 dark:bg-zinc-900 px-3 py-3 text-center font-semibold text-sm border-b border-zinc-200 dark:border-zinc-800" colSpan={3}>Match</th>
+                  <th className="px-3 py-3">Day</th>
+                  <th className="px-3 py-3 min-w-[140px]">Time</th>
+                  <th className="px-3 py-3">Score</th>
+                  <th className="px-3 py-3 min-w-[120px]">Winner</th>
+                  <th className="px-3 py-3 min-w-[140px]">Kickoff Team</th>
+                  <th className="px-3 py-3 min-w-[135px]">First Goal in</th>
+                  <th className="px-3 py-3 min-w-[145px]">First Score by</th>
+                  <th className="px-3 py-3 min-w-[155px]">Match Duration</th>
+                  <th className="px-3 py-3">Status</th>
+                  <th className="px-3 py-3 text-right">Actions</th>
                 </tr>
-              ) : pagedMatches.length > 0 ? (
-                pagedMatches.map((match, idx) => (
-                  <tr key={match.id} className="transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40">
-                    <td className="static md:sticky left-0 z-20 w-16 min-w-[64px] max-w-[64px] bg-white dark:bg-zinc-950 px-3 py-3 text-left text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-800">{idx + 1}</td>
-                    <td className="static md:sticky left-[64px] z-20 w-32 min-w-[128px] max-w-[128px] bg-white dark:bg-zinc-950 pl-3 pr-0 py-3 font-medium text-zinc-950 dark:text-zinc-50 border-b border-zinc-200 dark:border-zinc-800">
-                      {getTeam1WithFlag(match, "sm")}
-                    </td>
-                    <td className="static md:sticky left-[192px] z-20 w-16 min-w-[64px] max-w-[64px] bg-white dark:bg-zinc-950 px-3 py-3 text-center font-medium text-zinc-950 dark:text-zinc-50 border-b border-zinc-200 dark:border-zinc-800">
-                      {getVs("sm")}
-                    </td>
-                    <td className="static md:sticky left-[256px] z-20 w-32 min-w-[128px] max-w-[128px] bg-white dark:bg-zinc-950 pl-0 pr-3 py-3 font-medium text-zinc-950 dark:text-zinc-50 border-b border-zinc-200 dark:border-zinc-800">
-                      {getTeam2WithFlag(match, "sm")}
-                    </td>
-                    <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.match_day}</td>
-                    <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{formatDateTime(match.match_datetime)}</td>
-                    <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{formatScore(match)}</td>
-                    <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{getWinnerLabel(match, teams)}</td>
-                    <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{getTeamNameById(teams, match.kick_off_team_id) || "--"}</td>
-                    <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.first_goal_in ? firstGoalInLabels[match.first_goal_in as FirstGoalIn] : "--"}</td>
-                    <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{getTeamNameById(teams, match.first_scoring_team_id) || "--"}</td>
-                    <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.match_duration ? matchDurationLabels[match.match_duration as MatchDuration] : "--"}</td>
-                    <td className="px-3 py-3">
-                      <StatusPill tone={match.match_locked ? "accent" : "secondary"}>
-                        {getMatchStatus(match)}
-                      </StatusPill>
-                    </td>
-                    <td className="px-3 py-3 text-right">
-                      <div className="flex justify-end gap-1">
-                        <button
-                          title="Edit"
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-50 cursor-pointer transition dark:text-emerald-400 dark:hover:bg-emerald-950"
-                          type="button"
-                          onClick={() => startEditingMatch(match)}
-                        >
-                          <IconPencil className="h-4 w-4" />
-                          <span className="sr-only">Edit</span>
-                        </button>
-                        <button
-                          title="Delete"
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-700 hover:bg-rose-50 cursor-pointer transition disabled:opacity-40 dark:text-rose-400 dark:hover:bg-rose-950"
-                          disabled={isDeletingId === match.id}
-                          type="button"
-                          onClick={() => handleDeleteClick(match)}
-                        >
-                          <IconTrash className="h-4 w-4" />
-                          <span className="sr-only">Delete</span>
-                        </button>
-                      </div>
+              </thead>
+              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                {isLoading ? (
+                  <tr>
+                    <td className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400" colSpan={14}>Loading matches…</td>
+                  </tr>
+                ) : pagedMatches.length > 0 ? (
+                  pagedMatches.map((match, idx) => (
+                    <tr key={match.id} className="transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40">
+                      <td className="static md:sticky left-0 z-20 w-16 min-w-[64px] max-w-[64px] bg-white dark:bg-zinc-950 px-3 py-3 text-left text-zinc-700 dark:text-zinc-300 border-b border-zinc-200 dark:border-zinc-800">{idx + 1}</td>
+                      <td className="static md:sticky left-[64px] z-20 w-32 min-w-[128px] max-w-[128px] bg-white dark:bg-zinc-950 pl-3 pr-0 py-3 font-medium text-zinc-950 dark:text-zinc-50 border-b border-zinc-200 dark:border-zinc-800">{getTeam1WithFlag(match, "sm")}</td>
+                      <td className="static md:sticky left-[192px] z-20 w-16 min-w-[64px] max-w-[64px] bg-white dark:bg-zinc-950 px-3 py-3 text-center font-medium text-zinc-950 dark:text-zinc-50 border-b border-zinc-200 dark:border-zinc-800">{getVs("sm")}</td>
+                      <td className="static md:sticky left-[256px] z-20 w-32 min-w-[128px] max-w-[128px] bg-white dark:bg-zinc-950 pl-0 pr-3 py-3 font-medium text-zinc-950 dark:text-zinc-50 border-b border-zinc-200 dark:border-zinc-800">{getTeam2WithFlag(match, "sm")}</td>
+                      <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.match_day}</td>
+                      <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{formatDateTime(match.match_datetime)}</td>
+                      <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{formatScore(match)}</td>
+                      <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{getWinnerLabel(match, teams)}</td>
+                      <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{getTeamNameById(teams, match.kick_off_team_id) || "--"}</td>
+                      <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.first_goal_in ? firstGoalInLabels[match.first_goal_in as FirstGoalIn] : "--"}</td>
+                      <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{getTeamNameById(teams, match.first_scoring_team_id) || "--"}</td>
+                      <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.match_duration ? matchDurationLabels[match.match_duration as MatchDuration] : "--"}</td>
+                      <td className="px-3 py-3">
+                        <StatusPill tone={match.match_locked ? "accent" : "secondary"}>{getMatchStatus(match)}</StatusPill>
+                      </td>
+                      <td className="px-3 py-3 text-right">
+                        <div className="flex justify-end gap-1">
+                          <button title="Edit" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-50 cursor-pointer transition disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-400 dark:hover:bg-emerald-950" disabled={openingEditMatchId !== null} type="button" onClick={() => void startEditingMatch(match)}>
+                            <IconPencil className="h-4 w-4" />
+                            <span className="sr-only">Edit</span>
+                          </button>
+                          <button title="Delete" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-700 hover:bg-rose-50 cursor-pointer transition disabled:opacity-40 dark:text-rose-400 dark:hover:bg-rose-950" disabled={isDeletingId === match.id} type="button" onClick={() => handleDeleteClick(match)}>
+                            <IconTrash className="h-4 w-4" />
+                            <span className="sr-only">Delete</span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400" colSpan={14}>
+                      {isSearchActive ? `No matches match "${searchQuery}".` : "No matches found."}
                     </td>
                   </tr>
-                ))
-              ) : (
-                <tr>
-                  <td className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400" colSpan={14}>
-                    {isSearchActive ? `No matches match "${searchQuery}".` : "No matches found."}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <Pagination
-        page={page}
-        pageSize={PAGE_SIZE}
-        total={filteredMatches.length}
-        onChange={setPage}
-      />
-
-      <ConfirmModal
-        isOpen={deleteTarget !== null}
-        title="Delete Match"
-        message={deleteTarget ? `Are you sure you want to delete ${getMatchLabelText(deleteTarget)}? This action cannot be undone.` : ""}
-        confirmLabel="Delete"
-        isDangerous
-        onConfirm={() => void handleDeleteConfirm()}
-        onCancel={() => setDeleteTarget(null)}
-      />
-
-      <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingMatchId ? "Edit Match" : "New Match"}>
-        <form className="flex flex-col gap-4" onSubmit={(e) => void handleSubmit(e)}>
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">Schedule and result details.</p>
-            <StatusPill tone={formState.matchLocked ? "accent" : "secondary"}>
-              {formState.matchLocked ? "Locked" : "Open"}
-            </StatusPill>
+                )}
+              </tbody>
+            </table>
           </div>
+        </section>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block">
-              <span className={labelCls}><p>Team 1</p></span>
-              <select name="team1_id" required value={formState.team1Id} onChange={(event) => updateField("team1Id", event.target.value)} className={selectCls}>
-                <option value="">Select team</option>
-                {teams.map((team) => (<option key={team.id} value={team.id}>{team.name}</option>))}
-              </select>
-            </label>
-            <label className="block">
-              <span className={labelCls}><p>Team 2</p></span>
-              <select name="team2_id" required value={formState.team2Id} onChange={(event) => updateField("team2Id", event.target.value)} className={selectCls}>
-                <option value="">Select team</option>
-                {teams.map((team) => (<option key={team.id} value={team.id}>{team.name}</option>))}
-              </select>
-            </label>
-            <label className="block">
-              <span className={labelCls}><p>Kickoff (Local Time)</p></span>
-              <input name="match_datetime" required type="datetime-local" value={convertTimeZone(formState.matchDatetime, 'UTC', DEFAULT_TIMEZONE)} onChange={(event) => updateField("matchDatetime", event.target.value)} className={inputCls} />
-            </label>
-            <label className="block">
-              <span className={labelCls}><p>Match day</p></span>
-              <input min="1" name="match_day" required type="number" value={formState.matchDay} onChange={(event) => updateField("matchDay", event.target.value)} className={inputCls} />
-            </label>
-            <label className="block sm:col-span-1">
-              <span className={labelCls}><p>Venue</p></span>
-              <input name="venue_name" type="text" value={formState.venueName} onChange={(event) => updateField("venueName", event.target.value)} className={inputCls} />
-            </label>
-            <label className="block">
-              <span className={labelCls}><p>Game Stage</p></span>
-              <select name="match_stage" value={formState.matchStage} onChange={(event) => updateField("matchStage", event.target.value)} className={selectCls}>
-                <option value="">Not set</option>
-                {matchStages.map((stage) => (<option key={stage} value={stage}>{matchStageLabels[stage]}</option>))}
-              </select>
-            </label>
-            <label className="block">
-              <span className={labelCls}><p>{formState.team1Id ? teams.find((team) => team.id.toString() === formState.team1Id)?.name : "Team 1 score"}</p></span>
-              <input min="0" name="team1_score" type="number" value={formState.team1Score || ""} onChange={(event) => updateField("team1Score", event.target.value)} className={inputCls} />
-            </label>
-            <label className="block">
-              <span className={labelCls}><p>{formState.team2Id ? teams.find((team) => team.id.toString() === formState.team2Id)?.name : "Team 2 score"}</p></span>
-              <input min="0" name="team2_score" type="number" value={formState.team2Score || ""} onChange={(event) => updateField("team2Score", event.target.value)} className={inputCls} />
-            </label>
-            <label className="block">
-              <span className={labelCls}><p>First goal in</p></span>
-              <select disabled={!matchHasGoals} name="first_goal_in" required={matchHasGoals} value={formState.firstGoalIn} onChange={(event) => updateField("firstGoalIn", event.target.value)} className={selectCls}>
-                <option value="">{matchHasGoals ? "Not Set" : "N/A"}</option>
-                {formState.matchStage === "GROUP" && firstGoalIns.filter((slot) => slot !== "ET").map((slot) => (<option key={slot} value={slot}>{firstGoalInLabels[slot]}</option>))}
-                {formState.matchStage !== "GROUP" && firstGoalIns.map((slot) => (<option key={slot} value={slot}>{firstGoalInLabels[slot]}</option>))}
-              </select>
-            </label>
-            <label className="block">
-              <span className={labelCls}><p>First score by</p></span>
-              <select disabled={!matchHasGoals} name="first_scoring_team_id" required={matchHasGoals} value={formState.firstScoringTeamId} onChange={(event) => updateField("firstScoringTeamId", event.target.value)} className={selectCls}>
-                <option value="">{matchHasGoals ? "Not Set" : "N/A"}</option>
-                <>
-                  {Number(formState.team1Score || 0) > 0 && <option value={formState.team1Id}>{teams.find((team) => team.id.toString() === formState.team1Id)?.name}</option>}
-                  {Number(formState.team2Score || 0) > 0 && <option value={formState.team2Id}>{teams.find((team) => team.id.toString() === formState.team2Id)?.name}</option>}
-                </>
-              </select>
-            </label>
-            <label className="block">
-              <span className={labelCls}><p>Yellow cards</p></span>
-              <input min="0" name="yellow_card_count" type="number" value={formState.yellowCardCount || 0} onChange={(event) => updateField("yellowCardCount", event.target.value)} className={inputCls} />
-            </label>
-            <label className="block">
-              <span className={labelCls}><p>Red cards</p></span>
-              <input min="0" name="red_card_count" type="number" value={formState.redCardCount || 0} onChange={(event) => updateField("redCardCount", event.target.value)} className={inputCls} />
-            </label>
-            <label className="block">
-              <span className={labelCls}><p>Kick-off team</p></span>
-              <select name="kick_off_team_id" value={formState.kickoffTeamId} onChange={(event) => updateField("kickoffTeamId", event.target.value)} className={selectCls}>
-                <option value="">Not set</option>
-                {selectedTeams.map((team) => (<option key={team.id} value={team.id}>{team.name}</option>))}
-              </select>
-            </label>
-            <label className="block">
-              <span className={labelCls}><p>Match duration</p></span>
-              <select name="match_duration" value={formState.matchStage === "GROUP" ? "90" : formState.matchDuration} disabled={formState.matchStage === "GROUP"} onChange={(event) => updateField("matchDuration", event.target.value)} className={selectCls}>
-                <option value="">{formState.matchStage === "GROUP" ? matchDurationLabels["90"] : "Not set"}</option>
-                {matchDurations.map((duration) => (<option key={duration} value={duration}>{matchDurationLabels[duration]}</option>))}
-              </select>
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer rounded-md border border-zinc-200 px-3 py-3 text-sm font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">
-              <input checked={formState.matchLocked} name="match_locked" type="checkbox" onChange={(event) => updateField("matchLocked", event.target.checked)} className="h-4 w-4 accent-emerald-700" />
-              <p>Locked</p>
-            </label>
-            <label className="flex items-center gap-3 cursor-pointer rounded-md border border-zinc-200 px-3 py-3 text-sm font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">
-              <input checked={formState.matchReminderSent} name="match_reminder_sent" type="checkbox" onChange={(event) => updateField("matchReminderSent", event.target.checked)} className="h-4 w-4 accent-emerald-700" />
-              <p>Reminder sent</p>
-            </label>
-            <label className="block">
-              <span className={labelCls}><p>Winner</p></span>
-              <select disabled={formState.matchStage === "GROUP"} name="winner_id" value={formState.team1Score > formState.team2Score ? formState.team1Id : (formState.team2Score > formState.team1Score ? formState.team2Id : "")} onChange={() => { }} className={selectCls}>
-                {formState.matchStage === "GROUP" && <option value="">{formState.matchLocked && formState.team1Score === formState.team2Score ? "Draw" : "Not set"}</option>}
-                {formState.matchLocked && formState.team1Score !== formState.team2Score ? selectedTeams.map((team) => (<option key={team.id} value={team.id}>{team.name}</option>)) : null}
-              </select>
-            </label>
-          </div>
+        <Pagination page={page} pageSize={PAGE_SIZE} total={filteredMatches.length} onChange={setPage} />
 
-          {formError ? (
-            <label className="block col-span-2">
+        <ConfirmModal
+          isOpen={deleteTarget !== null}
+          title="Delete Match"
+          message={deleteTarget ? `Are you sure you want to delete ${getMatchLabelText(deleteTarget)}? This action cannot be undone.` : ""}
+          confirmLabel="Delete"
+          isDangerous
+          onConfirm={() => void handleDeleteConfirm()}
+          onCancel={() => setDeleteTarget(null)}
+        />
+
+        <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editingMatchId ? "Edit Match" : "New Match"}>
+          <form className="flex flex-col gap-4" onSubmit={(e) => void handleSubmit(e)}>
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-2">
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">Schedule and result details.</p>
+              <StatusPill tone={formState.matchLocked ? "accent" : "secondary"}>
+                {formState.matchLocked ? "Locked" : "Open"}
+              </StatusPill>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label className="block">
+                <span className={labelCls}><p>Team 1</p></span>
+                <select name="team1_id" required value={formState.team1Id} onChange={(event) => updateField("team1Id", event.target.value)} className={selectCls}>
+                  <option value="">Select team</option>
+                  {teams.map((team) => (<option key={team.id} value={team.id}>{team.name}</option>))}
+                </select>
+              </label>
+              <label className="block">
+                <span className={labelCls}><p>Team 2</p></span>
+                <select name="team2_id" required value={formState.team2Id} onChange={(event) => updateField("team2Id", event.target.value)} className={selectCls}>
+                  <option value="">Select team</option>
+                  {teams.map((team) => (<option key={team.id} value={team.id}>{team.name}</option>))}
+                </select>
+              </label>
+              <label className="block">
+                <span className={labelCls}><p>Kickoff (Local Time)</p></span>
+                <input name="match_datetime" required type="datetime-local" value={convertTimeZone(formState.matchDatetime, 'UTC', DEFAULT_TIMEZONE)} onChange={(event) => updateField("matchDatetime", event.target.value)} className={inputCls} />
+              </label>
+              <label className="block">
+                <span className={labelCls}><p>Match day</p></span>
+                <input min="1" name="match_day" required type="number" value={formState.matchDay} onChange={(event) => updateField("matchDay", event.target.value)} className={inputCls} />
+              </label>
+              <label className="block sm:col-span-1">
+                <span className={labelCls}><p>Venue</p></span>
+                <input name="venue_name" type="text" value={formState.venueName} onChange={(event) => updateField("venueName", event.target.value)} className={inputCls} />
+              </label>
+              <label className="block">
+                <span className={labelCls}><p>Game Stage</p></span>
+                <select name="match_stage" value={formState.matchStage} onChange={(event) => updateField("matchStage", event.target.value)} className={selectCls}>
+                  <option value="">Not set</option>
+                  {matchStages.map((stage) => (<option key={stage} value={stage}>{matchStageLabels[stage]}</option>))}
+                </select>
+              </label>
+              <label className="block">
+                <span className={labelCls}><p>{formState.team1Id ? teams.find((team) => team.id.toString() === formState.team1Id)?.name : "Team 1 score"}</p></span>
+                <input min="0" name="team1_score" type="number" value={formState.team1Score || ""} onChange={(event) => updateField("team1Score", event.target.value)} className={inputCls} />
+              </label>
+              <label className="block">
+                <span className={labelCls}><p>{formState.team2Id ? teams.find((team) => team.id.toString() === formState.team2Id)?.name : "Team 2 score"}</p></span>
+                <input min="0" name="team2_score" type="number" value={formState.team2Score || ""} onChange={(event) => updateField("team2Score", event.target.value)} className={inputCls} />
+              </label>
+              <label className="block">
+                <span className={labelCls}><p>First goal in</p></span>
+                <select disabled={!matchHasGoals} name="first_goal_in" required={matchHasGoals} value={formState.firstGoalIn} onChange={(event) => updateField("firstGoalIn", event.target.value)} className={selectCls}>
+                  <option value="">{matchHasGoals ? "Not Set" : "N/A"}</option>
+                  {formState.matchStage === "GROUP" && firstGoalIns.filter((slot) => slot !== "ET").map((slot) => (<option key={slot} value={slot}>{firstGoalInLabels[slot]}</option>))}
+                  {formState.matchStage !== "GROUP" && firstGoalIns.map((slot) => (<option key={slot} value={slot}>{firstGoalInLabels[slot]}</option>))}
+                </select>
+              </label>
+              <label className="block">
+                <span className={labelCls}><p>First score by</p></span>
+                <select disabled={!matchHasGoals} name="first_scoring_team_id" required={matchHasGoals} value={formState.firstScoringTeamId} onChange={(event) => updateField("firstScoringTeamId", event.target.value)} className={selectCls}>
+                  <option value="">{matchHasGoals ? "Not Set" : "N/A"}</option>
+                  <>
+                    {Number(formState.team1Score || 0) > 0 && <option value={formState.team1Id}>{teams.find((team) => team.id.toString() === formState.team1Id)?.name}</option>}
+                    {Number(formState.team2Score || 0) > 0 && <option value={formState.team2Id}>{teams.find((team) => team.id.toString() === formState.team2Id)?.name}</option>}
+                  </>
+                </select>
+              </label>
+              <label className="block">
+                <span className={labelCls}><p>Yellow cards</p></span>
+                <input min="0" name="yellow_card_count" type="number" value={formState.yellowCardCount || 0} onChange={(event) => updateField("yellowCardCount", event.target.value)} className={inputCls} />
+              </label>
+              <label className="block">
+                <span className={labelCls}><p>Red cards</p></span>
+                <input min="0" name="red_card_count" type="number" value={formState.redCardCount || 0} onChange={(event) => updateField("redCardCount", event.target.value)} className={inputCls} />
+              </label>
+              <label className="block">
+                <span className={labelCls}><p>Kick-off team</p></span>
+                <select name="kick_off_team_id" value={formState.kickoffTeamId} onChange={(event) => updateField("kickoffTeamId", event.target.value)} className={selectCls}>
+                  <option value="">Not set</option>
+                  {selectedTeams.map((team) => (<option key={team.id} value={team.id}>{team.name}</option>))}
+                </select>
+              </label>
+              <label className="block">
+                <span className={labelCls}><p>Match duration</p></span>
+                <select name="match_duration" value={formState.matchStage === "GROUP" ? "90" : formState.matchDuration} disabled={formState.matchStage === "GROUP"} onChange={(event) => updateField("matchDuration", event.target.value)} className={selectCls}>
+                  <option value="">{formState.matchStage === "GROUP" ? matchDurationLabels["90"] : "Not set"}</option>
+                  {matchDurations.map((duration) => (<option key={duration} value={duration}>{matchDurationLabels[duration]}</option>))}
+                </select>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer rounded-md border border-zinc-200 px-3 py-3 text-sm font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">
+                <input checked={formState.matchLocked} name="match_locked" type="checkbox" onChange={(event) => updateField("matchLocked", event.target.checked)} className="h-4 w-4 accent-emerald-700" />
+                <p>Locked</p>
+              </label>
+              <label className="flex items-center gap-3 cursor-pointer rounded-md border border-zinc-200 px-3 py-3 text-sm font-medium text-zinc-700 dark:border-zinc-700 dark:text-zinc-300">
+                <input checked={formState.matchReminderSent} name="match_reminder_sent" type="checkbox" onChange={(event) => updateField("matchReminderSent", event.target.checked)} className="h-4 w-4 accent-emerald-700" />
+                <p>Reminder sent</p>
+              </label>
+              <label className="block">
+                <span className={labelCls}><p>Winner</p></span>
+                <select disabled={formState.matchStage === "GROUP"} name="winner_id" value={formState.team1Score > formState.team2Score ? formState.team1Id : (formState.team2Score > formState.team1Score ? formState.team2Id : "")} onChange={() => { }} className={selectCls}>
+                  {formState.matchStage === "GROUP" && <option value="">{formState.matchLocked && formState.team1Score === formState.team2Score ? "Draw" : "Not set"}</option>}
+                  {formState.matchLocked && formState.team1Score !== formState.team2Score ? selectedTeams.map((team) => (<option key={team.id} value={team.id}>{team.name}</option>)) : null}
+                </select>
+              </label>
+            </div>
+
+            {formError ? (
               <p aria-live="polite" className="mt-2 rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-300">
                 {formError}
               </p>
-            </label>
-          ) : null}
+            ) : null}
 
-          <div className="mt-4 flex justify-end gap-3">
-            <button
-              className="inline-flex h-11 px-4 items-center gap-2 justify-center rounded-md border cursor-pointer border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
-              type="button"
-              onClick={handleCloseModal}
-            >
-              <IconCancel className="h-4 w-4" />
-              Cancel
-            </button>
-            <button
-              className="inline-flex h-11 px-4 items-center gap-2 justify-center rounded-md cursor-pointer bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400"
-              disabled={isSubmitting}
-              type="submit"
-            >
-              <IconSave className="h-4 w-4" />
-              {isSubmitting ? "Saving…" : editingMatchId ? "Update Match" : "Save Match"}
-            </button>
-          </div>
-        </form>
-      </Modal>
-    </main>
+            <div className="mt-4 flex justify-end gap-3">
+              <button className="inline-flex h-11 px-4 items-center gap-2 justify-center rounded-md border cursor-pointer border-zinc-200 bg-white text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-700" type="button" onClick={handleCloseModal}>
+                <IconCancel className="h-4 w-4" />
+                Cancel
+              </button>
+              <button className="inline-flex h-11 px-4 items-center gap-2 justify-center rounded-md cursor-pointer bg-tournament-primary text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400" disabled={isSubmitting} type="submit">
+                <IconSave className="h-4 w-4" />
+                {isSubmitting ? "Saving…" : editingMatchId ? "Update Match" : "Save Match"}
+              </button>
+            </div>
+          </form>
+        </Modal>
+      </main>
+    </>
   );
 };
 

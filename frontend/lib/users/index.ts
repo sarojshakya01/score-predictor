@@ -1,6 +1,7 @@
 export {
   createUser,
   deleteUser,
+  getAdminUser,
   listAdminUsers,
   updateCurrentUserFinalist,
   updateUser,

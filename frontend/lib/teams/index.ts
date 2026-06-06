@@ -1,6 +1,7 @@
 export {
   createTeam,
   deleteTeam,
+  getAdminTeam,
   listAdminTeams,
   listAllTeams,
   teamService,

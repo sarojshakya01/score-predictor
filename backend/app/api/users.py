@@ -124,6 +124,21 @@ async def list_users(
     )
 
 
+@admin_router.get(
+    "/{user_id}",
+    response_model=UserResponse,
+    summary="Get user",
+)
+async def get_user(
+    user_id: Annotated[int, Path(gt=0)],
+    _current_admin: CurrentAdminUser,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> UserResponse:
+    """Return a single user from the admin user management screen."""
+    service = UserService(db)
+    return await service.get_user(user_id)
+
+
 @admin_router.post(
     "",
     response_model=UserResponse,

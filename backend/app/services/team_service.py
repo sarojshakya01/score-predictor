@@ -70,7 +70,12 @@ class TeamService:
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Team name already exists",
             )
-        return TeamResponse.model_validate({**created_team.__dict__, "flag_url": TeamService.flag_base_url + created_team.fifa_code})
+        return self._to_response(created_team)
+
+    async def get_team(self, team_id: int) -> TeamResponse:
+        """Return a single team by id."""
+        team = await self._get_team_or_404(team_id)
+        return self._to_response(team)
 
     async def update_team(
         self,
@@ -83,7 +88,7 @@ class TeamService:
         values = data.model_dump(exclude_unset=True)
 
         if not values:
-            return TeamResponse.model_validate(team)
+            return self._to_response(team)
 
         new_name = values.get("name")
         if isinstance(new_name, str) and await self._team_repository.name_exists(
@@ -102,7 +107,7 @@ class TeamService:
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Team name already exists",
             )
-        return TeamResponse.model_validate({**updated_team.__dict__, "flag_url": TeamService.flag_base_url + updated_team.fifa_code})
+        return self._to_response(updated_team)
 
     async def delete_team(self, team_id: int) -> None:
         """Delete an existing team."""
@@ -135,12 +140,22 @@ class TeamService:
     ) -> TeamListResponse:
         """Build a paginated team response."""
         return TeamListResponse(
-            items=[TeamResponse.model_validate({**team.__dict__, "flag_url": TeamService.flag_base_url + team.fifa_code}) for team in teams],
+            items=[TeamService._to_response(team) for team in teams],
             total=total,
             limit=limit,
             offset=offset,
         )
-    
+
+    @staticmethod
+    def _to_response(team: Team) -> TeamResponse:
+        """Build a team response with its FIFA flag URL."""
+        return TeamResponse.model_validate(
+            {
+                **team.__dict__,
+                "flag_url": TeamService.flag_base_url + team.fifa_code,
+            },
+        )
+
     @staticmethod
     def team_flag_url(team) -> TeamResponse:
         """Buld team's flag URL."""

@@ -41,6 +41,12 @@ export const listAdminTeams = async (
   });
 };
 
+export const getAdminTeam = async (teamId: number): Promise<TeamResponse> => {
+  return authenticatedApiFetch<TeamResponse>(`/admin/teams/${teamId}`, {
+    method: "GET",
+  });
+};
+
 export const listAllTeams = async (
   params: ListTeamsParams = {},
 ): Promise<TeamListResponse> => {
@@ -81,6 +87,7 @@ export const deleteTeam = async (teamId: number): Promise<void> => {
 export const teamService = {
   createTeam,
   deleteTeam,
+  getAdminTeam,
   listAdminTeams,
   updateTeam,
 };

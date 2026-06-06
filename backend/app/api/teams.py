@@ -77,6 +77,20 @@ async def list_teams(
     )
 
 
+@admin_router.get(
+    "/{team_id}",
+    response_model=TeamResponse,
+    summary="Get team",
+)
+async def get_team(
+    team_id: Annotated[int, Path(gt=0)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> TeamResponse:
+    """Return a single team by id."""
+    service = TeamService(db)
+    return await service.get_team(team_id)
+
+
 @admin_router.post(
     "",
     response_model=TeamResponse,

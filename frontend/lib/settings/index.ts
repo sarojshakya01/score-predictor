@@ -1,6 +1,7 @@
 export {
   createSetting,
   deleteSetting,
+  getAdminSetting,
   getGameRules,
   getMatchDay,
   listSetting,

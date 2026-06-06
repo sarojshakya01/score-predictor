@@ -117,6 +117,11 @@ class UserService:
                 detail="An unexpected error occurred: could not list users",
             )
 
+    async def get_user(self, user_id: int) -> UserResponse:
+        """Return a single user by id."""
+        user = await self._get_user_or_404(user_id)
+        return UserResponse.model_validate(user)
+
     async def create_user(self, data: UserCreate) -> UserResponse:
         """Create a user from the admin user management screen."""
         if await self._user_repository.email_exists(data.email):

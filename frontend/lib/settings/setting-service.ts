@@ -26,6 +26,12 @@ export const listSetting = async (
   return authenticatedApiFetch<SettingListResponse>(path, { method: "GET" });
 };
 
+export const getAdminSetting = async (settingId: number): Promise<SettingResponse> => {
+  return authenticatedApiFetch<SettingResponse>(`/admin/settings/${settingId}`, {
+    method: "GET",
+  });
+};
+
 export const getGameRules = async (): Promise<GameRulesResponse> => {
   return apiFetch<GameRulesResponse>("/rules", { method: "GET" });
 };
@@ -60,6 +66,7 @@ export const deleteSetting = async (settingId: number): Promise<void> => {
 export const settingService = {
   createSetting,
   deleteSetting,
+  getAdminSetting,
   getGameRules,
   getMatchDay,
   listSetting,

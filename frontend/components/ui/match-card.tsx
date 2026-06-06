@@ -3,9 +3,9 @@ import { PillTone, StatusPill } from "./status-pill";
 import { JSX } from "react";
 import { PredictionStatus } from "@/lib/matches/types";
 import Link from "next/link";
-import Image from "next/image";
 import { DEFAULT_TIMEZONE } from "@/lib/api/config";
 import { IconCheck, IconCross, IconLocation, IconWarning } from "./icons";
+import TeamWithFlag from "./team-with-flag";
 
 // ---------------------------------------------------------------------------
 // Lock-urgency helpers
@@ -103,12 +103,7 @@ const MatchDayNGroupNStatus = (match: MatchResponse) => {
 };
 
 export const getTeam1WithFlag = (match: MatchResponse, size: string = "md") => (
-  <div className={(size === "sm" ? "w-full" : "w-[47%]") + " flex items-center justify-end gap-2 pr-2"}>
-    <span className="inline-block w-full text-right">{match.team1_name}</span>
-    {match.team1_flag_url ? (
-      <Image width={30} height={30} className={(size === "sm" ? "min-h-[18px]" : "min-h-[25px]") + " w-auto rounded object-cover shadow-sm"} decoding="async" loading="lazy" src={match.team1_flag_url} alt="flag" />
-    ) : null}
-  </div>
+  <TeamWithFlag match={match} size={size} isHomeTeam={true} />
 )
 
 export const getVs = (size: string = "md") => (
@@ -116,12 +111,7 @@ export const getVs = (size: string = "md") => (
 )
 
 export const getTeam2WithFlag = (match: MatchResponse, size: string = "md") => (
-  <div className={(size === "sm" ? "w-full" : "w-[47%]") + " flex items-center justify-start gap-2 pl-2"}>
-    {match.team2_flag_url ? (
-      <Image width={30} height={30} className={(size === "sm" ? "min-h-[18px]" : "min-h-[25px]") + " w-auto rounded object-cover shadow-sm"} decoding="async" loading="lazy" src={match.team2_flag_url} alt="flag" />
-    ) : null}
-    <span className="inline-block w-full text-left">{match.team2_name}</span>
-  </div>
+  <TeamWithFlag match={match} size={size} isHomeTeam={false} />
 )
 export const getMatchLabelWithFlag = (match: MatchResponse, width: string = "w-full", size: string = "md"): JSX.Element => (
   <div className={`flex ${width} items-center gap-3`}>
@@ -152,9 +142,7 @@ export const MatchVenue = (match: MatchResponse) => (
         <IconLocation />
       </Link>
       <dd className="mt-1 font-medium text-zinc-950 dark:text-zinc-50">
-        {match.venue_name
-          ? <Link target="_blank" href={`https://google.com/search?q=${match.venue_name?.trim()}`} className="text-tournament-primary-light hover:text-tournament-primary">{match.venue_name?.trim()}</Link>
-          : "TBA"}
+        {match.venue_name ? match.venue_name?.trim() : "TBA"}
       </dd>
     </div>
   </dl>

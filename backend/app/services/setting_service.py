@@ -76,6 +76,11 @@ class SettingService:
 
         return SettingResponse.model_validate(created_setting)
 
+    async def get_setting(self, setting_id: int) -> SettingResponse:
+        """Return a single setting by id."""
+        setting = await self._get_setting_or_404(setting_id)
+        return SettingResponse.model_validate(setting)
+
     async def update_setting(
         self,
         *,

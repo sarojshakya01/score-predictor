@@ -44,6 +44,12 @@ export const listAdminUsers = async (
   });
 };
 
+export const getAdminUser = async (userId: number): Promise<UserResponse> => {
+  return authenticatedApiFetch<UserResponse>(`/admin/users/${userId}`, {
+    method: "GET",
+  });
+};
+
 export const createUser = async (data: UserCreate): Promise<UserResponse> => {
   return authenticatedApiFetch<UserResponse, UserCreate>("/admin/users", {
     body: data,
@@ -80,6 +86,7 @@ export const deleteUser = async (userId: number): Promise<void> => {
 export const userService = {
   createUser,
   deleteUser,
+  getAdminUser,
   listAdminUsers,
   updateUser,
 };
