@@ -6,7 +6,7 @@ import React, { useEffect, useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { PillTone, StatusPill } from "@/components/ui/status-pill";
 import { ApiError } from "@/lib/api";
-import { isAuthenticated, MissingAuthTokenError } from "@/lib/auth";
+import { isAuthenticated, MissingAuthTokenError, SessionExpiredError } from "@/lib/auth";
 import { getUserPredictionDetails, listLeaderboard } from "@/lib/leaderboard";
 import type {
   LeaderboardEntryResponse,
@@ -34,6 +34,10 @@ const getLoadErrorMessage = (error: unknown): string => {
 
   if (error instanceof MissingAuthTokenError) {
     return "Please log in before viewing the leaderboard.";
+  }
+
+  if (error instanceof SessionExpiredError) {
+    return "Your session has expired. Please login again.";
   }
 
   if (error instanceof Error && error.message.trim()) {
@@ -103,7 +107,7 @@ const PtsCell = ({ points }: { points: number }) => {
         ? "bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-950 dark:text-rose-400 dark:ring-rose-800"
         : "bg-zinc-100 text-zinc-500 ring-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:ring-zinc-600";
   return (
-    <td className="whitespace-nowrap px-3 py-2.5 text-center">
+    <td className="whitespace-nowrap px-3 py-2.5 text-center border-r border-zinc-200 dark:border-zinc-700">
       <span
         className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${color}`}
       >
@@ -358,7 +362,7 @@ const UserPointsDetailModal = ({
               <p className="text-sm text-zinc-500 dark:text-zinc-400">No predictions on completed matches yet.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
+            <div className="overflow-auto max-h-[40rem] rounded-lg border border-zinc-200 dark:border-zinc-700">
               <table className="min-w-max w-full border-collapse text-sm">
                 <thead>
                   {/* Group row */}
@@ -377,7 +381,7 @@ const UserPointsDetailModal = ({
                     <th
                       rowSpan={2}
                       className={[
-                        "static md:sticky left-[70px] top-0 z-20 w-[285px] min-w-[285px] max-w-[285px]",
+                        "static md:sticky left-[70px] top-0 z-40 w-[285px] min-w-[285px] max-w-[285px]",
                         "bg-zinc-100 dark:bg-zinc-900",
                         "border-b border-zinc-200 dark:border-zinc-700",
                         "whitespace-nowrap px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500"
@@ -388,7 +392,7 @@ const UserPointsDetailModal = ({
                     <th
                       rowSpan={2}
                       className={[
-                        "static md:sticky left-[356px] z-20 w-[80px] min-w-[80px] max-w-[80px]",
+                        "static md:sticky left-[356px] top-0 z-40 w-[80px] min-w-[80px] max-w-[80px]",
                         "bg-zinc-100 dark:bg-zinc-900",
                         "border-b border-zinc-200 dark:border-zinc-700",
                         "whitespace-nowrap px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500"
@@ -401,6 +405,8 @@ const UserPointsDetailModal = ({
                         key={label}
                         colSpan={colSpan}
                         className={[
+                          "static md:sticky top-0 z-30",
+                          "bg-zinc-50 dark:bg-zinc-800",
                           "border-r border-zinc-200 dark:border-zinc-700",
                           "px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider",
                           "last:border-r-0",
@@ -418,6 +424,8 @@ const UserPointsDetailModal = ({
                         <th
                           key={`${label}-${sub}`}
                           className={[
+                            "static md:sticky top-8 z-30",
+                            "bg-zinc-50 dark:bg-zinc-800",
                             "whitespace-nowrap px-3 py-1.5 text-center text-[11px] font-medium tracking-wide text-zinc-400 dark:text-zinc-500",
                             sub === "Pts" ? "border-r border-zinc-200 dark:border-zinc-700" : ""
                           ].join(" ")}
@@ -429,7 +437,7 @@ const UserPointsDetailModal = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800">
-                  {data.items.map((item, idx) => (
+                  {[...data.items, ...data.items, ...data.items].map((item, idx) => (
                     <ScoreRow key={item.match_id} index={idx} item={item} />
                   ))}
                 </tbody>
@@ -438,7 +446,7 @@ const UserPointsDetailModal = ({
                   {data.items.some((item) => item.match_stage === "F") && (<>
                     <tr>
                       <td colSpan={2} className={[
-                        "static md:sticky left-0 top-0 z-40 w-[345px] min-w-[345px] max-w-[345px]",
+                        "static md:sticky left-0 z-20 w-[345px] min-w-[345px] max-w-[345px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
@@ -462,7 +470,7 @@ const UserPointsDetailModal = ({
                     </tr>
                     <tr>
                       <td colSpan={2} className={[
-                        "static md:sticky left-0 top-0 z-40 w-[356px] min-w-[356px] max-w-[356px]",
+                        "static md:sticky left-0 z-20 w-[356px] min-w-[356px] max-w-[356px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
@@ -490,7 +498,7 @@ const UserPointsDetailModal = ({
                     <>
                       <tr>
                         <td colSpan={2} className={[
-                          "static md:sticky left-0 top-0 z-40 w-[356px] min-w-[356px] max-w-[356px]",
+                          "static md:sticky left-0 z-20 w-[356px] min-w-[356px] max-w-[356px]",
                           "bg-white dark:bg-zinc-950",
                           "border-b border-zinc-200 dark:border-zinc-800",
                           "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
@@ -515,7 +523,7 @@ const UserPointsDetailModal = ({
                     </>)}
                   <tr>
                     <td colSpan={2} className={[
-                      "static md:sticky left-0 top-0 z-40 w-[356px] min-w-[356px] max-w-[356px]",
+                      "static md:sticky left-0 z-20 w-[356px] min-w-[356px] max-w-[356px]",
                       "bg-white dark:bg-zinc-950",
                       "border-b border-zinc-200 dark:border-zinc-800",
                       "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
@@ -887,6 +895,7 @@ export const LeaderboardDashboard = () => {
         }
 
         if (
+          error instanceof SessionExpiredError ||
           error instanceof MissingAuthTokenError ||
           (error instanceof ApiError && error.status === 401)
         ) {
@@ -990,47 +999,47 @@ export const LeaderboardDashboard = () => {
                     "px-3 py-3"
                   ].join(" ")}>Total</th>
                   <th className={[
-                    "static md:sticky top-0",
+                    "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right"
                   ].join(" ")}>Score</th>
                   <th className={[
-                    "static md:sticky top-0",
+                    "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[105px]"
                   ].join(" ")}>Goal Diff</th>
                   <th className={[
-                    "static md:sticky top-0",
+                    "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[145px]"
                   ].join(" ")}>First Score In</th>
                   <th className={[
-                    "static md:sticky top-0",
+                    "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[145px]"
                   ].join(" ")}>First Score By</th>
                   <th className={[
-                    "static md:sticky top-0",
+                    "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[120px]"
                   ].join(" ")}>Yello Card</th>
                   <th className={[
-                    "static md:sticky top-0",
+                    "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[100px]"
                   ].join(" ")}>Red Card</th>
                   <th className={[
-                    "static md:sticky top-0",
+                    "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right"
                   ].join(" ")}>Duration</th>
                   <th className={[
-                    "static md:sticky top-0",
+                    "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[100px]"
                   ].join(" ")}>Kick-off</th>
                   <th className={[
-                    "static md:sticky top-0",
+                    "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[150px]"
                   ].join(" ")}>Predicted/Total</th>

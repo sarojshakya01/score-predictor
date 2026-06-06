@@ -454,52 +454,52 @@ const AdminMatchesPage = () => {
                     "px-3 py-3"
                   ].join(" ")} colSpan={3}>Match</th>
                   <th className={[
-                    "static md:sticky top-0",
+                    "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700"
                   ].join(" ")}>Day</th>
                   <th className={[
-                    "static md:sticky top-0",
+                    "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[140px]"
                   ].join(" ")}>Time</th>
                   <th className={[
-                    "static md:sticky top-0",
+                    "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700"
                   ].join(" ")}>Score</th>
                   <th className={[
-                    "static md:sticky top-0",
+                    "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700"
                   ].join(" ")}>Winner</th>
                   <th className={[
-                    "static md:sticky top-0",
+                    "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[150px]"
                   ].join(" ")}>Kickoff Team</th>
                   <th className={[
-                    "static md:sticky top-0",
+                    "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[140px]"
                   ].join(" ")}>First Goal in</th>
                   <th className={[
-                    "static md:sticky top-0",
+                    "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[145px]"
                   ].join(" ")}>First Score by</th>
                   <th className={[
-                    "static md:sticky top-0",
+                    "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[100px]"
                   ].join(" ")}>Duration</th>
                   <th className={[
-                    "static md:sticky top-0",
+                    "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700"
                   ].join(" ")}>Status</th>
                   <th className={[
-                    "static md:sticky top-0",
+                    "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 text-right"
                   ].join(" ")}>Actions</th>

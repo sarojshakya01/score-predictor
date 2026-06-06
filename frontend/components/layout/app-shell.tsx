@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { AuthActions } from "@/components/auth/auth-actions";
+import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { PrimaryNav } from "@/components/layout/primary-nav";
 import { AdminNav } from "@/components/layout/admin-nav";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
@@ -16,9 +18,15 @@ type AppShellProps = {
 };
 
 export const AppShell = ({ children }: AppShellProps) => {
-  const { user } = useAuth();
+  const { user, isSessionExpired, dismissSessionExpired } = useAuth();
+  const router = useRouter();
   const isAdmin = user?.role === RoleName.ADMIN;
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  const handleSessionLogin = () => {
+    dismissSessionExpired();
+    router.push("/login");
+  };
 
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
@@ -110,6 +118,15 @@ export const AppShell = ({ children }: AppShellProps) => {
           <p>Predictions lock one hour before kickoff.</p>
         </div>
       </footer>
+      <ConfirmModal
+        isOpen={isSessionExpired}
+        title="Session expired"
+        message="Your session has expired. Please login again to continue using the system."
+        confirmLabel="Login"
+        cancelLabel="Stay here"
+        onConfirm={handleSessionLogin}
+        onCancel={dismissSessionExpired}
+      />
     </div>
   );
 };

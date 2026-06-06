@@ -6,6 +6,7 @@ import {
   getRefreshToken,
   setAuthTokens,
 } from "@/lib/auth/token-storage";
+import { notifySessionExpired } from "@/lib/auth/session-events";
 import type {
   ChangePasswordRequest,
   EmailRequest,
@@ -23,6 +24,13 @@ export class MissingAuthTokenError extends Error {
   constructor(message = "Authentication token is missing.") {
     super(message);
     this.name = "MissingAuthTokenError";
+  }
+}
+
+export class SessionExpiredError extends Error {
+  constructor(message = "Authentication session has expired.") {
+    super(message);
+    this.name = "SessionExpiredError";
   }
 }
 
@@ -69,13 +77,17 @@ export const login = async (data: LoginRequest): Promise<TokenResponse> => {
 export const refresh = async (
   refreshToken: string | null = getRefreshToken(),
 ): Promise<TokenResponse> => {
-  const token = requireToken(refreshToken);
+  if (!refreshToken) {
+    clearAuthTokens();
+    notifySessionExpired();
+    throw new SessionExpiredError();
+  }
 
   try {
     const tokens = await apiFetch<TokenResponse, RefreshTokenRequest>(
       "/auth/refresh",
       {
-        body: { refresh_token: token },
+        body: { refresh_token: refreshToken },
         method: "POST",
       },
     );
@@ -85,6 +97,8 @@ export const refresh = async (
   } catch (error) {
     if (error instanceof ApiError && error.status === 401) {
       clearAuthTokens();
+      notifySessionExpired();
+      throw new SessionExpiredError();
     }
 
     throw error;
@@ -140,8 +154,8 @@ export const changePassword = async (
 export const getCurrentUser = async (
   accessToken: string | null = getAccessToken(),
 ): Promise<UserResponse> => {
-  return apiFetch<UserResponse>("/auth/me", {
-    accessToken: requireToken(accessToken),
+  return authenticatedApiFetch<UserResponse>("/auth/me", {
+    accessToken,
     method: "GET",
   });
 };
@@ -172,10 +186,20 @@ export const authenticatedApiFetch = async <TResponse, TBody = unknown>(
     ) {
       const refreshedTokens = await refresh(refreshToken);
 
-      return apiFetch<TResponse, TBody>(path, {
-        ...apiOptions,
-        accessToken: refreshedTokens.access_token,
-      });
+      try {
+        return await apiFetch<TResponse, TBody>(path, {
+          ...apiOptions,
+          accessToken: refreshedTokens.access_token,
+        });
+      } catch (retryError) {
+        if (retryError instanceof ApiError && retryError.status === 401) {
+          clearAuthTokens();
+          notifySessionExpired();
+          throw new SessionExpiredError();
+        }
+
+        throw retryError;
+      }
     }
 
     throw error;

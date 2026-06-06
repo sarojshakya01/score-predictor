@@ -5,7 +5,7 @@ import Image from "next/image";
 import { MatchResponse } from "@/lib/matches";
 
 export default function TeamWithFlag({ match, size, isHomeTeam }: { match: MatchResponse, size: string, isHomeTeam: boolean }) {
-  let [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   if (isHomeTeam) {
     return (<div className={(size === "sm" ? "w-full" : "w-[47%]") + " flex items-center justify-end gap-2"}>

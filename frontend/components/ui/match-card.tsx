@@ -193,9 +193,8 @@ export const SelectableMatchCard = (props: {
       key={match.id}
       className={[
         match.match_locked ? "opacity-70" : "",
-        "border " + (isSelected ? "border-tournament" : "border-zinc-200 dark:border-zinc-700"),
+        "border " + (isSelected ? "border-tournament bg-white dark:bg-zinc-700" : "border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800"),
         "relative overflow-hidden cursor-pointer rounded-md p-4",
-        "bg-zinc-50 dark:bg-zinc-800",
         "shadow-sm dark:shadow-zinc-950",
         className,
       ].join(" ")}

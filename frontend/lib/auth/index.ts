@@ -13,6 +13,7 @@ export {
   resetPassword,
   signup,
   verifyEmail,
+  SessionExpiredError,
 } from "@/lib/auth/auth-service";
 export { hasRole, isAdmin } from "@/lib/auth/authorization";
 export {

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
-import { changePassword, MissingAuthTokenError } from "@/lib/auth";
+import { changePassword, MissingAuthTokenError, SessionExpiredError } from "@/lib/auth";
 import { getErrorMessage } from "@/lib/forms/error-message";
 import { IconKey } from "@/components/ui/icons";
 
@@ -40,6 +40,10 @@ export const ChangePasswordForm = () => {
       setConfirmPassword("");
       setSuccessMessage(response.message);
     } catch (error) {
+      if (error instanceof SessionExpiredError) {
+        return;
+      }
+
       if (error instanceof MissingAuthTokenError) {
         router.replace("/login");
         return;

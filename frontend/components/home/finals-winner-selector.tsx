@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/icons";
 import { getCurrentMatchDay, listFinalMatches, type MatchResponse } from "@/lib/matches";
 import { listAllTeams, type TeamResponse } from "@/lib/teams";
-import { getCurrentUser, isAuthenticated, MissingAuthTokenError, UserResponse } from "@/lib/auth";
+import { getCurrentUser, isAuthenticated, MissingAuthTokenError, SessionExpiredError, UserResponse } from "@/lib/auth";
 import { Modal } from "../ui/modal";
 import { ApiError } from "@/lib/api";
 import { getErrorMessage } from "@/lib/forms/error-message";
@@ -476,6 +476,7 @@ export const FinalsWinnerSelector = () => {
         }
 
         if (
+          error instanceof SessionExpiredError ||
           error instanceof MissingAuthTokenError ||
           (error instanceof ApiError && error.status === 401)
         ) {
@@ -606,6 +607,11 @@ export const FinalsWinnerSelector = () => {
           tone: "success",
         });
       } catch (error) {
+        if (error instanceof SessionExpiredError) {
+          setAuthRequired(true);
+          return;
+        }
+
         if (error instanceof MissingAuthTokenError) {
           setAuthRequired(true);
           showAuthRequiredToast();

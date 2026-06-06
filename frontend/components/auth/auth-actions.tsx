@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { getCurrentUser, isAuthenticated, logout } from "@/lib/auth";
 import type { UserResponse } from "@/lib/auth";
 import { IconChevronDown, IconKey, IconLogin, IconLogout, IconUserPlus } from "@/components/ui/icons";
+import { subscribeToSessionExpired } from "@/lib/auth/session-events";
 
 export const AuthActions = () => {
   const pathname = usePathname();
@@ -14,6 +15,14 @@ export const AuthActions = () => {
   const [user, setUser] = useState<UserResponse | null>(null);
   const [isChecking, setIsChecking] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    return subscribeToSessionExpired(() => {
+      setUser(null);
+      setIsChecking(false);
+      setIsMenuOpen(false);
+    });
+  }, []);
 
   useEffect(() => {
     let isMounted = true;

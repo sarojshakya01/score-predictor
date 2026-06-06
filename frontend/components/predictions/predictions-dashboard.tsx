@@ -7,7 +7,7 @@ import { Modal } from "@/components/ui/modal";
 import { StatusPill } from "@/components/ui/status-pill";
 import { ToastViewport, useToast } from "@/components/ui/toast";
 import { ApiError } from "@/lib/api";
-import { isAuthenticated, MissingAuthTokenError } from "@/lib/auth";
+import { isAuthenticated, MissingAuthTokenError, SessionExpiredError } from "@/lib/auth";
 import { getErrorMessage } from "@/lib/forms/error-message";
 import {
   firstGoalInLabels,
@@ -519,9 +519,12 @@ export const PredictionsDashboard = () => {
     const card = cardStripRef.current.querySelector<HTMLElement>(
       `[data-match-id="${selectedMatchId}"]`,
     );
+
     if (!card) return;
-    card.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-  }, [selectedMatchId]);
+
+    const offset = 200; // px from top to card
+    window.scrollTo({ top: window.scrollY + card.getBoundingClientRect().top - offset, behavior: "smooth" });;
+  }, [selectedMatchId, predictions]);
 
   const applyMatchSelection = useCallback((
     nextMatches: MatchResponse[],
@@ -610,6 +613,7 @@ export const PredictionsDashboard = () => {
         }
 
         if (
+          error instanceof SessionExpiredError ||
           error instanceof MissingAuthTokenError ||
           (error instanceof ApiError && error.status === 401)
         ) {
@@ -744,6 +748,11 @@ export const PredictionsDashboard = () => {
         tone: "success",
       });
     } catch (error) {
+      if (error instanceof SessionExpiredError) {
+        setAuthRequired(true);
+        return;
+      }
+
       if (
         error instanceof MissingAuthTokenError ||
         (error instanceof ApiError && error.status === 401)
@@ -1199,42 +1208,42 @@ export const PredictionsDashboard = () => {
                   "pl-2 pr-3 py-3 text-center"
                 ].join(" ")}>Match</th>
                 <th className={[
-                  "static md:sticky top-0",
+                  "static md:sticky top-0 z-30",
                   "bg-zinc-100 dark:bg-zinc-700",
                   "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700"
                 ].join(" ")}>Score</th>
                 <th className={[
-                  "static md:sticky top-0",
+                  "static md:sticky top-0 z-30",
                   "bg-zinc-100 dark:bg-zinc-700",
                   "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[135px]"
                 ].join(" ")}>First Goal in</th>
                 <th className={[
-                  "static md:sticky top-0",
+                  "static md:sticky top-0 z-30",
                   "bg-zinc-100 dark:bg-zinc-700",
                   "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[145px]"
                 ].join(" ")}>First Score by</th>
                 <th className={[
-                  "static md:sticky top-0",
+                  "static md:sticky top-0 z-30",
                   "bg-zinc-100 dark:bg-zinc-700",
                   "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[135px]"
                 ].join(" ")}>Yellow Card</th>
                 <th className={[
-                  "static md:sticky top-0",
+                  "static md:sticky top-0 z-30",
                   "bg-zinc-100 dark:bg-zinc-700",
                   "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[100px]"
                 ].join(" ")}>Red Card</th>
                 <th className={[
-                  "static md:sticky top-0",
+                  "static md:sticky top-0 z-30",
                   "bg-zinc-100 dark:bg-zinc-700",
                   "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[100px]"
                 ].join(" ")}>Kick-off</th>
                 <th className={[
-                  "static md:sticky top-0",
+                  "static md:sticky top-0 z-30",
                   "bg-zinc-100 dark:bg-zinc-700",
                   "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[100px]"
                 ].join(" ")}>Duration</th>
                 <th className={[
-                  "static md:sticky top-0",
+                  "static md:sticky top-0 z-30",
                   "bg-zinc-100 dark:bg-zinc-700",
                   "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[135px]"
                 ].join(" ")}>Submitted by</th>
