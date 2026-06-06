@@ -810,7 +810,7 @@ export const FinalsWinnerSelector = () => {
                   aria-label={`Select ${team.name} for ${activePlace.title}`}
                   onClick={() => selectTeam(team.id)}
                   className={[
-                    "relative flex min-h-36 w-40 shrink-0 flex-col justify-between rounded-md border bg-zinc-50 p-3 text-left transition hover:-translate-y-0.5 hover:border-tournament-primary hover:bg-white hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-tournament-primary dark:hover:bg-zinc-700",
+                    "relative flex h-36 w-40 shrink-0 flex-col justify-between rounded-md border bg-zinc-50 p-3 text-left transition hover:-translate-y-0.5 hover:border-tournament-primary hover:bg-white hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-tournament-primary dark:hover:bg-zinc-700",
                     (isSelectedForActivePlace || selectedPlace)
                       ? `${activePlace.activeClasses} bg-white dark:bg-zinc-900`
                       : "border-zinc-200",
@@ -904,88 +904,88 @@ export const FinalsWinnerSelector = () => {
       onClose={handleCancelSubmit}
       title="Confirm Prediction"
     >
-        <div className="flex flex-col gap-5">
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            {Object.values(selections).filter(Boolean).length === 3 ? (
-              <>
-                You are about to{" "}
-                <span className="font-semibold text-zinc-900 dark:text-zinc-100">update</span>{" "}
-                your prediction for winners of the tournament.
-              </>
-            ) : (
-              <>
-                You are about to{" "}
-                <span className="font-semibold text-zinc-900 dark:text-zinc-100">submit</span>{" "}
-                your prediction for winners of the tournament. Please review before confirming.
-              </>
-            )}
-          </p>
+      <div className="flex flex-col gap-5">
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          {Object.values(selections).filter(Boolean).length === 3 ? (
+            <>
+              You are about to{" "}
+              <span className="font-semibold text-zinc-900 dark:text-zinc-100">update</span>{" "}
+              your prediction for winners of the tournament.
+            </>
+          ) : (
+            <>
+              You are about to{" "}
+              <span className="font-semibold text-zinc-900 dark:text-zinc-100">submit</span>{" "}
+              your prediction for winners of the tournament. Please review before confirming.
+            </>
+          )}
+        </p>
 
 
-          <div className="rounded-md border border-zinc-200 dark:border-zinc-700 overflow-hidden">
-            <div className="bg-zinc-50 dark:bg-zinc-800 px-4 py-2 border-b border-zinc-200 dark:border-zinc-700">
-              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-                Your Prediction
-              </p>
-            </div>
-            <dl className="grid grid-cols-1 gap-px bg-zinc-200 dark:bg-zinc-700">
-              {Object.entries(selections).map(([key, value]) => {
-                const place = placeDefinitions.find((def) => def.id === Number(key));
-                const team = teamsById.get(Number(value));
-                if (!place || !team) {
-                  return null;
-                }
-                const PlaceIcon = place?.icon;
-                return (
-                  <div key={key} className="grid grid-cols-2 gap-2 bg-white dark:bg-zinc-900 px-4 py-3">
-                    <dt className="text-sm content-center text-zinc-500 dark:text-zinc-400">{place?.title || key}
-                      {PlaceIcon && <PlaceIcon className="h-4 w-4" />}
-                    </dt>
-                    <dd className="flex text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                      <Image
-                        width={20}
-                        height={20}
-                        className="min-h-[19px] w-auto shrink-0 rounded object-cover shadow-sm"
-                        decoding="async"
-                        loading="lazy"
-                        src={team.flag_url || ""}
-                        alt={`${teamsById.get(Number(value))?.name || "Not Selected"} flag`}
-                      />
-                      <div className="min-w-0 px-5">
-                        <p className="truncate font-semibold text-xs">
-                          {teamsById.get(Number(value))?.name || "Not Selected"}
-                        </p>
-                        <p className="mt-0.5 opacity-75 text-xs" >
-                          FIFA #{teamsById.get(Number(value))?.fifa_rank}
-                        </p>
-                      </div>
-                    </dd>
-                  </div>
-                )
-              })}
-            </dl>
+        <div className="rounded-md border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+          <div className="bg-zinc-50 dark:bg-zinc-800 px-4 py-2 border-b border-zinc-200 dark:border-zinc-700">
+            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+              Your Prediction
+            </p>
           </div>
+          <dl className="grid grid-cols-1 gap-px bg-zinc-200 dark:bg-zinc-700">
+            {Object.entries(selections).map(([key, value]) => {
+              const place = placeDefinitions.find((def) => def.id === Number(key));
+              const team = teamsById.get(Number(value));
+              if (!place || !team) {
+                return null;
+              }
+              const PlaceIcon = place?.icon;
+              return (
+                <div key={key} className="grid grid-cols-2 gap-2 bg-white dark:bg-zinc-900 px-4 py-3">
+                  <dt className="text-sm content-center text-zinc-500 dark:text-zinc-400">{place?.title || key}
+                    {PlaceIcon && <PlaceIcon className="h-4 w-4" />}
+                  </dt>
+                  <dd className="flex text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                    <Image
+                      width={20}
+                      height={20}
+                      className="min-h-[19px] w-auto shrink-0 rounded object-cover shadow-sm"
+                      decoding="async"
+                      loading="lazy"
+                      src={team.flag_url || ""}
+                      alt={`${teamsById.get(Number(value))?.name || "Not Selected"} flag`}
+                    />
+                    <div className="min-w-0 px-5">
+                      <p className="truncate font-semibold text-xs">
+                        {teamsById.get(Number(value))?.name || "Not Selected"}
+                      </p>
+                      <p className="mt-0.5 opacity-75 text-xs" >
+                        FIFA #{teamsById.get(Number(value))?.fifa_rank}
+                      </p>
+                    </div>
+                  </dd>
+                </div>
+              )
+            })}
+          </dl>
+        </div>
 
-          <div className="flex justify-end gap-3 pt-1">
-            <button
-              type="button"
-              onClick={handleCancelSubmit}
-              className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleConfirmClick()}
-              disabled={isSubmitting}
-              className="inline-flex h-10 items-center gap-2 justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400"
-            >
-              {isSubmitting
-                ? (isUpdating ? "Updating..." : "Submitting...")
-                : (isUpdating ? "Confirm Update" : "Confirm & Submit")}
-            </button>
-          </div>
-        </div >
+        <div className="flex justify-end gap-3 pt-1">
+          <button
+            type="button"
+            onClick={handleCancelSubmit}
+            className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleConfirmClick()}
+            disabled={isSubmitting}
+            className="inline-flex h-10 items-center gap-2 justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400"
+          >
+            {isSubmitting
+              ? (isUpdating ? "Updating..." : "Submitting...")
+              : (isUpdating ? "Confirm Update" : "Confirm & Submit")}
+          </button>
+        </div>
+      </div >
     </Modal >
   </>
   );
