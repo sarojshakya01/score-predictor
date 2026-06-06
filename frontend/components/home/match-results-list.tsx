@@ -64,7 +64,12 @@ export const MatchResultsList = ({ matches }: { matches: MatchResponse[] }) => {
   }
 
   return (
-    <article className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:shadow-zinc-950">
+    <article className={[
+      "overflow-hidden",
+      "rounded-md border-zinc-200 border dark:border-zinc-700",
+      "shadow-sm dark:shadow-zinc-950",
+      "bg-white dark:bg-zinc-900"
+    ].join(" ")}>
       <div className="flex gap-3 overflow-x-auto p-4">
         {matches.map((match) => {
           const team1Won = match.winner_id === match.team1_id;

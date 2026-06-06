@@ -193,8 +193,10 @@ export const SelectableMatchCard = (props: {
       key={match.id}
       className={[
         match.match_locked ? "opacity-70" : "",
-        isSelected ? "border-tournament" : "border-zinc-200 dark:border-zinc-700",
-        "relative overflow-hidden cursor-pointer rounded-md border bg-white p-4 shadow-sm dark:bg-zinc-900 dark:shadow-zinc-950",
+        "border " + (isSelected ? "border-tournament" : "border-zinc-200 dark:border-zinc-700"),
+        "relative overflow-hidden cursor-pointer rounded-md p-4",
+        "bg-zinc-50 dark:bg-zinc-800",
+        "shadow-sm dark:shadow-zinc-950",
         className,
       ].join(" ")}
       onClick={() => handleCardClick(match)}
@@ -228,8 +230,10 @@ export const MatchCard = (props: { match: MatchResponse; className?: string }) =
     <article
       className={[
         match.match_locked ? "opacity-70 mouse-events-none" : "",
-        "border-zinc-200 dark:border-zinc-700",
-        "relative overflow-hidden rounded-md border bg-white p-4 shadow-sm dark:bg-zinc-900 dark:shadow-zinc-950",
+        "relative overflow-hidden rounded-md p-4",
+        "bg-zinc-50 dark:bg-zinc-800",
+        "border border-zinc-200 dark:border-zinc-700",
+        "shadow-sm dark:shadow-zinc-950",
         className,
       ].join(" ")}
     >

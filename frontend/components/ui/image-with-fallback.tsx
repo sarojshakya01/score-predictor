@@ -28,7 +28,7 @@ export default function ImageWithFallback({
       {...rest}
       src={origSrc}
       alt={alt}
-      className="object-cover object-center w-auto h-[525px] rounded-md"
+      className="object-cover object-center w-auto h-[500px] rounded-md"
       loading="eager"
       onError={() => {
         setImgSrc(fallbackSrc);

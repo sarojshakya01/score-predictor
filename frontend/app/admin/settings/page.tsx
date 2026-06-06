@@ -92,7 +92,7 @@ const AdminSettingsPage = () => {
     };
     void load();
     return () => { isMounted = false; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // search
@@ -227,7 +227,7 @@ const AdminSettingsPage = () => {
     <>
       <ToastViewport onDismiss={dismissToast} toasts={toasts} />
 
-      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
         {/* header */}
         <section className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-zinc-950 dark:text-zinc-50">App Configurations</h2>

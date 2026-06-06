@@ -176,7 +176,7 @@ const Home = async () => {
                 Predict Winners
               </h2>
             </div>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
               Predict your World Cup 2026 winner, runner-up and third place.
             </p>
           </div>
@@ -247,7 +247,12 @@ const Home = async () => {
           </Link>
         </div>
         {matches.length > 0 ? (
-          <div className="flex gap-4 overflow-x-auto pb-2">
+          <div className={[
+            "flex gap-4 overflow-x-auto p-4 overflow-hidden rounded-md",
+            "border border-zinc-200 dark:border-zinc-700",
+            "shadow-sm dark:shadow-zinc-950",
+            "bg-white dark:bg-zinc-900"
+          ].join(" ")}>
             {matches.map((match) => (
               <MatchCard
                 key={match.id}

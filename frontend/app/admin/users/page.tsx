@@ -84,7 +84,7 @@ const AdminUsersPage = () => {
     return () => {
       isMounted = false;
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filteredUsers = useMemo(() => {
@@ -218,7 +218,7 @@ const AdminUsersPage = () => {
     <>
       <ToastViewport onDismiss={dismissToast} toasts={toasts} />
 
-      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+      <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-5 sm:px-6 lg:px-8">
         <section className="flex flex-wrap items-center justify-between gap-3">
           <div><h2 className="text-zinc-950 dark:text-zinc-50">Active Users</h2></div>
           <button

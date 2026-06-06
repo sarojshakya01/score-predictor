@@ -928,88 +928,97 @@ export const PredictionsDashboard = () => {
     isSubmitting || authRequired || !selectedMatch || selectedStatus === "Locked";
   const hasAnyPredictedGoals = hasAnyGoalPrediction(formState);
 
-  const inputCls = "mt-1 h-11 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-emerald-900";
-  const selectCls = "mt-1 h-11 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:disabled:bg-zinc-700 dark:disabled:text-zinc-500 dark:focus:ring-emerald-900";
+  const inputCls = "mt-1 h-10 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-emerald-900";
+  const selectCls = "mt-1 h-10 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:disabled:bg-zinc-700 dark:disabled:text-zinc-500 dark:focus:ring-emerald-900";
   const labelTextCls = "flex items-center gap-2 text-sm font-medium text-zinc-700 dark:text-zinc-300";
 
   return (
     <>
       <ToastViewport onDismiss={dismissToast} toasts={toasts} />
-      <section className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
-            {matchListTitle}
-          </h2>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            aria-label="Previous match day"
-            disabled={isLoading || previousMatchDay === null}
-            onClick={() => {
-              if (previousMatchDay !== null) {
-                void handleMatchDayChange(previousMatchDay);
-              }
-            }}
-            className="grid h-10 w-10 place-items-center cursor-pointer rounded-md border border-zinc-300 dark:bg-zinc-900 dark:shadow-zinc-950 text-lg font-semibold text-zinc-700 transition hover:border-tournament-primary hover:text-emerald-800 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-tournament-primary dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-600"
-          >
-            <IconChevronLeft />
-          </button>
-          <span className="min-w-28 text-center text-sm font-medium text-zinc-600 dark:text-zinc-400">
-            {referenceMatchDay === null
-              ? "Match day"
-              : `Match Day ${referenceMatchDay}`}
-          </span>
-          <button
-            type="button"
-            aria-label="Next match day"
-            disabled={isLoading || nextMatchDay === null}
-            onClick={() => {
-              if (nextMatchDay !== null) {
-                void handleMatchDayChange(nextMatchDay);
-              }
-            }}
-            className="grid h-10 w-10 place-items-center cursor-pointer rounded-md border border-zinc-300 dark:bg-zinc-900 dark:shadow-zinc-950 text-lg font-semibold text-zinc-700 transition hover:border-tournament-primary hover:text-emerald-800 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-tournament-primary dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-600"
-          >
-            <IconChevronRight />
-          </button>
-        </div>
-      </section>
 
       {/* Card strip — ref attached so scroll-into-view can target it */}
-      <section ref={cardStripRef} className="flex gap-4 overflow-x-auto pb-2">
-        {isLoading ? (
-          Array.from({ length: 3 }, (_, index) => (
-            <div
-              key={index}
-              className="h-57 w-[280px] shrink-0 animate-pulse rounded-md border border-zinc-200 shadow-sm dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-zinc-950 sm:w-80 lg:w-[360px]"
-            />
-          ))
-        ) : matches.length > 0 ? (
-          matches.map((match) => {
-            const isSelected = match.id === selectedMatchId;
-            const isSaved = predictions.some(
-              (prediction) => prediction.match_id === match.id,
-            );
-
-            return (
-              <SelectableMatchCard
-                key={match.id}
-                match={match}
-                isSaved={isSaved}
-                isPredictionAvailable={predictions.length > 0}
-                isSelected={isSelected}
-                handleCardClick={handleCardClick}
-                className="h-57 w-[280px] shrink-0 sm:w-80 lg:w-[360px]"
-                data-match-id={match.id}
-              />
-            );
-          })
-        ) : (
-          <div className="w-full rounded-md border border-zinc-200 p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:shadow-zinc-950">
-            No upcoming matches are available.
+      <section ref={cardStripRef} >
+        <div className="mb-4 flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
+              {matchListTitle}
+            </h2>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">Select match day and match to make your predictions for the match.</p>
           </div>
-        )}
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="Previous match day"
+              disabled={isLoading || previousMatchDay === null}
+              onClick={() => {
+                if (previousMatchDay !== null) {
+                  void handleMatchDayChange(previousMatchDay);
+                }
+              }}
+              className="grid h-10 w-10 place-items-center cursor-pointer rounded-md border border-zinc-300 dark:bg-zinc-900 dark:shadow-zinc-950 text-lg font-semibold text-zinc-700 transition hover:border-tournament-primary hover:text-emerald-800 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-tournament-primary dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-600"
+            >
+              <IconChevronLeft className="h-5 w-5" />
+            </button>
+            <span className="min-w-28 text-center text-sm font-medium text-zinc-600 dark:text-zinc-400">
+              {referenceMatchDay === null
+                ? "Match day"
+                : `Match Day ${referenceMatchDay}`}
+            </span>
+            <button
+              type="button"
+              aria-label="Next match day"
+              disabled={isLoading || nextMatchDay === null}
+              onClick={() => {
+                if (nextMatchDay !== null) {
+                  void handleMatchDayChange(nextMatchDay);
+                }
+              }}
+              className="grid h-10 w-10 place-items-center cursor-pointer rounded-md border border-zinc-300 dark:bg-zinc-900 dark:shadow-zinc-950 text-lg font-semibold text-zinc-700 transition hover:border-tournament-primary hover:text-emerald-800 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-tournament-primary dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-600"
+            >
+              <IconChevronRight className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+        <article className={[
+          "flex gap-4 overflow-x-auto p-4 overflow-hidden rounded-md",
+          "border border-zinc-200 dark:border-zinc-700",
+          "shadow-sm dark:shadow-zinc-950",
+          "bg-white dark:bg-zinc-900"
+        ].join(" ")}>
+          {isLoading ? (
+            Array.from({ length: 3 }, (_, index) => (
+              <div
+                key={index}
+                className="h-55 w-[280px] shrink-0 animate-pulse rounded-md border border-zinc-200 shadow-sm dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-zinc-950 sm:w-80 lg:w-[360px]"
+              />
+            ))
+          ) : matches.length > 0 ? (
+            matches.map((match) => {
+              const isSelected = match.id === selectedMatchId;
+              const isSaved = predictions.some(
+                (prediction) => prediction.match_id === match.id,
+              );
+
+              return (
+                <SelectableMatchCard
+                  key={match.id}
+                  match={match}
+                  isSaved={isSaved}
+                  isPredictionAvailable={predictions.length > 0}
+                  isSelected={isSelected}
+                  handleCardClick={handleCardClick}
+                  className="h-55 w-[280px] shrink-0 sm:w-80 lg:w-[360px]"
+                  data-match-id={match.id}
+                />
+              );
+            })
+          ) : (
+            <div className="w-full rounded-md border border-zinc-200 p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:shadow-zinc-950">
+              No upcoming matches are available.
+            </div>
+          )}
+        </article>
       </section >
 
       {loadError ? (
@@ -1019,11 +1028,11 @@ export const PredictionsDashboard = () => {
       ) : null}
 
       <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
-        <div className="hidden lg:flex w-40 h-[525px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48">
+        <div className="hidden lg:flex w-40 h-[500px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48">
           <ImageWithFallback width={530} height={530} src={"/images/players/" + selectedMatch?.team1_name_short?.toLowerCase() + ".png"} alt={selectedMatch?.team1_name || "Captain Image"} />
         </div>
         <form
-          className={(selectedStatus === "Locked" ? "opacity-50 pointer-events-none " : "") + "relative w-full lg:max-w-2xl rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 p-4 sm:p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:bg-black"}
+          className={(selectedStatus === "Locked" ? "opacity-50 pointer-events-none " : "") + "relative w-full lg:max-w-2xl rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 p-3 sm:p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:bg-black"}
           onSubmit={handleSubmit}
         >
           <div className="absolute inset-0 bg-[url('/images/logo-tournament.avif')] bg-center bg-no-repeat bg-cover opacity-[0.03] pointer-events-none bg-prediction"></div>
@@ -1162,7 +1171,7 @@ export const PredictionsDashboard = () => {
             </button>
           </div>
         </form>
-        <div className="hidden lg:flex w-40 h-[525px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48">
+        <div className="hidden lg:flex w-40 h-[500px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48">
           <ImageWithFallback width={530} height={530} src={"/images/players/" + selectedMatch?.team2_name_short?.toLowerCase() + ".png"} alt={selectedMatch?.team2_name || "Captain Image"} />
         </div>
       </section >

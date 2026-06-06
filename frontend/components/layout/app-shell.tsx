@@ -26,7 +26,7 @@ export const AppShell = ({ children }: AppShellProps) => {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
           {/* ── Top bar ─────────────────────────────────────── */}
-          <div className="flex h-16 items-center justify-between gap-3">
+          <div className="flex h-14 items-center justify-between gap-3">
             {/* Logo */}
             <Link
               href={isAdmin ? "/admin" : "/"}
