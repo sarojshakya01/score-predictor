@@ -817,7 +817,7 @@ const RaceChart = ({ frames, onUserClick }: { frames: LeaderboardRaceFrameRespon
             <span className="pl-3 dark:text-zinc-400 text-right">Match Pts</span>
           </div>
         </div>
-        <div className="max-h-[30rem] divide-y divide-zinc-100 overflow-y-auto dark:divide-zinc-800">
+        <div className="max-h-[35rem] divide-y divide-zinc-100 overflow-y-auto dark:divide-zinc-800">
           {frame.standings.map((standing) => (
             <RaceChartRow
               key={standing.user_id}
@@ -965,7 +965,7 @@ export const LeaderboardDashboard = () => {
               Showing {rows.length} of {leaderboard?.total ?? 0} ranked users
             </p>
           </div>
-          <div className="overflow-x-auto">
+          <div className="overflow-auto max-h-[35rem]">
             <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
               <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800/70 dark:text-zinc-400">
                 <tr>
