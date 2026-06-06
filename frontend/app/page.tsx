@@ -257,7 +257,7 @@ const Home = async () => {
               <MatchCard
                 key={match.id}
                 match={match}
-                className="w-[280px] shrink-0 sm:w-80 lg:w-[360px]"
+                className="w-[280px] h-60 shrink-0 sm:w-80 lg:w-[360px]"
               />
             ))}
           </div>

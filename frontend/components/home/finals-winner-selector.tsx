@@ -794,7 +794,7 @@ export const FinalsWinnerSelector = () => {
         </div>
 
         {filteredTeams.length > 0 ? (
-          <div className="flex gap-3 overflow-x-auto p-2">
+          <div className="flex gap-3 overflow-x-auto overflow-y-hidden p-2">
             {filteredTeams.map((team) => {
               const selectedPlace = selectedPlaceByTeamId.get(team.id);
               const isSelectedForActivePlace =
