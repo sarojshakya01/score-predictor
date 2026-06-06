@@ -523,7 +523,8 @@ export const PredictionsDashboard = () => {
     if (!card) return;
 
     const offset = 200; // px from top to card
-    window.scrollTo({ top: window.scrollY + card.getBoundingClientRect().top - offset, behavior: "smooth" });;
+    window.scrollTo({ top: window.scrollY + card.getBoundingClientRect().top - offset, behavior: "smooth" });
+    card.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
   }, [selectedMatchId, predictions]);
 
   const applyMatchSelection = useCallback((

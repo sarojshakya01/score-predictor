@@ -437,7 +437,7 @@ const UserPointsDetailModal = ({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800">
-                  {[...data.items, ...data.items, ...data.items].map((item, idx) => (
+                  {data.items.map((item, idx) => (
                     <ScoreRow key={item.match_id} index={idx} item={item} />
                   ))}
                 </tbody>
