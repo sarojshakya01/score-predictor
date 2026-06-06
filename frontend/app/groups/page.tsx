@@ -90,7 +90,7 @@ const GroupsPage = () => {
                             <span className="inline-flex items-center justify-center rounded border border-zinc-200 bg-zinc-50 text-xs font-semibold text-zinc-600 relative dark:border-zinc-700 dark:bg-zinc-800">
                               <Image width={30} height={30} alt={team.fifa_code} className="object-cover rounded min-h-[25px] w-auto" src={team.flag_url} />
                             </span>
-                            <span>{team.team}</span>
+                            <span className="xl:truncate xl:max-w-[140px]">{team.team}</span>
                           </span>
                         </td>
                         <td className="px-3 py-4 text-right text-zinc-700 dark:text-zinc-300">{team.fifa_rank}</td>

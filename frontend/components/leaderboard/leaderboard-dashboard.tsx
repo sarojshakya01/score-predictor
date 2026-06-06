@@ -989,15 +989,51 @@ export const LeaderboardDashboard = () => {
                     "border-b border-zinc-200 dark:border-zinc-700",
                     "px-3 py-3"
                   ].join(" ")}>Total</th>
-                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right">Score</th>
-                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[105px]">Goal Diff</th>
-                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[145px]">First Score In</th>
-                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[145px]">First Score By</th>
-                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[120px]">Yello Card</th>
-                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[100px]">Red Card</th>
-                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right">Duration</th>
-                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[100px]">Kick-off</th>
-                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[150px]">Predicted/Total</th>
+                  <th className={[
+                    "static md:sticky top-0",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right"
+                  ].join(" ")}>Score</th>
+                  <th className={[
+                    "static md:sticky top-0",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[105px]"
+                  ].join(" ")}>Goal Diff</th>
+                  <th className={[
+                    "static md:sticky top-0",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[145px]"
+                  ].join(" ")}>First Score In</th>
+                  <th className={[
+                    "static md:sticky top-0",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[145px]"
+                  ].join(" ")}>First Score By</th>
+                  <th className={[
+                    "static md:sticky top-0",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[120px]"
+                  ].join(" ")}>Yello Card</th>
+                  <th className={[
+                    "static md:sticky top-0",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[100px]"
+                  ].join(" ")}>Red Card</th>
+                  <th className={[
+                    "static md:sticky top-0",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right"
+                  ].join(" ")}>Duration</th>
+                  <th className={[
+                    "static md:sticky top-0",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[100px]"
+                  ].join(" ")}>Kick-off</th>
+                  <th className={[
+                    "static md:sticky top-0",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[150px]"
+                  ].join(" ")}>Predicted/Total</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">

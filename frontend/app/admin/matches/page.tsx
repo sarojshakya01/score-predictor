@@ -436,7 +436,7 @@ const AdminMatchesPage = () => {
                 : `${filteredMatches.length} of ${matches.length} match${matches.length !== 1 ? "es" : ""} match "${searchQuery}"`}
             </div>
           )}
-          <div className="overflow-x-auto">
+          <div className="overflow-auto max-h-[40rem]">
             <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
               <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
                 <tr>
@@ -453,16 +453,56 @@ const AdminMatchesPage = () => {
                     "border-b border-zinc-200 dark:border-zinc-700",
                     "px-3 py-3"
                   ].join(" ")} colSpan={3}>Match</th>
-                  <th className="px-3 py-3 border-b border-zinc-200 dark:border-zinc-700">Day</th>
-                  <th className="px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[140px]">Time</th>
-                  <th className="px-3 py-3 border-b border-zinc-200 dark:border-zinc-700">Score</th>
-                  <th className="px-3 py-3 border-b border-zinc-200 dark:border-zinc-700">Winner</th>
-                  <th className="px-3 py-3 border-b border-zinc-200 dark:border-zinc-700">Kickoff Team</th>
-                  <th className="px-3 py-3 border-b border-zinc-200 dark:border-zinc-700">First Goal in</th>
-                  <th className="px-3 py-3 border-b border-zinc-200 dark:border-zinc-700">First Score by</th>
-                  <th className="px-3 py-3 border-b border-zinc-200 dark:border-zinc-700">Match Duration</th>
-                  <th className="px-3 py-3 border-b border-zinc-200 dark:border-zinc-700">Status</th>
-                  <th className="px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 text-right">Actions</th>
+                  <th className={[
+                    "static md:sticky top-0",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700"
+                  ].join(" ")}>Day</th>
+                  <th className={[
+                    "static md:sticky top-0",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[140px]"
+                  ].join(" ")}>Time</th>
+                  <th className={[
+                    "static md:sticky top-0",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700"
+                  ].join(" ")}>Score</th>
+                  <th className={[
+                    "static md:sticky top-0",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700"
+                  ].join(" ")}>Winner</th>
+                  <th className={[
+                    "static md:sticky top-0",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[150px]"
+                  ].join(" ")}>Kickoff Team</th>
+                  <th className={[
+                    "static md:sticky top-0",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[140px]"
+                  ].join(" ")}>First Goal in</th>
+                  <th className={[
+                    "static md:sticky top-0",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[145px]"
+                  ].join(" ")}>First Score by</th>
+                  <th className={[
+                    "static md:sticky top-0",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[100px]"
+                  ].join(" ")}>Duration</th>
+                  <th className={[
+                    "static md:sticky top-0",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700"
+                  ].join(" ")}>Status</th>
+                  <th className={[
+                    "static md:sticky top-0",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 text-right"
+                  ].join(" ")}>Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">

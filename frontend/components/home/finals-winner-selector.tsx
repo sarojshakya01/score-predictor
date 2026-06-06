@@ -529,7 +529,7 @@ export const FinalsWinnerSelector = () => {
 
   const predictionLocked = currentMatchDay ? currentMatchDay > 7 : false;
   const predictionStatus = !currentMatchDay ? "Open" : predictionLocked ? "Locked" : currentMatchDay >= 5 ? "Locking soon" : "Open";
-  const ActivePlaceIcon = activePlace.icon;
+  const IconActivePlace = activePlace.icon;
 
   const selectTeam = (teamId: number) => {
     if (predictionLocked) {
@@ -641,7 +641,7 @@ export const FinalsWinnerSelector = () => {
               activePlace.iconClasses,
             ].join(" ")}
           >
-            <ActivePlaceIcon className="h-5 w-5" />
+            <IconActivePlace className="h-5 w-5" />
           </span>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">
@@ -710,7 +710,7 @@ export const FinalsWinnerSelector = () => {
       <div className="flex flex-col gap-3 p-6 sm:flex-row sm:items-end sm:justify-center sm:gap-4 sm:px-10 items-center">
         {placeDefinitions.map((place) => {
           const selectedTeam = selectedTeams[place.id];
-          const PlaceIcon = place.icon;
+          const IconPlace = place.icon;
           const isActive = activePlace.id === place.id;
 
           return (
@@ -736,7 +736,7 @@ export const FinalsWinnerSelector = () => {
                       place.iconClasses,
                     ].join(" ")}
                   >
-                    <PlaceIcon className={place.scale.iconSvg} />
+                    <IconPlace className={place.scale.iconSvg} />
                   </span>
                   <div className="min-w-0">
                     <p className={`${place.scale.rankText} font-semibold uppercase tracking-[0.12em]`}>
@@ -747,7 +747,10 @@ export const FinalsWinnerSelector = () => {
                     </p>
                   </div>
                 </div>
-                {selectedTeam ? <IconCheck className={`${place.scale.checkIcon} shrink-0`} /> : null}
+
+                {selectedTeam ? <span className="inline-flex items-center rounded-full text-xs font-medium bg-tournament-secondary text-white">
+                  <IconCheck className={`${place.scale.checkIcon} shrink-0`} />
+                </span> : null}
               </div>
 
               <div className="mt-3 flex min-w-0 items-center gap-2">
@@ -785,7 +788,7 @@ export const FinalsWinnerSelector = () => {
       <div className="border-t border-zinc-200 px-4 pb-4 pt-3 dark:border-zinc-800">
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-            <ActivePlaceIcon className="h-4 w-4" />
+            <IconActivePlace className="h-4 w-4" />
             {predictionLocked ? <span>Teams</span> : <span>Select your team</span>}
           </div>
           <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
@@ -799,7 +802,7 @@ export const FinalsWinnerSelector = () => {
               const selectedPlace = selectedPlaceByTeamId.get(team.id);
               const isSelectedForActivePlace =
                 selections[activePlace.id] === team.id;
-              const TeamPlaceIcon = selectedPlace?.icon;
+              const IconTeamPlace = selectedPlace?.icon;
 
               return (
                 <button
@@ -826,14 +829,14 @@ export const FinalsWinnerSelector = () => {
                       src={team.flag_url}
                       alt={`${team.name} flag`}
                     />
-                    {selectedPlace && TeamPlaceIcon ? (
+                    {selectedPlace && IconTeamPlace ? (
                       <span
                         className={[
                           "inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[11px] font-semibold",
                           selectedPlace.badgeClasses,
                         ].join(" ")}
                       >
-                        <TeamPlaceIcon className="h-3.5 w-3.5" />
+                        <IconTeamPlace className="h-3.5 w-3.5" />
                         {selectedPlace.label}
                       </span>
                     ) : (
@@ -935,11 +938,11 @@ export const FinalsWinnerSelector = () => {
               if (!place || !team) {
                 return null;
               }
-              const PlaceIcon = place?.icon;
+              const IconPlace = place?.icon;
               return (
                 <div key={key} className="grid grid-cols-2 gap-2 bg-white dark:bg-zinc-900 px-4 py-3">
                   <dt className="text-sm content-center text-zinc-500 dark:text-zinc-400">{place?.title || key}
-                    {PlaceIcon && <PlaceIcon className="h-4 w-4" />}
+                    {IconPlace && <IconPlace className="h-4 w-4" />}
                   </dt>
                   <dd className="flex text-sm font-medium text-zinc-900 dark:text-zinc-100">
                     <Image
