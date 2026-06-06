@@ -135,19 +135,34 @@ const ScoreRow = ({
   return (
     <tr className="group border-b border-zinc-100 dark:border-zinc-800 transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/50">
       {/* S.N. */}
-      <td className="whitespace-nowrap px-3 py-2.5 text-center text-xs font-medium text-zinc-400 dark:text-zinc-500">
+      <td className={[
+        "static md:sticky left-0 z-20 w-[70px] min-w-[70px] max-w-[70px]",
+        "bg-white dark:bg-zinc-950",
+        "border-b border-zinc-200 dark:border-zinc-800",
+        "whitespace-nowrap pl-5 pr-3 py-2.5 text-center text-xs font-medium text-zinc-400 dark:text-zinc-500"
+      ].join(" ")}>
         {index + 1}
       </td>
 
       {/* Match */}
-      <td className="min-w-[10rem] px-3 py-2.5">
-        <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+      <td className={[
+        "static md:sticky left-[70px] z-20 w-[285px] min-w-[285px] max-w-[285px]",
+        "bg-white dark:bg-zinc-950",
+        "border-b border-zinc-200 dark:border-zinc-800",
+        "px-3 py-2.5 text-center"
+      ].join(" ")}>
+        <p className={"text-sm font-semibold text-zinc-900 dark:text-zinc-100"}>
           {item.team1_name} <span className="text-zinc-400 dark:text-zinc-500">vs</span> {item.team2_name}
         </p>
       </td>
 
       {/* Total */}
-      <td className="whitespace-nowrap px-3 py-2.5 text-center">
+      <td className={[
+        "static md:sticky left-[356px] z-20 w-[80px] min-w-[80px] max-w-[80px]",
+        "bg-white dark:bg-zinc-950",
+        "border-b border-zinc-200 dark:border-zinc-800",
+        "whitespace-nowrap px-3 py-2.5 text-center"
+      ].join(" ")}>
         <span
           className={`inline-flex h-8 w-12 items-center justify-center rounded-lg text-sm font-bold ${totalColor(item.total_points)}`}
         >
@@ -275,7 +290,7 @@ const UserPointsDetailModal = ({
       {/* Loading skeleton */}
       {isLoading && (
         <div className="flex flex-col gap-3 py-2">
-          <div className="h-16 animate-pulse rounded-xl bg-zinc-100 dark:bg-zinc-800" />
+          <div className="h-16 animate-pulse rounded-lg bg-zinc-100 dark:bg-zinc-800" />
           {[1, 2, 3].map((i) => (
             <div key={i} className="h-12 animate-pulse rounded-lg bg-zinc-100 dark:bg-zinc-800" />
           ))}
@@ -284,7 +299,7 @@ const UserPointsDetailModal = ({
 
       {/* Error */}
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
           {error}
         </div>
       )}
@@ -327,7 +342,7 @@ const UserPointsDetailModal = ({
             ].map(({ label, value, color }) => (
               <div
                 key={label}
-                className="flex flex-col gap-1 rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800/50"
+                className="flex flex-col gap-1 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800/50"
               >
                 <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
                   {label}
@@ -339,30 +354,45 @@ const UserPointsDetailModal = ({
 
           {/* Empty state */}
           {data.items.length === 0 ? (
-            <div className="rounded-xl border border-zinc-200 bg-zinc-50 py-12 text-center dark:border-zinc-700 dark:bg-zinc-800/50">
+            <div className="rounded-lg border border-zinc-200 bg-zinc-50 py-12 text-center dark:border-zinc-700 dark:bg-zinc-800/50">
               <p className="text-sm text-zinc-500 dark:text-zinc-400">No predictions on completed matches yet.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-zinc-200 dark:border-zinc-700">
+            <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700 pb-2">
               <table className="min-w-max w-full border-collapse text-sm">
                 <thead>
                   {/* Group row */}
                   <tr className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/70">
                     <th
                       rowSpan={2}
-                      className="whitespace-nowrap border-r border-zinc-200 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:border-zinc-700 dark:text-zinc-500"
+                      className={[
+                        "static md:sticky left-0 top-0 z-40 w-[70px] min-w-[70px] max-w-[70px]",
+                        "bg-zinc-100 dark:bg-zinc-900",
+                        "border-b border-zinc-200 dark:border-zinc-700",
+                        "whitespace-nowrap pl-5 pr-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500"
+                      ].join(" ")}
                     >
                       S.N.
                     </th>
                     <th
                       rowSpan={2}
-                      className="whitespace-nowrap border-r border-zinc-200 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:border-zinc-700 dark:text-zinc-400"
+                      className={[
+                        "static md:sticky left-[70px] top-0 z-20 w-[285px] min-w-[285px] max-w-[285px]",
+                        "bg-zinc-100 dark:bg-zinc-900",
+                        "border-b border-zinc-200 dark:border-zinc-700",
+                        "whitespace-nowrap px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500"
+                      ].join(" ")}
                     >
                       Match
                     </th>
                     <th
                       rowSpan={2}
-                      className="whitespace-nowrap border-r border-zinc-200 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-500 dark:border-zinc-700 dark:text-zinc-400"
+                      className={[
+                        "static md:sticky left-[356px] z-20 w-[80px] min-w-[80px] max-w-[80px]",
+                        "bg-zinc-100 dark:bg-zinc-900",
+                        "border-b border-zinc-200 dark:border-zinc-700",
+                        "whitespace-nowrap px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500"
+                      ].join(" ")}
                     >
                       Total
                     </th>
@@ -370,7 +400,12 @@ const UserPointsDetailModal = ({
                       <th
                         key={label}
                         colSpan={colSpan}
-                        className={`border-r border-zinc-200 dark:border-zinc-700 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider last:border-r-0 ${color}`}
+                        className={[
+                          "border-r border-zinc-200 dark:border-zinc-700",
+                          "px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider",
+                          "last:border-r-0",
+                          color
+                        ].join(" ")}
                       >
                         {label}
                       </th>
@@ -382,7 +417,10 @@ const UserPointsDetailModal = ({
                       (["Actual", "Predicted", "Pts"] as const).map((sub) => (
                         <th
                           key={`${label}-${sub}`}
-                          className={`whitespace-nowrap px-3 py-1.5 text-center text-[11px] font-medium tracking-wide text-zinc-400 dark:text-zinc-500 ${sub === "Pts" ? "border-r border-zinc-200 dark:border-zinc-700" : ""}`}
+                          className={[
+                            "whitespace-nowrap px-3 py-1.5 text-center text-[11px] font-medium tracking-wide text-zinc-400 dark:text-zinc-500",
+                            sub === "Pts" ? "border-r border-zinc-200 dark:border-zinc-700" : ""
+                          ].join(" ")}
                         >
                           {sub}
                         </th>
@@ -399,46 +437,98 @@ const UserPointsDetailModal = ({
                 <tfoot className="border-t-2 border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/70">
                   {data.items.some((item) => item.match_stage === "F") && (<>
                     <tr>
-                      <td colSpan={3} className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                      <td colSpan={2} className={[
+                        "static md:sticky left-0 top-0 z-40 w-[345px] min-w-[345px] max-w-[345px]",
+                        "bg-white dark:bg-zinc-950",
+                        "border-b border-zinc-200 dark:border-zinc-800",
+                        "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+                      ].join(" ")}>
                         Winner Prediction Points
                       </td>
                       {/* Score pts */}
-                      <td colSpan={2} />
-                      <PtsCell
-                        points={data.winner_points}
-                      />
-                      <td colSpan={21} />
+                      <td className={[
+                        "static md:sticky left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
+                        "bg-white dark:bg-zinc-950",
+                        "border-b border-zinc-200 dark:border-zinc-800",
+                        "whitespace-nowrap px-3 py-2.5 text-center"
+                      ].join(" ")}>
+                        <span
+                          className={`inline-flex h-8 w-12 items-center justify-center rounded-lg text-sm font-bold ${totalColor(data.total_points)}`}
+                        >
+                          {data.winner_points}
+                        </span>
+                      </td>
+                      <td colSpan={24} />
                     </tr>
                     <tr>
-                      <td colSpan={3} className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                      <td colSpan={2} className={[
+                        "static md:sticky left-0 top-0 z-40 w-[356px] min-w-[356px] max-w-[356px]",
+                        "bg-white dark:bg-zinc-950",
+                        "border-b border-zinc-200 dark:border-zinc-800",
+                        "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+                      ].join(" ")}>
                         Runner up Prediction Points
                       </td>
                       {/* Score pts */}
-                      <td colSpan={2} />
-                      <PtsCell
-                        points={data.runner_up_points}
-                      />
-                      <td colSpan={21} />
-                    </tr></>)}
-
-                  {data.items.some((item) => item.match_stage === "3P") && (<>
-                    <tr>
-                      <td colSpan={3} className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                        Third Place Prediction Points
+                      <td className={[
+                        "static md:sticky left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
+                        "bg-white dark:bg-zinc-950",
+                        "border-b border-zinc-200 dark:border-zinc-800",
+                        "whitespace-nowrap px-3 py-2.5 text-center"
+                      ].join(" ")}>
+                        <span
+                          className={`inline-flex h-8 w-12 items-center justify-center rounded-lg text-sm font-bold ${totalColor(data.total_points)}`}
+                        >
+                          {data.runner_up_points}
+                        </span>
                       </td>
-                      {/* Score pts */}
-                      <td colSpan={2} />
-                      <PtsCell
-                        points={data.third_place_points}
-                      />
-                      <td colSpan={21} />
-                    </tr></>)}
+                      <td colSpan={24} />
+                    </tr>
+                  </>)}
+
+                  {data.items.some((item) => item.match_stage === "3P") && (
+                    <>
+                      <tr>
+                        <td colSpan={2} className={[
+                          "static md:sticky left-0 top-0 z-40 w-[356px] min-w-[356px] max-w-[356px]",
+                          "bg-white dark:bg-zinc-950",
+                          "border-b border-zinc-200 dark:border-zinc-800",
+                          "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+                        ].join(" ")}>
+                          Third Place Prediction Points
+                        </td>
+                        {/* Score pts */}
+                        <td className={[
+                          "static md:sticky left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
+                          "bg-white dark:bg-zinc-950",
+                          "border-b border-zinc-200 dark:border-zinc-800",
+                          "whitespace-nowrap px-3 py-2.5 text-center"
+                        ].join(" ")}>
+                          <span
+                            className={`inline-flex h-8 w-12 items-center justify-center rounded-lg text-sm font-bold ${totalColor(data.total_points)}`}
+                          >
+                            {data.third_place_points}
+                          </span>
+                        </td>
+                        <td colSpan={24} />
+                      </tr>
+                    </>)}
                   <tr>
-                    <td colSpan={2} className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                    <td colSpan={2} className={[
+                      "static md:sticky left-0 top-0 z-40 w-[356px] min-w-[356px] max-w-[356px]",
+                      "bg-white dark:bg-zinc-950",
+                      "border-b border-zinc-200 dark:border-zinc-800",
+                      "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+                    ].join(" ")}>
                       Totals
                     </td>
                     {/* Total pts */}
-                    <td className="whitespace-nowrap px-3 py-2.5 text-center">
+                    <td className={[
+                      "static md:sticky left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
+                      "bg-white dark:bg-zinc-950",
+                      "border-b border-zinc-200 dark:border-zinc-800",
+                      "whitespace-nowrap px-3 py-2.5 text-center"
+                    ].join(" ")}>
                       <span
                         className={`inline-flex h-8 w-12 items-center justify-center rounded-lg text-sm font-bold ${totalColor(data.total_points)}`}
                       >
@@ -509,8 +599,18 @@ const LeaderboardRow = ({
 }) => {
   return (
     <tr className="dark:hover:bg-zinc-800/40 transition-colors">
-      <td className="px-5 py-4 font-semibold text-zinc-950 dark:text-zinc-100">{row.rank}</td>
-      <td className="px-5 py-4">
+      <td className={[
+        "static md:sticky left-0 z-20 w-16 min-w-[75px] max-w-[64px]",
+        "bg-white dark:bg-zinc-950",
+        "border-b border-zinc-200 dark:border-zinc-800",
+        "pl-5 py-3 py-4 font-semibold text-zinc-950 dark:text-zinc-100"
+      ].join(" ")}>{row.rank}</td>
+      <td className={[
+        "static md:sticky left-[75px] z-20 w-[150px] min-w-[150px] max-w-[150px]",
+        "bg-white dark:bg-zinc-950",
+        "border-b border-zinc-200 dark:border-zinc-800",
+        "px-3 py-3 font-medium text-zinc-950 dark:text-zinc-50"
+      ].join(" ")}>
         <button
           type="button"
           onClick={() => onUserClick(row.user_id, row.name)}
@@ -519,28 +619,33 @@ const LeaderboardRow = ({
           {row.name}
         </button>
       </td>
-      <td className="px-5 py-4 font-semibold text-zinc-950 dark:text-zinc-100">
+      <td className={[
+        "static md:sticky left-[225px] z-20 w-[90px] min-w-[90px] max-w-[90px]",
+        "bg-white dark:bg-zinc-950",
+        "border-b border-zinc-200 dark:border-zinc-800",
+        "px-3 py-3 font-medium text-zinc-950 dark:text-zinc-50 text-right"
+      ].join(" ")}>
         {row.total_points}
       </td>
-      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.score_points}</td>
-      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.goal_difference_points}</td>
-      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.first_goal_in_points}</td>
-      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.first_scoring_team_points}</td>
-      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.yellow_card_points}</td>
-      {/* <td className="px-5 py-4">
+      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">{row.score_points}</td>
+      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">{row.goal_difference_points}</td>
+      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">{row.first_goal_in_points}</td>
+      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">{row.first_scoring_team_points}</td>
+      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">{row.yellow_card_points}</td>
+      {/* <td className="px-3 py-4">
         <StatusPill tone={"yellow"}>
           {formatSignedNumber(row.red_card_points)}
         </StatusPill>
       </td> */}
-      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.red_card_points}</td>
-      {/* <td className="px-5 py-4">
+      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">{row.red_card_points}</td>
+      {/* <td className="px-3 py-4">
         <StatusPill tone={getPointsTone(row.red_card_points)}>
           {formatSignedNumber(row.red_card_points)}
         </StatusPill>
       </td> */}
-      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.kick_off_team_points}</td>
-      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{row.match_duration_points}</td>
-      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300 text-right">
+      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">{row.kick_off_team_points}</td>
+      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">{row.match_duration_points}</td>
+      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300 text-right">
         {row.predicted_matches} / {completedMatches}
       </td>
     </tr>
@@ -864,18 +969,35 @@ export const LeaderboardDashboard = () => {
             <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
               <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800/70 dark:text-zinc-400">
                 <tr>
-                  <th className="px-5 py-3 dark:text-zinc-400">Rank</th>
-                  <th className="px-5 py-3 dark:text-zinc-400 min-w-[150px]">User</th>
-                  <th className="px-5 py-3 dark:text-zinc-200 min-w-[150px]">Total Points</th>
-                  <th className="px-5 py-3 dark:text-zinc-400">Score</th>
-                  <th className="px-5 py-3 dark:text-zinc-400 min-w-[120px]">Goal Diff</th>
-                  <th className="px-5 py-3 dark:text-zinc-400 min-w-[160px]">First Score In</th>
-                  <th className="px-5 py-3 dark:text-zinc-400 min-w-[170px]">First Score By</th>
-                  <th className="px-5 py-3 dark:text-zinc-400 min-w-[140px]">Yello Card</th>
-                  <th className="px-5 py-3 dark:text-zinc-400 min-w-[120px]">Red Card</th>
-                  <th className="px-5 py-3 dark:text-zinc-400">Duration</th>
-                  <th className="px-5 py-3 dark:text-zinc-400 min-w-[110px]">Kick-off</th>
-                  <th className="px-5 py-3 text-right dark:text-zinc-400 min-w-[100px]">Predicted/ Completed</th>
+                  <th className={[
+                    "static md:sticky left-0 top-0 z-40 w-16 min-w-[75px] max-w-[64px]",
+                    "bg-zinc-100 dark:bg-zinc-900",
+                    "border-b border-zinc-200 dark:border-zinc-700",
+                    "pl-5 pr-3 py-3 dark:text-zinc-400"
+                  ].join(" ")}>Rank</th>
+                  <th className={[
+                    "static md:sticky left-[75px] top-0 z-40 w-[150px] min-w-[150px] max-w-[150px]",
+                    "bg-zinc-100 dark:bg-zinc-900",
+                    "font-semibold text-sm",
+                    "px-3 py-3 dark:text-zinc-400",
+                    "border-b border-zinc-200 dark:border-zinc-700"
+                  ].join(" ")}>User</th>
+                  <th className={[
+                    "static md:sticky left-[225px] top-0 z-40 w-[90px] min-w-[90px] max-w-[90px]",
+                    "bg-zinc-100 dark:bg-zinc-900",
+                    "text-right font-semibold text-sm",
+                    "border-b border-zinc-200 dark:border-zinc-700",
+                    "px-3 py-3"
+                  ].join(" ")}>Total</th>
+                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700">Score</th>
+                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 min-w-[105px]">Goal Diff</th>
+                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 min-w-[145px]">First Score In</th>
+                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 min-w-[145px]">First Score By</th>
+                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 min-w-[120px]">Yello Card</th>
+                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 min-w-[100px]">Red Card</th>
+                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700">Duration</th>
+                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 min-w-[100px]">Kick-off</th>
+                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 min-w-[150px] text-right">Predicted/Total</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">

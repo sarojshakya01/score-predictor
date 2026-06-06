@@ -980,7 +980,7 @@ export const PredictionsDashboard = () => {
             </button>
           </div>
         </div>
-        <article className={[
+        <div className={[
           "flex gap-4 overflow-x-auto p-4 overflow-hidden rounded-md",
           "border border-zinc-200 dark:border-zinc-700",
           "shadow-sm dark:shadow-zinc-950",
@@ -1009,7 +1009,6 @@ export const PredictionsDashboard = () => {
                   isSelected={isSelected}
                   handleCardClick={handleCardClick}
                   className="h-55 w-[280px] shrink-0 sm:w-80 lg:w-[360px]"
-                  data-match-id={match.id}
                 />
               );
             })
@@ -1018,7 +1017,7 @@ export const PredictionsDashboard = () => {
               No upcoming matches are available.
             </div>
           )}
-        </article>
+        </div>
       </section >
 
       {loadError ? (
@@ -1176,7 +1175,7 @@ export const PredictionsDashboard = () => {
         </div>
       </section >
 
-      <section className="overflow-hidden rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 shadow-sm grid gap-6 dark:border-zinc-700 dark:bg-zinc-900">
+      {!authRequired && (<section className="overflow-hidden rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 shadow-sm grid dark:border-zinc-700 dark:bg-zinc-900">
         <div className="border-b border-zinc-200 px-5 py-4 dark:border-zinc-700">
           <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
             Prediction History
@@ -1186,16 +1185,27 @@ export const PredictionsDashboard = () => {
           <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
             <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
               <tr>
-                <th className="pl-5 pr-3 py-3">S.N.</th>
-                <th className="pl-2 pr-5 py-3 text-center min-w-[300px]">Match</th>
-                <th className="px-5 py-3">Score</th>
-                <th className="px-5 py-3 min-w-[170px]">First Goal in</th>
-                <th className="px-5 py-3 min-w-[170px]">First Score by</th>
-                <th className="px-5 py-3 min-w-[150px]">Yellow Card</th>
-                <th className="px-5 py-3 min-w-[120px]">Red Card</th>
-                <th className="px-5 py-3 min-w-[120px]">Kick-off</th>
-                <th className="px-5 py-3 min-w-[120px]">Duration</th>
-                <th className="px-5 py-3 text-right min-w-[150px]">Submitted</th>
+                <th className={[
+                  "static md:sticky left-0 top-0 z-40 w-16 min-w-[64px] max-w-[64px]",
+                  "bg-zinc-100 dark:bg-zinc-900",
+                  "border-b border-zinc-200 dark:border-zinc-700",
+                  "pl-3 pr-3 py-3"
+                ].join(" ")}>S.N.</th>
+                <th className={[
+                  "static md:sticky left-[64px] top-0 z-40 w-[320px] min-w-[300px] max-w-[300px]",
+                  "bg-zinc-100 dark:bg-zinc-900",
+                  "text-center font-semibold text-sm",
+                  "border-b border-zinc-200 dark:border-zinc-700",
+                  "pl-2 pr-3 py-3 text-center"
+                ].join(" ")}>Match</th>
+                <th className="px-3 py-3 border-b border-zinc-200 dark:border-zinc-700">Score</th>
+                <th className="px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[135px]">First Goal in</th>
+                <th className="px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[145px]">First Score by</th>
+                <th className="px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[135px]">Yellow Card</th>
+                <th className="px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[100px]">Red Card</th>
+                <th className="px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[100px]">Kick-off</th>
+                <th className="px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[100px]">Duration</th>
+                <th className="px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[135px]">Submitted by</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -1207,40 +1217,50 @@ export const PredictionsDashboard = () => {
 
                   return (
                     <tr key={prediction.id}>
-                      <td className="pl-5 pr-3 py-4">{idx + 1}</td>
-                      <td className="pl-2 pr-5 py-4 font-medium text-zinc-950 dark:text-zinc-50">
+                      <td className={[
+                        "static md:sticky left-0 z-20 w-16 min-w-[64px] max-w-[64px]",
+                        "bg-white dark:bg-zinc-950",
+                        "border-b border-zinc-200 dark:border-zinc-800",
+                        "pl-3 pr-3 py-4 text-left text-zinc-700 dark:text-zinc-300"
+                      ].join(" ")}>{idx + 1}</td>
+                      <td className={[
+                        "static md:sticky left-[64px] z-20 w-[320px] min-w-[320px] max-w-[320px]",
+                        "bg-white dark:bg-zinc-950",
+                        "border-b border-zinc-200 dark:border-zinc-800",
+                        "pl-2 pr-3 py-4 font-medium text-zinc-950 dark:text-zinc-50"
+                      ].join(" ")}>
                         {predictionMatch
                           ? getMatchLabelWithFlag(predictionMatch)
                           : `Match #${prediction.match_id}`}
                       </td>
-                      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
+                      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">
                         {prediction.team1_score} - {prediction.team2_score}
                       </td>
-                      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
+                      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">
                         {prediction.first_goal_in ? firstGoalInLabels[prediction.first_goal_in] : "Not Predicted"}
                       </td>
-                      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
+                      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">
                         {prediction.first_scoring_team_id ? getTeamNameById(
                           predictionMatch,
                           prediction.first_scoring_team_id,
                         ) : "Not Predicted"}
                       </td>
-                      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
+                      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">
                         {prediction.yellow_card_count}
                       </td>
-                      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
+                      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">
                         {prediction.red_card_count}
                       </td>
-                      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
+                      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">
                         {prediction.kick_off_team_id ? getTeamNameById(
                           predictionMatch,
                           prediction.kick_off_team_id,
                         ) : "Not Predicted"}
                       </td>
-                      <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">
+                      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">
                         {prediction.match_duration ? matchDurationLabels[prediction.match_duration] : "Not Predicted"}
                       </td>
-                      <td className="px-5 py-4 text-right text-zinc-700 dark:text-zinc-300">
+                      <td className="px-3 py-4 text-right text-zinc-700 dark:text-zinc-300">
                         {formatDateTime(prediction.predicted_datetime, false)}
                       </td>
                     </tr>
@@ -1252,16 +1272,14 @@ export const PredictionsDashboard = () => {
                     colSpan={10}
                     className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400"
                   >
-                    {authRequired
-                      ? "Login to load your prediction history."
-                      : "No predictions submitted yet."}
+                    {"No predictions submitted yet."}
                   </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-      </section >
+      </section >)}
 
       {/* Prediction Confirmation Modal */}
       <Modal

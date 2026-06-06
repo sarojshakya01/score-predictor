@@ -200,6 +200,7 @@ export const SelectableMatchCard = (props: {
         className,
       ].join(" ")}
       onClick={() => handleCardClick(match)}
+      data-match-id={match.id}
     >
       <>
         {MatchDayNGroupNStatus(match)}
