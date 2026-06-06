@@ -2,15 +2,15 @@
 APScheduler-based automation for the Match Predictor backend.
 
 Five scheduled jobs:
-  1. extract_live_match_data   – every 2 min  – polls UEFA livescore API and
-                                                updates match scores / stats in DB
-  2. update_current_match_day  – every hour   – sets the current_match_day setting
-                                                to the next upcoming match day
-  3. send_autolock_email       – every 5 min  – locks matches ≤60 min away and
-                                                emails predictions summary to all users
-  4. send_reminder_email       – every 30 min – emails users who have not yet
-                                                predicted for matches within 3 hours
-  5. send_todays_matches_email – daily 07:00  – morning digest of today's matches
+  1. extract_live_match_data   – every 2 min   – polls UEFA livescore API and
+                                                 updates match scores / stats in DB
+  2. send_autolock_email       – every 5 min   – locks matches ≤60 min away and
+                                                 emails predictions summary to all users
+  3. send_reminder_email       – every 30 min  – emails users who have not yet
+                                                 predicted for matches within 3 hours
+  4. update_current_match_day  – every 4 hours – sets the current_match_day setting
+                                                 to the next upcoming match day
+  5. send_todays_matches_email – daily 07:00   – morning digest of today's matches
 
 Usage
 -----
@@ -20,6 +20,8 @@ Register it in app/main.py:
     from app.workers.scheduler import lifespan
     app = FastAPI(..., lifespan=lifespan)
 """
+from app.models.user import UserRole
+from datetime import UTC
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
@@ -60,6 +62,11 @@ _DURATION_LABELS: dict[str, str] = {
 }
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
+def _fmt_value(value: str | None) -> str:
+    if value is None:
+        return "—"
+    return value
 
 def _fmt_first_goal_in(value: str | None) -> str:
     if value is None:
@@ -356,29 +363,27 @@ async def send_autolock_email() -> None:
             header_html = (
                 f"<tr>"
                 f"<th>#</th><th>Manager</th>"
-                f"<th>{team1_name} Score</th><th>{team2_name} Score</th>"
-                f"<th>Kick-off Team</th><th>Duration</th>"
+                f"<th>{team1_name}</th><th>{team2_name}</th>"
+                f"<th>First Goal in</th><th>First Score by</th>"
                 f"<th>Yellow Cards</th><th>Red Cards</th>"
-                f"<th>First Scorer</th><th>Goal in 1st Half</th>"
+                f"<th>Kick-off Team</th><th>Duration</th>"
                 f"</tr>"
             )
 
             rows_html = ""
             for idx, pred in enumerate(predictions, start=1):
-                ko_team = pred.kick_off_team.name if pred.kick_off_team else "—"
-                fs_team = pred.first_scoring_team.name if pred.first_scoring_team else "—"
                 rows_html += (
                     f"<tr>"
                     f"<td>{idx}</td>"
                     f"<td>{pred.user.first_name} {pred.user.last_name}</td>"
-                    f"<td>{pred.team1_score}</td>"
-                    f"<td>{pred.team2_score}</td>"
-                    f"<td>{ko_team}</td>"
-                    f"<td>{_fmt_duration(pred.match_duration)}</td>"
-                    f"<td>{pred.yellow_card_count}</td>"
-                    f"<td>{pred.red_card_count}</td>"
-                    f"<td>{fs_team}</td>"
+                    f"<td>{_fmt_value(pred.team1_score)}</td>"
+                    f"<td>{_fmt_value(pred.team2_score)}</td>"
                     f"<td>{_fmt_first_goal_in(pred.first_goal_in)}</td>"
+                    f"<td>{_fmt_value(pred.first_scoring_team.name)}</td>"
+                    f"<td>{_fmt_value(pred.yellow_card_count)}</td>"
+                    f"<td>{_fmt_value(pred.red_card_count)}</td>"
+                    f"<td>{_fmt_value(pred.kick_off_team.name )}</td>"
+                    f"<td>{_fmt_duration(pred.match_duration)}</td>"
                     f"</tr>"
                 )
 
@@ -436,9 +441,12 @@ async def send_reminder_email() -> None:
             logger.info("[JOB4] No matches needing a reminder – skipping")
             return
 
-        # Fetch all active users
+        # Fetch all active user
         user_result = await db.execute(
-            select(User).where(User.is_active.is_(True)).order_by(User.id.asc()),
+            select(User).where(
+                (User.is_active.is_(True)) &
+                (User.role != UserRole.ADMIN)
+            ).order_by(User.id.asc()),
         )
         all_users: list[User] = list(user_result.scalars().all())
         recipients: list[str] = [u.email for u in all_users]
@@ -453,7 +461,7 @@ async def send_reminder_email() -> None:
             team1_name = match.team1.name
             team2_name = match.team2.name
             match_title = f"{team1_name} vs {team2_name}"
-            match_time_str = match.match_datetime.astimezone().strftime("%Y-%m-%d %H:%M %Z")
+            match_time_str = match.match_datetime.replace(tzinfo=UTC).astimezone().strftime("%Y-%m-%d %H:%M %Z")
 
             # Fetch existing predictions for this match
             pred_result = await db.execute(
@@ -539,8 +547,12 @@ async def send_todays_matches_email() -> None:
         )
         matches: list[Match] = list(result.scalars().all())
 
+        # Fetch all active user's email
         user_result = await db.execute(
-            select(User.email).where(User.is_active.is_(True)),
+            select(User.email).where(
+                (User.is_active.is_(True)) &
+                (User.role != UserRole.ADMIN)
+            ).order_by(User.id.asc()),
         )
         recipients: list[str] = list(user_result.scalars().all())
 
@@ -548,14 +560,14 @@ async def send_todays_matches_email() -> None:
         logger.info("[JOB5] No active users – skipping email")
         return
 
-    header_html = "<tr><th>Match Day</th><th>Match</th><th>Match Time (UTC)</th></tr>"
+    header_html = "<tr><th>Match Day</th><th>Match</th><th>Match Time</th></tr>"
 
     if matches:
         rows_html = "".join(
             f"<tr>"
             f"<td>Day {m.match_day}</td>"
             f"<td>{m.team1.name} vs {m.team2.name}</td>"
-            f"<td>{m.match_datetime.strftime('%Y-%m-%d %H:%M')}</td>"
+            f"<td>{m.match_datetime.replace(tzinfo=UTC).astimezone().strftime('%Y-%m-%d %H:%M')}</td>"
             f"</tr>"
             for m in matches
         )
@@ -567,7 +579,7 @@ async def send_todays_matches_email() -> None:
     body = build_base_html(
         f"<p>Dear Managers,</p>"
         f"<p>Here is the match schedule for the next 24 hours "
-        f"(as of {now.strftime('%Y-%m-%d %H:%M UTC')}):</p>"
+        f"(as of {now.replace(tzinfo=UTC).astimezone().strftime('%Y-%m-%d %H:%M')}):</p>"
         f"{table_html}"
         f"<p>Don't forget to submit your predictions before kick-off!</p>"
     )
@@ -588,31 +600,20 @@ async def send_todays_matches_email() -> None:
 
 def _create_scheduler() -> AsyncIOScheduler:
     """Instantiate and configure the APScheduler instance."""
-    scheduler = AsyncIOScheduler(timezone="UTC")
+    scheduler = AsyncIOScheduler()
 
     # Job 1 – Live data extraction: every 2 minutes
-    scheduler.add_job(
-        extract_live_match_data,
-        trigger=IntervalTrigger(minutes=2),
-        id="extract_live_match_data",
-        name="Live match data extraction",
-        replace_existing=True,
-        max_instances=1,
-        misfire_grace_time=30,
-    )
+    # scheduler.add_job(
+    #     extract_live_match_data,
+    #     trigger=IntervalTrigger(minutes=2),
+    #     id="extract_live_match_data",
+    #     name="Live match data extraction",
+    #     replace_existing=True,
+    #     max_instances=1,
+    #     misfire_grace_time=30,
+    # )
 
-    # Job 2 – Update current match day: every hour
-    scheduler.add_job(
-        update_current_match_day,
-        trigger=IntervalTrigger(hours=1),
-        id="update_current_match_day",
-        name="Update current match day",
-        replace_existing=True,
-        max_instances=1,
-        misfire_grace_time=120,
-    )
-
-    # Job 3 – Auto-lock & locked email: every 5 minutes
+    # Job 2 – Auto-lock & locked email: every 5 minutes
     scheduler.add_job(
         send_autolock_email,
         trigger=IntervalTrigger(minutes=5),
@@ -623,7 +624,7 @@ def _create_scheduler() -> AsyncIOScheduler:
         misfire_grace_time=60,
     )
 
-    # Job 4 – Prediction reminder: every 30 minutes
+    # Job 3 – Prediction reminder: every 30 minutes
     scheduler.add_job(
         send_reminder_email,
         trigger=IntervalTrigger(minutes=30),
@@ -634,10 +635,21 @@ def _create_scheduler() -> AsyncIOScheduler:
         misfire_grace_time=120,
     )
 
-    # Job 5 – Today's matches digest: daily at 07:00 UTC
+    # Job 4 – Update current match day: every 4 hours
+    scheduler.add_job(
+        update_current_match_day,
+        trigger=IntervalTrigger(hours=4),
+        id="update_current_match_day",
+        name="Update current match day",
+        replace_existing=True,
+        max_instances=1,
+        misfire_grace_time=120,
+    )
+
+    # Job 5 – Today's matches digest: daily at 07:00 Local time
     scheduler.add_job(
         send_todays_matches_email,
-        trigger=CronTrigger(hour=7, minute=0),
+        trigger=CronTrigger(hour=13, minute=24),
         id="send_todays_matches_email",
         name="Send today's matches morning digest",
         replace_existing=True,

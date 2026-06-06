@@ -18,6 +18,7 @@ import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { IconCancel, IconPencil, IconPlus, IconSave, IconSearch, IconTrash, IconX } from "@/components/ui/icons";
 import { Pagination } from "@/components/ui/pagination";
 import { formatDateTime } from "@/components/ui/match-card";
+import { RoleName } from "@/lib/auth/types";
 
 const emptyFormState: UserCreate = {
   email: "",
@@ -26,7 +27,7 @@ const emptyFormState: UserCreate = {
   last_name: "",
   mobile_no: "",
   password: "",
-  role: "USER",
+  role: RoleName.USER,
   is_active: true,
 };
 
@@ -278,8 +279,8 @@ const AdminUsersPage = () => {
                     <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{user.email}</td>
                     <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{user.mobile_no}</td>
                     <td className="px-5 py-4 text-center">
-                      <StatusPill tone={user.role === "ADMIN" ? "yellow" : "primary"}>
-                        {user.role === "ADMIN" ? "Admin" : "Player"}
+                      <StatusPill tone={user.role === RoleName.ADMIN ? "yellow" : "primary"}>
+                        {user.role === RoleName.ADMIN ? "Admin" : "Player"}
                       </StatusPill>
                     </td>
                     <td className="px-5 py-4 text-center">

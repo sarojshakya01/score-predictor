@@ -8,6 +8,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { useAuth } from "@/components/auth/auth-context";
 import { getErrorMessage } from "@/lib/forms/error-message";
 import { IconLogin } from "@/components/ui/icons";
+import { RoleName } from "@/lib/auth/types";
 
 const inputCls = "mt-2 h-11 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-emerald-900";
 
@@ -30,7 +31,7 @@ export const LoginForm = () => {
         password,
       });
       const currentUser = await getCurrentUser();
-      if (currentUser.role === "ADMIN") {
+      if (currentUser.role === RoleName.ADMIN) {
         router.replace("/admin");
       } else {
         router.replace("/");

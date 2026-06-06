@@ -547,6 +547,48 @@ const LeaderboardRow = ({
   );
 };
 
+const getRaceChartBg = () => {
+  const colors = [
+    "bg-tournament-primary-light",
+    "bg-tournament-secondary-light",
+    "bg-tournament-accent-light",
+    "bg-rose-600",
+    "bg-amber-600",
+    "bg-purple-600",
+    "bg-tournament-primary-light",
+    "bg-tournament-secondary-light",
+    "bg-tournament-accent-light",
+    "bg-emerald-600",
+    "bg-orange-600",
+    "bg-pink-600",
+    "bg-indigo-600",
+    "bg-tournament-primary-light",
+    "bg-tournament-secondary-light",
+    "bg-tournament-accent-light",
+    "bg-cyan-600",
+    "bg-teal-600",
+    "bg-violet-600",
+    "bg-fuchsia-600",
+    "bg-tournament-primary-light",
+    "bg-tournament-secondary-light",
+    "bg-tournament-accent-light",
+    "bg-amber-600",
+    "bg-purple-600",
+    "bg-emerald-600",
+    "bg-orange-600",
+    "bg-tournament-primary-light",
+    "bg-tournament-secondary-light",
+    "bg-tournament-accent-light",
+    "bg-pink-600",
+    "bg-indigo-600",
+    "bg-cyan-600",
+    "bg-teal-600",
+    "bg-violet-600",
+    "bg-fuchsia-600",
+  ];
+  const randomColor = colors[Math.floor(Math.random() * colors.length)];
+  return randomColor;
+}
 // ── Race Chart ────────────────────────────────────────────────────────────────
 
 const RaceChartRow = ({
@@ -562,11 +604,12 @@ const RaceChartRow = ({
     standing.total_points === 0
       ? 2
       : Math.max(8, (Math.abs(standing.total_points) / maxPoints) * 100);
+
   const barColor =
     standing.total_points < 0
       ? "bg-rose-600"
       : standing.match_points > 0
-        ? "bg-tournament-primary-light"
+        ? getRaceChartBg()
         : "bg-zinc-500";
 
   return (

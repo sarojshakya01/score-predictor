@@ -1003,7 +1003,7 @@ export const PredictionsDashboard = () => {
                     {selectedMatch.team1_flag_url && (
                       <Image width={32} height={32} className="min-h-[30px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team1_flag_url} alt={selectedMatch.team1_name} />
                     )}
-                    <span>{selectedMatch.team1_name} Score</span>
+                    <span>{selectedMatch.team1_name}</span>
                   </>
                 ) : "Team 1 Score"}
               </span>
@@ -1018,7 +1018,7 @@ export const PredictionsDashboard = () => {
                     {selectedMatch.team2_flag_url && (
                       <Image width={32} height={32} className="min-h-[30px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team2_flag_url} alt={selectedMatch.team2_name} />
                     )}
-                    <span>{selectedMatch.team2_name} Score</span>
+                    <span>{selectedMatch.team2_name}</span>
                   </>
                 ) : "Team 2 Score"}
               </span>

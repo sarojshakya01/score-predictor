@@ -1,4 +1,4 @@
-import type { UserResponse, UserRole } from "@/lib/auth/types";
+import { RoleName, type UserResponse, type UserRole } from "@/lib/auth/types";
 
 type UserWithRole = Pick<UserResponse, "role"> | null | undefined;
 
@@ -10,5 +10,5 @@ export const hasRole = (
 };
 
 export const isAdmin = (user: UserWithRole): boolean => {
-  return hasRole(user, ["ADMIN"]);
+  return hasRole(user, [RoleName.ADMIN]);
 };

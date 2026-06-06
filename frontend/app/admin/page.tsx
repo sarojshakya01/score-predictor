@@ -9,6 +9,7 @@ import { listAdminTeams, TeamResponse } from "@/lib/teams";
 import { listAdminUsers } from "@/lib/users";
 import { UserResponse } from "@/lib/auth";
 import { toneClasses, toneClassesLight } from "@/components/ui/status-pill";
+import { RoleName } from "@/lib/auth/types";
 
 const AdminPage = () => {
 
@@ -33,7 +34,7 @@ const AdminPage = () => {
         ]);
 
         if (isMounted) {
-          setUsers(userList.items.filter((user) => user.role === "USER"));
+          setUsers(userList.items.filter((user) => user.role === RoleName.USER));
           setMatches(matchList.items);
           setTeams(teamList.items);
           setUpComingMatches(upcomingMatchList.items);

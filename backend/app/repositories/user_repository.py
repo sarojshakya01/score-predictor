@@ -48,12 +48,13 @@ class UserRepository:
         )
         return result.scalar_one_or_none()
 
-    async def list_active_users(self) -> list[User]:
+    async def list_active_users(self, exclude_admin: bool = False) -> list[User]:
         """Fetch active users for public leaderboard rankings."""
+        statement = select(User).where(User.is_active.is_(True))
+        if exclude_admin:
+            statement = statement.where(User.role != UserRole.ADMIN)
         result = await self._db.execute(
-            select(User)
-            .where(User.is_active.is_(True))
-            .order_by(User.created_at.asc(), User.id.asc()),
+            statement.order_by(User.created_at.asc(), User.id.asc()),
         )
         return list(result.scalars().all())
 

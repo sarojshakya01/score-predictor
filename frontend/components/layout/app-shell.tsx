@@ -9,6 +9,7 @@ import { AdminNav } from "@/components/layout/admin-nav";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { useAuth } from "@/components/auth/auth-context";
 import Image from "next/image";
+import { RoleName } from "@/lib/auth/types";
 
 type AppShellProps = {
   children: React.ReactNode;
@@ -16,7 +17,7 @@ type AppShellProps = {
 
 export const AppShell = ({ children }: AppShellProps) => {
   const { user } = useAuth();
-  const isAdmin = user?.role === "ADMIN";
+  const isAdmin = user?.role === RoleName.ADMIN;
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (

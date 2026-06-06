@@ -4,6 +4,7 @@ import { useEffect, ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/components/auth/auth-context";
 import type { UserRole } from "@/lib/auth";
+import { RoleName } from "@/lib/auth/types";
 
 type RouteGuardProps = {
   children: ReactNode;
@@ -30,7 +31,7 @@ export const RouteGuard = ({ children, allowedRoles }: RouteGuardProps) => {
 
     // Role-based logic
     if (allowedRoles && !allowedRoles.includes(user.role)) {
-      if (user.role === "ADMIN") {
+      if (user.role === RoleName.ADMIN) {
         // Admins should be sent to the admin dashboard
         router.replace("/admin");
       } else {
