@@ -358,7 +358,7 @@ const UserPointsDetailModal = ({
               <p className="text-sm text-zinc-500 dark:text-zinc-400">No predictions on completed matches yet.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700 pb-2">
+            <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
               <table className="min-w-max w-full border-collapse text-sm">
                 <thead>
                   {/* Group row */}
@@ -434,7 +434,7 @@ const UserPointsDetailModal = ({
                   ))}
                 </tbody>
                 {/* Totals footer */}
-                <tfoot className="border-t-2 border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/70">
+                <tfoot className="border-t-2 border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/70 mb-2">
                   {data.items.some((item) => item.match_stage === "F") && (<>
                     <tr>
                       <td colSpan={2} className={[
@@ -603,7 +603,7 @@ const LeaderboardRow = ({
         "static md:sticky left-0 z-20 w-16 min-w-[75px] max-w-[64px]",
         "bg-white dark:bg-zinc-950",
         "border-b border-zinc-200 dark:border-zinc-800",
-        "pl-5 py-3 py-4 font-semibold text-zinc-950 dark:text-zinc-100"
+        "px-3 py-4 font-semibold text-zinc-950 dark:text-zinc-100 text-center"
       ].join(" ")}>{row.rank}</td>
       <td className={[
         "static md:sticky left-[75px] z-20 w-[150px] min-w-[150px] max-w-[150px]",
@@ -614,7 +614,7 @@ const LeaderboardRow = ({
         <button
           type="button"
           onClick={() => onUserClick(row.user_id, row.name)}
-          className="font-medium text-indigo-600 hover:text-indigo-800 hover:underline transition-colors cursor-pointer text-left dark:text-indigo-400 dark:hover:text-indigo-300"
+          className="font-medium text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer text-left dark:text-indigo-400 dark:hover:text-indigo-300"
         >
           {row.name}
         </button>
@@ -627,24 +627,24 @@ const LeaderboardRow = ({
       ].join(" ")}>
         {row.total_points}
       </td>
-      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">{row.score_points}</td>
-      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">{row.goal_difference_points}</td>
-      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">{row.first_goal_in_points}</td>
-      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">{row.first_scoring_team_points}</td>
-      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">{row.yellow_card_points}</td>
+      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300 text-right">{row.score_points}</td>
+      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300 text-right">{row.goal_difference_points}</td>
+      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300 text-right">{row.first_goal_in_points}</td>
+      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300 text-right">{row.first_scoring_team_points}</td>
+      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300 text-right">{row.yellow_card_points}</td>
       {/* <td className="px-3 py-4">
         <StatusPill tone={"yellow"}>
           {formatSignedNumber(row.red_card_points)}
         </StatusPill>
       </td> */}
-      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">{row.red_card_points}</td>
+      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300 text-right">{row.red_card_points}</td>
       {/* <td className="px-3 py-4">
         <StatusPill tone={getPointsTone(row.red_card_points)}>
           {formatSignedNumber(row.red_card_points)}
         </StatusPill>
       </td> */}
-      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">{row.kick_off_team_points}</td>
-      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">{row.match_duration_points}</td>
+      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300 text-right">{row.kick_off_team_points}</td>
+      <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300 text-right">{row.match_duration_points}</td>
       <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300 text-right">
         {row.predicted_matches} / {completedMatches}
       </td>
@@ -718,9 +718,12 @@ const RaceChartRow = ({
         : "bg-zinc-500";
 
   return (
-    <div className="grid min-w-[42rem] grid-cols-[4rem_13rem_1fr_5rem_5rem] items-center gap-3 px-4 py-3 text-sm">
-      <div className="font-semibold text-zinc-950 dark:text-zinc-100">{standing.rank}</div>
-      <div className="truncate font-medium text-indigo-600 hover:text-indigo-800 hover:underline transition-colors cursor-pointer text-left dark:text-indigo-400 dark:hover:text-indigo-300" onClick={() => onUserClick(standing.user_id, standing.name)}>{standing.name}</div>
+    <div className="grid min-w-[42rem] grid-cols-[75px_150px_90px_1fr_100px] items-center pl-0 pr-4 py-3 text-sm">
+      <div className={"px-3 font-semibold text-zinc-950 dark:text-zinc-100 text-center"}>{standing.rank}</div>
+      <div className="px-3 truncate font-medium text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer text-left dark:text-indigo-400 dark:hover:text-indigo-300" onClick={() => onUserClick(standing.user_id, standing.name)}>{standing.name}</div>
+      <div className="px-3 text-right font-semibold text-zinc-950 dark:text-zinc-100">
+        {standing.total_points}
+      </div>
       <div className="h-9 overflow-hidden rounded-md bg-zinc-100 dark:bg-zinc-700">
         <div
           className={`flex h-full items-center justify-end rounded-md px-3 text-xs font-semibold text-white transition-[width] duration-700 ease-out ${barColor}`}
@@ -733,9 +736,6 @@ const RaceChartRow = ({
         <StatusPill tone={getPointsTone(standing.match_points)}>
           {formatSignedNumber(standing.match_points)}
         </StatusPill>
-      </div>
-      <div className="text-right font-semibold text-zinc-950 dark:text-zinc-100">
-        {standing.total_points}
       </div>
     </div>
   );
@@ -808,13 +808,13 @@ const RaceChart = ({ frames, onUserClick }: { frames: LeaderboardRaceFrameRespon
         </div>
       </div>
       <div className="overflow-x-auto">
-        <div className="min-w-[42rem] border-b border-zinc-100 bg-zinc-50 px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800/70 dark:text-zinc-400">
-          <div className="grid grid-cols-[4rem_13rem_1fr_5rem_5rem] gap-3">
-            <span>Rank</span>
-            <span>User</span>
-            <span>Total</span>
-            <span className="text-right">Match Pts</span>
-            <span className="text-right">Total Pts</span>
+        <div className="min-w-[42rem] border-b border-zinc-100 bg-zinc-50 pl-0 pr-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800/70 dark:text-zinc-400">
+          <div className="grid grid-cols-[75px_150px_90px_1fr_100px] items-center">
+            <span className="px-3 dark:text-zinc-400 text-center">Rank</span>
+            <span className="px-3 dark:text-zinc-400 text-left">User</span>
+            <span className="px-3 dark:text-zinc-400 text-right">Total</span>
+            <span className="dark:text-zinc-400 text-left">Total</span>
+            <span className="pl-3 dark:text-zinc-400 text-right">Match Pts</span>
           </div>
         </div>
         <div className="max-h-[30rem] divide-y divide-zinc-100 overflow-y-auto dark:divide-zinc-800">
@@ -973,7 +973,7 @@ export const LeaderboardDashboard = () => {
                     "static md:sticky left-0 top-0 z-40 w-16 min-w-[75px] max-w-[64px]",
                     "bg-zinc-100 dark:bg-zinc-900",
                     "border-b border-zinc-200 dark:border-zinc-700",
-                    "pl-5 pr-3 py-3 dark:text-zinc-400"
+                    "px-3 py-3 dark:text-zinc-400 text-center"
                   ].join(" ")}>Rank</th>
                   <th className={[
                     "static md:sticky left-[75px] top-0 z-40 w-[150px] min-w-[150px] max-w-[150px]",
@@ -985,19 +985,19 @@ export const LeaderboardDashboard = () => {
                   <th className={[
                     "static md:sticky left-[225px] top-0 z-40 w-[90px] min-w-[90px] max-w-[90px]",
                     "bg-zinc-100 dark:bg-zinc-900",
-                    "text-right font-semibold text-sm",
+                    "font-semibold text-sm text-right",
                     "border-b border-zinc-200 dark:border-zinc-700",
                     "px-3 py-3"
                   ].join(" ")}>Total</th>
-                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700">Score</th>
-                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 min-w-[105px]">Goal Diff</th>
-                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 min-w-[145px]">First Score In</th>
-                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 min-w-[145px]">First Score By</th>
-                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 min-w-[120px]">Yello Card</th>
-                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 min-w-[100px]">Red Card</th>
-                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700">Duration</th>
-                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 min-w-[100px]">Kick-off</th>
-                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 min-w-[150px] text-right">Predicted/Total</th>
+                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right">Score</th>
+                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[105px]">Goal Diff</th>
+                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[145px]">First Score In</th>
+                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[145px]">First Score By</th>
+                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[120px]">Yello Card</th>
+                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[100px]">Red Card</th>
+                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right">Duration</th>
+                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[100px]">Kick-off</th>
+                  <th className="px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[150px]">Predicted/Total</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
