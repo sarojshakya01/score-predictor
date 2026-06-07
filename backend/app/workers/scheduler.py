@@ -215,6 +215,7 @@ async def extract_live_match_data() -> None:
                         team2_score=team2_score,
                         yellow_card_count=yellow_cards,
                         red_card_count=red_cards,
+                        match_datetime = db_match.match_datetime.replace(tzinfo=timezone.utc) if  db_match.match_datetime.tzinfo is None else db_match.match_datetime.astimezone(timezone.utc)
                     )
                 )
                 logger.info(
@@ -500,6 +501,11 @@ async def send_reminder_email() -> None:
 
             # Mark reminder sent
             match.match_reminder_sent = True
+
+            if match.match_datetime.tzinfo is None:
+                match.match_datetime = match.match_datetime.replace(tzinfo=timezone.utc)
+            else:
+                match.match_datetime = match.match_datetime.astimezone(timezone.utc)
 
         await db.commit()
 

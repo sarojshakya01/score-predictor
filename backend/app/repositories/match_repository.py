@@ -318,6 +318,11 @@ class MatchRepository:
     async def update(self, match: Match, values: Mapping[str, object]) -> Match:
         """Update an existing match and return the refreshed instance."""
         for field_name, value in values.items():
+            if field_name == "match_datetime":
+                if value.tzinfo is None:
+                    value = value.replace(tzinfo=timezone.utc)
+                else:
+                    value = value.astimezone(timezone.utc)
             setattr(match, field_name, value)
 
         await self._db.commit()
