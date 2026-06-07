@@ -25,6 +25,8 @@ services:
     container_name: sp_backend
     restart: unless-stopped
     env_file: .env
+    environment:
+      TZ: ${TIMEZONE}
     extra_hosts:
       # Allows containers to reach the host's MySQL on all platforms
       - "host.docker.internal:host-gateway"
