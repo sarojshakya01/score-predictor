@@ -24,6 +24,11 @@ class Settings(BaseSettings):
     EMAIL_VERIFICATION_EXPIRE_MINUTES: int = 1440  # 24 hours
     PASSWORD_RESET_EXPIRE_MINUTES: int = 60
     TIMEZONE: str = "Asia/Kathmandu"
+    LIVE_MATH_UPDATE_INTERVAL_MIN: int = 1
+    MATCH_LOCK_CHECK_INTERVAL_MIN: int = 5
+    REMINDER_CHECK_INTERVAL_MIN: int = 30
+    MATCH_DAY_UPDATE_INTERVAL_HR: int = 4
+    TODAYS_MATCH_REMINDER_TIME_HR: int = 10
 
     # ── EMAIL ───────────────────────────────────────────────────
     EMAIL_FROM: str = "[EMAIL_ADDRESS]"

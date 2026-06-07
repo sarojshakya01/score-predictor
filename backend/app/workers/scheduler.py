@@ -603,10 +603,10 @@ def _create_scheduler() -> AsyncIOScheduler:
     """Instantiate and configure the APScheduler instance."""
     scheduler = AsyncIOScheduler(timezone=settings.TIMEZONE)
 
-    # Job 1 – Live data extraction: every 2 minutes
+    # Job 1 – Live data extraction: every settings.LIVE_MATH_UPDATE_INTERVAL_MIN minutes
     # scheduler.add_job(
     #     extract_live_match_data,
-    #     trigger=IntervalTrigger(minutes=2),
+    #     trigger=IntervalTrigger(minutes=settings.LIVE_MATH_UPDATE_INTERVAL_MIN),
     #     id="extract_live_match_data",
     #     name="Live match data extraction",
     #     replace_existing=True,
@@ -614,10 +614,10 @@ def _create_scheduler() -> AsyncIOScheduler:
     #     misfire_grace_time=30,
     # )
 
-    # Job 2 – Auto-lock & locked email: every 5 minutes
+    # Job 2 – Auto-lock & locked email: every settings.MATCH_LOCK_CHECK_INTERVAL_MIN minutes
     scheduler.add_job(
         send_autolock_email,
-        trigger=IntervalTrigger(minutes=5),
+        trigger=IntervalTrigger(minutes=settings.MATCH_LOCK_CHECK_INTERVAL_MIN),
         id="send_autolock_email",
         name="Auto-lock matches and send prediction summary email",
         replace_existing=True,
@@ -625,10 +625,10 @@ def _create_scheduler() -> AsyncIOScheduler:
         misfire_grace_time=60,
     )
 
-    # Job 3 – Prediction reminder: every 30 minutes
+    # Job 3 – Prediction reminder: every settings.REMINDER_CHECK_INTERVAL_MIN minutes
     scheduler.add_job(
         send_reminder_email,
-        trigger=IntervalTrigger(minutes=1),
+        trigger=IntervalTrigger(minutes=settings.REMINDER_CHECK_INTERVAL_MIN),
         id="send_reminder_email",
         name="Send prediction reminder email",
         replace_existing=True,
@@ -636,10 +636,10 @@ def _create_scheduler() -> AsyncIOScheduler:
         misfire_grace_time=120,
     )
 
-    # Job 4 – Update current match day: every 4 hours
+    # Job 4 – Update current match day: every settings.MATCH_DAY_UPDATE_INTERVAL_HOURS hours
     scheduler.add_job(
         update_current_match_day,
-        trigger=IntervalTrigger(hours=4),
+        trigger=IntervalTrigger(hours=settings.MATCH_DAY_UPDATE_INTERVAL_HOURS),
         id="update_current_match_day",
         name="Update current match day",
         replace_existing=True,
@@ -647,10 +647,10 @@ def _create_scheduler() -> AsyncIOScheduler:
         misfire_grace_time=120,
     )
 
-    # Job 5 – Today's matches digest: daily at 07:00 Local time
+    # Job 5 – Today's matches digest: daily at settings.TODAYS_MATCH_REMINDER_TIME_HR:00 Local time
     scheduler.add_job(
         send_todays_matches_email,
-        trigger=CronTrigger(hour=13, minute=24),
+        trigger=CronTrigger(hour=settings.TODAYS_MATCH_REMINDER_TIME_HR, minute=0),
         id="send_todays_matches_email",
         name="Send today's matches morning digest",
         replace_existing=True,
