@@ -324,15 +324,17 @@ async def send_autolock_email() -> None:
             logger.info("[JOB3] No matches to lock – nothing to do")
             return
 
-        # Lock all of them
-        match_ids = [m.id for m in to_lock]
-        await db.execute(
-            update(Match)
-            .where(Match.id.in_(match_ids))
-            .values(match_locked=True),
-        )
+        # Lock all of them one at a time (just to ensure correct timezone info)
+        for m in to_lock:
+            m.match_datetime = m.match_datetime.replace(tzinfo=timezone.utc) if  m.match_datetime.tzinfo is None else m.match_datetime.astimezone(timezone.utc)
+            await db.execute(
+                update(Match)
+                .where(Match.id == m.id)
+                .values(match_locked=True, match_datetime = m.match_datetime),
+            )
+
         await db.commit()
-        logger.info("[JOB3] Locked %d match(es): %s", len(match_ids), match_ids)
+        logger.info("[JOB3] Locked %d match(es): %s", len(to_lock), to_lock)
 
         # Fetch all user emails
         user_result = await db.execute(
