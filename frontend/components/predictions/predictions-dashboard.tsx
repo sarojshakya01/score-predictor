@@ -13,13 +13,13 @@ import {
   firstGoalInLabels,
   firstGoalIns,
   getCurrentMatchDay,
-  getHeadToHeadMatchHistory,
+  getMatchInsight,
   listMatches,
   listUpcomingMatches,
   matchDurationLabels,
   matchDurations,
 } from "@/lib/matches";
-import type { HeadToHeadMatchHistory, MatchDuration, MatchResponse } from "@/lib/matches";
+import type { H2HResult, MatchDuration, MatchResponse } from "@/lib/matches";
 import {
   createPrediction,
   listCurrentUserPredictions,
@@ -168,9 +168,9 @@ const getHeadToHeadStats = (
 };
 
 const getHeadToHeadHistoryStats = (
-  headToHeadMatchHistory: HeadToHeadMatchHistory[],
+  matchInsight: H2HResult[],
 ): HeadToHeadStats => {
-  return headToHeadMatchHistory.reduce<HeadToHeadStats>(
+  return matchInsight.reduce<HeadToHeadStats>(
     (stats, match, index) => {
       const recencyWeight = 1 - index * 0.08;
 
@@ -244,17 +244,17 @@ const buildAiPrediction = (
   selectedMatch: MatchResponse,
   allMatches: MatchResponse[],
   teamsById: Map<number, TeamResponse>,
-  headToHeadMatchHistory: HeadToHeadMatchHistory[] = [],
+  h2hResults: H2HResult[] = [],
 ): AiPrediction => {
   const team1 = teamsById.get(selectedMatch.team1_id);
   const team2 = teamsById.get(selectedMatch.team2_id);
   const headToHeadMatches =
-    headToHeadMatchHistory.length > 0
+    h2hResults.length > 0
       ? []
       : getCompletedHeadToHeadMatches(selectedMatch, allMatches);
   const stats =
-    headToHeadMatchHistory.length > 0
-      ? getHeadToHeadHistoryStats(headToHeadMatchHistory)
+    h2hResults.length > 0
+      ? getHeadToHeadHistoryStats(h2hResults)
       : getHeadToHeadStats(selectedMatch, headToHeadMatches);
   const h2hTotal = Math.max(1, stats.team1Points + stats.team2Points);
   const h2hTeam1Score = stats.matchCount ? stats.team1Points / h2hTotal : 0.5;
@@ -364,8 +364,8 @@ const buildAiPrediction = (
       yellowCardCount: String(yellowCards),
     },
     summary:
-      headToHeadMatchHistory.length > 0
-        ? `AI pick loaded using ${headToHeadMatchHistory.length} head-to-head result${headToHeadMatches.length === 1 ? "" : "s"} and FIFA ranking.`
+      h2hResults.length > 0
+        ? `AI pick loaded using ${h2hResults.length} head-to-head result${headToHeadMatches.length === 1 ? "" : "s"} and FIFA ranking.`
         : headToHeadMatches.length > 0
           ? `AI pick loaded using ${headToHeadMatches.length} recent head-to-head match${headToHeadMatches.length === 1 ? "" : "es"} and FIFA ranking.`
           : "AI pick loaded using FIFA ranking and tournament-stage trends.",
@@ -857,22 +857,20 @@ export const PredictionsDashboard = () => {
 
     setIsAiPicking(true);
     try {
-      let headToHeadMatchHistory: HeadToHeadMatchHistory[] = [];
+      let h2hResults: H2HResult[] = [];
 
       try {
-        const headToHeadMatch = await getHeadToHeadMatchHistory(selectedMatch.id, {
-          limit: 7,
-        });
-        headToHeadMatchHistory = headToHeadMatch.items;
+        const headToHeadMatch = await getMatchInsight(selectedMatch.id);
+        h2hResults = headToHeadMatch.results;
       } catch {
-        headToHeadMatchHistory = [];
+        h2hResults = [];
       }
 
       const aiPrediction = buildAiPrediction(
         selectedMatch,
         allMatches,
         teamsById,
-        headToHeadMatchHistory,
+        h2hResults,
       );
       setFormState(aiPrediction.formState);
       showToast({

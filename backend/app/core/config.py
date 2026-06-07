@@ -36,6 +36,10 @@ class Settings(BaseSettings):
     # ── CORS ─────────────────────────────────────────────────────
     CORS_ORIGINS: list[str] = ["http://localhost:8025", "http://localhost:8026"]
 
+    OPENAI_ENDPOINT: str = ""
+    OPENAI_DEPLOYMENT_NAME: str = ""
+    OPENAI_KEY: str = ""
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

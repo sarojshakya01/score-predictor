@@ -1,7 +1,7 @@
 import { apiFetch } from "@/lib/api";
 import { authenticatedApiFetch } from "@/lib/auth";
 import type {
-  HeadToHeadResponse,
+  MatchInsightResponse,
   ListMatchesParams,
   ListUpcomingMatchesParams,
   MatchCreate,
@@ -122,22 +122,12 @@ export const listMatchResults = async (
   });
 };
 
-export const getHeadToHeadMatchHistory = async (
-  matchId: number,
-  params: { limit?: number } = {},
-): Promise<HeadToHeadResponse> => {
-  const searchParams = new URLSearchParams();
+export const getMatchInsight = async (
+  matchId: number
+): Promise<MatchInsightResponse> => {
+  const path = `/matches/${matchId}/insight`;
 
-  if (params.limit !== undefined) {
-    searchParams.set("limit", String(params.limit));
-  }
-
-  const queryString = searchParams.toString();
-  const path = queryString
-    ? `/matches/${matchId}/head-to-head?${queryString}`
-    : `/matches/${matchId}/head-to-head`;
-
-  return apiFetch<HeadToHeadResponse>(path, {
+  return apiFetch<MatchInsightResponse>(path, {
     method: "GET",
   });
 };
@@ -206,7 +196,7 @@ export const matchService = {
   createMatch,
   deleteMatch,
   getAdminMatch,
-  getHeadToHeadMatchHistory,
+  getMatchInsight,
   listAdminMatches,
   listMatches,
   listMatchResults,

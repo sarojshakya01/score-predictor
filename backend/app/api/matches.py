@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_admin_user
 from app.db.session import get_db
 from app.schemas.match import (
-    HeadToHeadResponse,
+    MatchInsightResponse,
     MatchCreate,
     MatchListResponse,
     MatchResponse,
@@ -76,18 +76,18 @@ async def list_match_results(
     )
 
 @router.get(
-    "/{match_id}/head-to-head",
-    response_model=HeadToHeadResponse,
-    summary="Find head-to-head results for a match",
+    "/{match_id}/insight",
+    response_model=MatchInsightResponse,
+    summary="Get match insight",
 )
-async def get_head_to_head(
+async def get_match_insights(
     match_id: Annotated[int, Path(gt=0)],
     db: Annotated[AsyncSession, Depends(get_db)],
     limit: Annotated[int, Query(ge=1, le=7)] = 7,
-) -> HeadToHeadResponse:
-    """Return head-to-head score snippets for a match."""
+) -> MatchInsightResponse:
+    """Return match insight."""
     service = MatchService(db)
-    return await service.get_head_to_head(match_id=match_id, limit=limit)
+    return await service.get_match_insights(match_id=match_id, limit=limit)
 
 
 @router.get(

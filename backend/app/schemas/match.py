@@ -144,23 +144,29 @@ class MatchListResponse(BaseModel):
     offset: int
 
 
-class HeadToHeadMatch(BaseModel):
-    """Parsed head-to-head result."""
+class H2HResult(BaseModel):
+    """Parsed match result."""
 
-    date_text: str | None = None
-    raw_text: str
-    source: str = "google"
-    team1_score: int
-    team2_score: int
+    date: str | None = None
+    opponent: str
+    score: int
+    result: str
+
+class TeamHistory(BaseModel):
+    """Parsed match result."""
+
+    date: str | None = None
+    opponent: str
+    score: int
+    result: str
 
 
-class HeadToHeadResponse(BaseModel):
-    """Head-to-head search results for a match."""
+class MatchInsightResponse(BaseModel):
+    """Match insight."""
 
-    items: list[HeadToHeadMatch]
-    limit: int
-    query: str
-    source: str = "google"
+    results: list[H2HResult] = []
+    team1_match_history: list[TeamHistory] = []
+    team2_match_history: list[TeamHistory] = []
+    summary: str
     team1_name: str
     team2_name: str
-    total: int

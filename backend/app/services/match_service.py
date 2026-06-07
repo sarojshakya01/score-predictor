@@ -8,19 +8,19 @@ from typing import Any
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.services.openai_service import OpenAIService
 from app.models.match import Match
 from app.repositories.match_repository import MatchRepository
 from app.repositories.setting_repository import SettingRepository
 from app.repositories.team_repository import TeamRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.match import (
-    HeadToHeadResponse,
+    MatchInsightResponse,
     MatchCreate,
     MatchListResponse,
     MatchResponse,
     MatchUpdate,
 )
-from app.services.head_to_head_service import HeadToHeadService
 from app.services.team_service import TeamService
 
 logger = logging.getLogger(__name__)
@@ -188,30 +188,39 @@ class MatchService:
                 detail="An unexpected error occurred: could not read match",
             )
 
-    async def get_head_to_head(
+    async def get_match_insights(
         self,
         *,
         match_id: int,
         limit: int,
-    ) -> HeadToHeadResponse:
-        """Return head-to-head snippets for a match."""
+    ) -> MatchInsightResponse:
+        """Return match insight for a match."""
         try:
             match = await self._get_match_or_404(match_id)
             team1_name = match.team1.name.replace("-H", "").replace("-A", "")
             team2_name = match.team2.name.replace("-H", "").replace("-A", "")
-            scraper = HeadToHeadService()
-            return await scraper.search(
-                team1_name=team1_name,
-                team1_code=match.team1.fifa_code,
-                team2_name=team2_name,
-                team2_code=match.team2.fifa_code,
-                limit=limit,
-            )
+            if team1_name == "TBA" or team2_name == "TBA":
+                return MatchInsightResponse(
+                    results=[],
+                    summary="Teams not available",
+                    team1_name=team1_name,
+                    team2_name=team2_name,
+                )
+            else:
+                insight = OpenAIService().get_insights_from_ai(team1_name, team2_name)
+                return MatchInsightResponse(
+                    team1_match_history=insight.get("team1_match_history", []),
+                    team2_match_history=insight.get("team2_match_history", []),
+                    h2h_results=insight.get("head_to_head", []),
+                    summary=insight.get("summary", ""),
+                    team1_name=team1_name,
+                    team2_name=team2_name,
+                )
         except HTTPException:
             raise
         except Exception as e:
             logger.exception("Unexpected error during get_head_to_head", e)
-            return HeadToHeadResponse(
+            return MatchInsightResponse(
                 items=[],
                 limit=limit,
                 query=(

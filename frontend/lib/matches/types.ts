@@ -67,22 +67,27 @@ export type MatchListResponse = {
   total: number;
 };
 
-export type HeadToHeadMatchHistory = {
-  date_text: string | null;
-  raw_text: string;
-  source: "google" | string;
+export type H2HResult = {
+  date: string | null;
   team1_score: number;
   team2_score: number;
+  result: string;
 };
 
-export type HeadToHeadResponse = {
-  items: HeadToHeadMatchHistory[];
-  limit: number;
-  query: string;
-  source: "google" | string;
+export type TeamHistory = {
+  date: string | null;
+  opponent: string;
+  score: number;
+  result: string;
+};
+
+export type MatchInsightResponse = {
+  results: H2HResult[];
+  team1_match_history: TeamHistory[];
+  team2_match_history: TeamHistory[];
+  summary: string;
   team1_name: string;
   team2_name: string;
-  total: number;
 };
 
 export type ListUpcomingMatchesParams = {

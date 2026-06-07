@@ -3,7 +3,7 @@ export {
   deleteMatch,
   getAdminMatch,
   getCurrentMatchDay,
-  getHeadToHeadMatchHistory,
+  getMatchInsight,
   listAdminMatches,
   listMatches,
   listMatchResults,
@@ -15,8 +15,8 @@ export {
 export { firstGoalIns, firstGoalInLabels, matchDurations, matchDurationLabels, matchStages, matchStageLabels } from "@/lib/matches/constants";
 export type {
   FirstGoalIn,
-  HeadToHeadMatchHistory,
-  HeadToHeadResponse,
+  H2HResult,
+  MatchInsightResponse,
   MatchDuration,
   MatchStage,
   ListMatchesParams,
