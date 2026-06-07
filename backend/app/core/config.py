@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     JWT_REFRESH_EXPIRE_MINUTES: int = 10080  # 7 days
     EMAIL_VERIFICATION_EXPIRE_MINUTES: int = 1440  # 24 hours
     PASSWORD_RESET_EXPIRE_MINUTES: int = 60
+    TIMEZONE: str = "Asia/Kathmandu"
 
     # ── EMAIL ───────────────────────────────────────────────────
     EMAIL_FROM: str = "[EMAIL_ADDRESS]"

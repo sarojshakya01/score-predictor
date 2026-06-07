@@ -35,6 +35,7 @@ from fastapi import FastAPI
 from sqlalchemy import select, update
 from sqlalchemy.orm import selectinload
 
+from app.core.config import settings
 from app.db.session import async_session_factory
 from app.models.match import Match
 from app.models.prediction import Prediction
@@ -394,7 +395,7 @@ async def send_autolock_email() -> None:
 
             body = build_base_html(
                 f"<p>Dear Managers,</p>"
-                f"<p>Predictions for <strong>{match_title}</strong> are now locked. Match will starts at {match.match_datetime.replace(tzinfo=UTC).astimezone().strftime('%Y-%m-%d %H:%M %Z')}.</p>"
+                f"<p>Predictions for <strong>{match_title}</strong> are now locked. Match will starts at {match.match_datetime.replace(tzinfo=UTC).astimezone().strftime('%Y-%m-%d %H:%M')}.</p>"
                 f"{table_html}"
             )
 
@@ -461,7 +462,7 @@ async def send_reminder_email() -> None:
             team1_name = match.team1.name
             team2_name = match.team2.name
             match_title = f"{team1_name} vs {team2_name}"
-            match_time_str = match.match_datetime.replace(tzinfo=UTC).astimezone().strftime("%Y-%m-%d %H:%M %Z")
+            match_time_str = match.match_datetime.replace(tzinfo=UTC).astimezone().strftime("%Y-%m-%d %H:%M")
 
             # Fetch existing predictions for this match
             pred_result = await db.execute(
@@ -567,7 +568,7 @@ async def send_todays_matches_email() -> None:
             f"<tr>"
             f"<td>Day {m.match_day}</td>"
             f"<td>{m.team1.name} vs {m.team2.name}</td>"
-            f"<td>{m.match_datetime.replace(tzinfo=UTC).astimezone().strftime('%Y-%m-%d %H:%M %Z')}</td>"
+            f"<td>{m.match_datetime.replace(tzinfo=UTC).astimezone().strftime('%Y-%m-%d %H:%M')}</td>"
             f"</tr>"
             for m in matches
         )
@@ -600,7 +601,7 @@ async def send_todays_matches_email() -> None:
 
 def _create_scheduler() -> AsyncIOScheduler:
     """Instantiate and configure the APScheduler instance."""
-    scheduler = AsyncIOScheduler()
+    scheduler = AsyncIOScheduler(timezone=settings.TIMEZONE)
 
     # Job 1 – Live data extraction: every 2 minutes
     # scheduler.add_job(
@@ -627,7 +628,7 @@ def _create_scheduler() -> AsyncIOScheduler:
     # Job 3 – Prediction reminder: every 30 minutes
     scheduler.add_job(
         send_reminder_email,
-        trigger=IntervalTrigger(minutes=30),
+        trigger=IntervalTrigger(minutes=1),
         id="send_reminder_email",
         name="Send prediction reminder email",
         replace_existing=True,

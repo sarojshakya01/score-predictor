@@ -199,7 +199,7 @@ class MatchService:
             match = await self._get_match_or_404(match_id)
             team1_name = match.team1.name.replace("-H", "").replace("-A", "")
             team2_name = match.team2.name.replace("-H", "").replace("-A", "")
-            if team1_name == "TBA" or team2_name == "TBA":
+            if True or team1_name == "TBA" or team2_name == "TBA":
                 return MatchInsightResponse(
                     results=[],
                     summary="Teams not available",
