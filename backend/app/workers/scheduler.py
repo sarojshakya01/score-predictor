@@ -397,7 +397,7 @@ async def send_autolock_email() -> None:
             table_html = f"<table><thead>{header_html}</thead><tbody>{rows_html}</tbody></table>"
 
             body = build_base_html(
-                f"<p>Dear Managers,</p>"
+                f"<p>Dear all,</p>"
                 f"<p>Predictions for <strong>{match_title}</strong> are now locked. Match will starts at {match.match_datetime.replace(tzinfo=UTC).astimezone().strftime('%Y-%m-%d %H:%M')}.</p>"
                 f"{table_html}"
             )
@@ -512,7 +512,7 @@ async def send_reminder_email() -> None:
         await db.commit()
 
         body = build_base_html(
-            f"<p>Dear Managers,</p>"
+            f"<p>Dear all,</p>"
             f"<p>A match is starting soon! Please submit your predictions before kick-off.</p>"
             f"{tables_html}"
         )
@@ -586,7 +586,7 @@ async def send_todays_matches_email() -> None:
     table_html = f"<table><thead>{header_html}</thead><tbody>{rows_html}</tbody></table>"
 
     body = build_base_html(
-        f"<p>Dear Managers,</p>"
+        f"<p>Dear all,</p>"
         f"<p>Here is the match schedule for the next 24 hours "
         f"(as of {now.replace(tzinfo=UTC).astimezone().strftime('%Y-%m-%d %H:%M')}):</p>"
         f"{table_html}"
