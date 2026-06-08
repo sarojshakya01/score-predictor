@@ -10,7 +10,7 @@ import { getHomeSummary } from "@/lib/home";
 import type { HomeSummaryResponse } from "@/lib/home";
 import { listMatchResults, listUpcomingMatches } from "@/lib/matches";
 import type { MatchResponse } from "@/lib/matches";
-import { MatchCard } from "@/components/ui/match-card";
+import { formatDateTime, MatchCard } from "@/components/ui/match-card";
 
 type HomePageData = {
   errors: string[];
@@ -136,6 +136,10 @@ const Home = async () => {
   const { errors, matches, results, summary } = await loadHomePageData();
   const dashboardMetrics = buildDashboardMetrics(summary);
   const nextLock = summary?.next_lock ?? null;
+  const nextFirstMatch = matches[0];
+  const predictionStartDate = new Date(`${nextFirstMatch.match_datetime}Z`);
+  predictionStartDate.setDate(predictionStartDate.getDate() - 2);
+  predictionStartDate.setHours(predictionStartDate.getHours() - 3);
 
   return (
     <PageShell
@@ -168,11 +172,11 @@ const Home = async () => {
         </section>
       ) : null}
 
-      {!matches.some((m) => (new Date(m.match_datetime).getDate() <= new Date().getDate() + 3)) && <section
+      {(new Date() < predictionStartDate) && <section
         className="rounded-md border border-yellow-700 dark:bg-yellow-950 px-5 py-4 text-sm dark:text-amber-500 dark:border-amber-700 bg-yellow-100 dark:bg-amber-950 dark:text-amber-300"
         role="alert"
       >
-        {"Announcement: This site is under testing. Prediction will be available after 9th Jun 2026 9PM (Tuesday). Please try using and report the bugs to the Admin. Thank you."}
+        {`Announcement: This site is under testing. Prediction will be available after ${formatDateTime(predictionStartDate.toString(), false)}. Please try using and report the bugs to the Admin. Thank you.`}
       </section>}
 
       <section>
