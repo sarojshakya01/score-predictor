@@ -903,7 +903,7 @@ export const FinalsWinnerSelector = () => {
             (isLoading) ? "pointer-events-none cursor-default opacity-70" : "",
           ].join(" ")}
         >
-          Predict
+          {isUpdating ? 'Update' : 'Save'}
         </button>)}
       </div>
     </article>

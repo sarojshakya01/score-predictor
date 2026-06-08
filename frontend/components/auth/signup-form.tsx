@@ -99,7 +99,7 @@ export const SignupForm = () => {
         </label>
         <label className="block col-span-3">
           <span className={labelCls}>Email</span>
-          <input autoComplete="email" name="email" required type="email" value={formState.email} onChange={(e) => updateField("email", e.target.value)} className={inputCls} />
+          <input autoComplete="email" name="email" required type="email" value={formState.email} onChange={(e) => updateField("email", e.target.value)} className={inputCls} placeholder="use your personal email address." />
         </label>
         <label className="block col-span-3">
           <span className={labelCls}>Password</span>
