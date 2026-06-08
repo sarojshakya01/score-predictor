@@ -240,7 +240,7 @@ const ensureKnockoutWinner = (
   return [team1Score, team2Score + 1];
 };
 
-const buildAiPrediction = (
+const buildAIPrediction = (
   selectedMatch: MatchResponse,
   allMatches: MatchResponse[],
   teamsById: Map<number, TeamResponse>,
@@ -468,10 +468,7 @@ const buildFormState = (
     };
   }
 
-  return {
-    ...emptyFormState,
-    kickoffTeamId: String(match.team1_id),
-  };
+  return emptyFormState;
 };
 
 const getReferenceMatchDay = (matches: MatchResponse[]): number | null => {
@@ -866,7 +863,7 @@ export const PredictionsDashboard = () => {
         h2hResults = [];
       }
 
-      const aiPrediction = buildAiPrediction(
+      const aiPrediction = buildAIPrediction(
         selectedMatch,
         allMatches,
         teamsById,
