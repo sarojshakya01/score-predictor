@@ -441,13 +441,13 @@ const AdminMatchesPage = () => {
               <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
                 <tr>
                   <th className={[
-                    "static md:sticky left-0 top-0 z-40 w-16 min-w-[64px] max-w-[64px]",
+                    "static md:sticky left-0 top-0 z-40 w-[50px] min-w-[50px] max-w-[50px] md:w-[64px] md:min-w-[64px] md:max-w-[64px]",
                     "bg-zinc-100 dark:bg-zinc-900",
                     "border-b border-zinc-200 dark:border-zinc-700",
                     "pl-5 pr-3 py-3"
                   ].join(" ")}>S.N.</th>
                   <th className={[
-                    "static md:sticky left-[64px] top-0 z-40 w-[320px] min-w-[320px] max-w-[320px]",
+                    "static left-[50px] top-0 z-40 w-[150px] min-w-[150px] max-w-[150px] md:left-[64px] md:sticky md:w-[320px] md:min-w-[320px] md:max-w-[320px]",
                     "bg-zinc-100 dark:bg-zinc-900",
                     "text-center font-semibold text-sm",
                     "border-b border-zinc-200 dark:border-zinc-700",
@@ -514,7 +514,7 @@ const AdminMatchesPage = () => {
                   pagedMatches.map((match, idx) => (
                     <tr key={match.id} className="transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40">
                       <td className={[
-                        "static md:sticky left-0 z-20 w-16 min-w-[64px] max-w-[64px]",
+                        "static md:sticky left-0 z-20 w-[50px] min-w-[50px] max-w-[50px] md:w-[64px] md:min-w-[64px] md:max-w-[64px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "pl-5 pr-3 py-3 text-left text-zinc-700 dark:text-zinc-300"
@@ -523,20 +523,36 @@ const AdminMatchesPage = () => {
                         "static md:sticky left-[64px] z-20 w-32 min-w-[128px] max-w-[128px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
-                        "pl-3 pr-0 py-3 font-medium text-zinc-950 dark:text-zinc-50"
+                        "pl-3 pr-0 py-3 font-medium text-zinc-950 dark:text-zinc-50",
+                        "hidden md:table-cell"
                       ].join(" ")}>{getTeam1WithFlag(match, "sm")}</td>
                       <td className={[
-                        "static md:sticky left-[192px] z-20 w-16 min-w-[64px] max-w-[64px]",
+                        "static md:sticky left-[50px] z-20 w-[50px] min-w-[50px] max-w-[50px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
-                        "px-3 py-3 text-center font-medium text-zinc-950 dark:text-zinc-50"
+                        "px-1 py-3 font-medium text-zinc-950 dark:text-zinc-50 text-center",
+                        "table-cell md:hidden"
+                      ].join(" ")}><p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{match.team1_name_short}</p></td>
+                      <td className={[
+                        "static md:sticky left-[100px] md:left-[192px] z-20 w-[25px] min-w-[25px] max-w-[25px] md:w-[64px] md:min-w-[64px] md:max-w-[64px]",
+                        "bg-white dark:bg-zinc-950",
+                        "border-b border-zinc-200 dark:border-zinc-800",
+                        "px-0 md:px-3 py-3 text-center font-medium text-zinc-950 dark:text-zinc-50"
                       ].join(" ")}>{getVs("sm")}</td>
                       <td className={[
                         "static md:sticky left-[256px] z-20 w-32 min-w-[128px] max-w-[128px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
-                        "pl-0 pr-3 py-3 font-medium text-zinc-950 dark:text-zinc-50"
+                        "pl-0 pr-3 py-3 font-medium text-zinc-950 dark:text-zinc-50",
+                        "hidden md:table-cell"
                       ].join(" ")}>{getTeam2WithFlag(match, "sm")}</td>
+                      <td className={[
+                        "static md:sticky left-[150px] z-[50px] w-32 min-w-[50px] max-w-[50px]",
+                        "bg-white dark:bg-zinc-950",
+                        "border-b border-zinc-200 dark:border-zinc-800",
+                        "px-1 py-3 font-medium text-zinc-950 dark:text-zinc-50 text-center",
+                        "table-cell md:hidden"
+                      ].join(" ")}><p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{match.team2_name_short}</p></td>
                       <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.match_day}</td>
                       <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{formatDateTime(match.match_datetime)}</td>
                       <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{formatScore(match)}</td>

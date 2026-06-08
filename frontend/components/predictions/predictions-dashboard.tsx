@@ -1194,13 +1194,13 @@ export const PredictionsDashboard = () => {
             <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
               <tr>
                 <th className={[
-                  "static md:sticky left-0 top-0 z-40 w-16 min-w-[64px] max-w-[64px]",
+                  "static md:sticky left-0 top-0 z-40 w-[50px] min-w-[50px] max-w-[50px]",
                   "bg-zinc-100 dark:bg-zinc-900",
                   "border-b border-zinc-200 dark:border-zinc-700",
                   "pl-3 pr-3 py-3"
                 ].join(" ")}>S.N.</th>
                 <th className={[
-                  "static md:sticky left-[64px] top-0 z-40 w-[120px] min-w-[120px] max-w-[120px] md:w-[300px] md:min-w-[300px] md:max-w-[300px]",
+                  "static md:sticky left-[50px] top-0 z-40 w-[120px] min-w-[120px] max-w-[120px] md:w-[300px] md:min-w-[300px] md:max-w-[300px]",
                   "bg-zinc-100 dark:bg-zinc-900",
                   "text-center font-semibold text-sm",
                   "border-b border-zinc-200 dark:border-zinc-700",
@@ -1258,13 +1258,13 @@ export const PredictionsDashboard = () => {
                   return (
                     <tr key={prediction.id}>
                       <td className={[
-                        "static md:sticky left-0 z-20 w-16 min-w-[64px] max-w-[64px]",
+                        "static md:sticky left-0 z-20 w-[50px] min-w-[50px] max-w-[50px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "pl-3 pr-3 py-4 text-left text-zinc-700 dark:text-zinc-300"
                       ].join(" ")}>{idx + 1}</td>
                       <td className={[
-                        "static md:sticky left-[64px] z-20 md:w-[300px] md:min-w-[300px] md:max-w-[300px]",
+                        "static md:sticky left-[50px] z-20 md:w-[300px] md:min-w-[300px] md:max-w-[300px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "pl-2 pr-3 py-4 font-medium text-zinc-950 dark:text-zinc-50",
@@ -1275,14 +1275,15 @@ export const PredictionsDashboard = () => {
                           : `Match #${prediction.match_id}`}
                       </td>
                       <td className={[
-                        "static md:sticky left-[64px] z-20 w-[120px] min-w-[120px] max-w-[120px]",
+                        "static md:sticky left-[50px] z-20 w-[120px] min-w-[120px] max-w-[120px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "pl-2 pr-3 py-4 font-medium text-zinc-950 dark:text-zinc-50",
                         "table-cell md:hidden"
                       ].join(" ")}>
                         {predictionMatch
-                          ? `${predictionMatch.team1_name_short} vs ${predictionMatch.team2_name_short}`
+                          ? <div className="flex justify-center"><p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mr-1">{predictionMatch.team1_name_short}</p>vs
+                            <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 ml-1">{predictionMatch.team2_name_short}</p></div>
                           : `Match #${prediction.match_id}`}
                       </td>
                       <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">

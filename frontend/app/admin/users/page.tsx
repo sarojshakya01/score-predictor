@@ -294,7 +294,7 @@ const AdminUsersPage = () => {
                   pagedUsers.map((user, idx) => (
                     <tr key={user.id} className="transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40">
                       <td className="px-5 py-4 text-left text-zinc-700 dark:text-zinc-300">{idx + 1}</td>
-                      <td className="px-5 py-4 font-medium text-zinc-950 dark:text-zinc-50">
+                      <td className="px-5 py-4 font-medium text-zinc-950 dark:text-zinc-50 truncate">
                         {[user.first_name, user.middle_name, user.last_name]
                           .filter(Boolean)
                           .join(" ")}

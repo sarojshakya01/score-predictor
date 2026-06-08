@@ -168,12 +168,13 @@ const Home = async () => {
         </section>
       ) : null}
 
-      <section
+      {!matches.some((m) => (new Date(m.match_datetime).getDate() <= new Date().getDate() + 3)) && <section
         className="rounded-md border border-yellow-700 dark:bg-yellow-950 px-5 py-4 text-sm dark:text-amber-500 dark:border-amber-700 bg-yellow-100 dark:bg-amber-950 dark:text-amber-300"
         role="alert"
       >
         {"Announcement: This site is under testing. Prediction will be available after 9th Jun 2026 9PM (Tuesday). Please try using and report the bugs to the Admin. Thank you."}
-      </section>
+      </section>}
+
       <section>
         <div className="mb-4 flex items-end justify-between gap-4">
           <div>
