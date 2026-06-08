@@ -81,7 +81,9 @@ class UserPointsDetailsResponse(BaseModel):
     match_label: str
     match_day: int
     team1_name: str
+    team2_name_short: str
     team2_name: str
+    team1_name_short: str
     team1_score: int | None
     team2_score: int | None
     predicted_team1_score: int | None

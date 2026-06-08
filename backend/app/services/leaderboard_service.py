@@ -326,7 +326,9 @@ class LeaderboardService:
                 score = self._score_prediction(point_from_prediction, rules)
                 running_total += score.total_points
                 team1_name = match.team1.name
+                team1_name_short = match.team1.fifa_code
                 team2_name = match.team2.name
+                team2_name_short = match.team2.fifa_code
 
                 items.append(
                     UserPointsDetailsResponse(
@@ -334,7 +336,9 @@ class LeaderboardService:
                         match_label=self._format_match_label(match),
                         match_day=match.match_day,
                         team1_name=team1_name,
+                        team1_name_short=team1_name_short,
                         team2_name=team2_name,
+                        team2_name_short=team2_name_short,
                         team1_score=match.team1_score,
                         team2_score=match.team2_score,
                         predicted_team1_score=point_from_prediction.team1_score,

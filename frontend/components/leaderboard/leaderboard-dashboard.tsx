@@ -150,19 +150,22 @@ const ScoreRow = ({
 
       {/* Match */}
       <td className={[
-        "static md:sticky left-[70px] z-20 w-[285px] min-w-[285px] max-w-[285px]",
+        "static left-[70px] z-20 w-[120px] min-w-[120px] max-w-[120px] md:sticky md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
         "bg-white dark:bg-zinc-950",
         "border-b border-zinc-200 dark:border-zinc-800",
         "px-3 py-2.5 text-center"
       ].join(" ")}>
-        <p className={"text-sm font-semibold text-zinc-900 dark:text-zinc-100"}>
+        <p className={"md:hidden text-sm font-semibold text-zinc-900 dark:text-zinc-100"}>
+          {item.team1_name_short} <span className="text-zinc-400 dark:text-zinc-500">vs</span> {item.team2_name_short}
+        </p>
+        <p className={"hidden md:block text-sm font-semibold text-zinc-900 dark:text-zinc-100"}>
           {item.team1_name} <span className="text-zinc-400 dark:text-zinc-500">vs</span> {item.team2_name}
         </p>
       </td>
 
       {/* Total */}
       <td className={[
-        "static md:sticky left-[356px] z-20 w-[80px] min-w-[80px] max-w-[80px]",
+        "static md:sticky left-[190px] md:left-[356px] z-20 w-[80px] min-w-[80px] max-w-[80px]",
         "bg-white dark:bg-zinc-950",
         "border-b border-zinc-200 dark:border-zinc-800",
         "whitespace-nowrap px-3 py-2.5 text-center"
@@ -381,7 +384,7 @@ const UserPointsDetailModal = ({
                     <th
                       rowSpan={2}
                       className={[
-                        "static md:sticky left-[70px] top-0 z-40 w-[285px] min-w-[285px] max-w-[285px]",
+                        "static left-[70px] top-0 z-40 w-[120px] min-w-[120px] max-w-[120px] md:sticky md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
                         "bg-zinc-100 dark:bg-zinc-900",
                         "border-b border-zinc-200 dark:border-zinc-700",
                         "whitespace-nowrap px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500"
@@ -392,7 +395,7 @@ const UserPointsDetailModal = ({
                     <th
                       rowSpan={2}
                       className={[
-                        "static md:sticky left-[356px] top-0 z-40 w-[80px] min-w-[80px] max-w-[80px]",
+                        "static left-[190px] md:sticky md:left-[356px] top-0 z-40 w-[80px] min-w-[80px] max-w-[80px]",
                         "bg-zinc-100 dark:bg-zinc-900",
                         "border-b border-zinc-200 dark:border-zinc-700",
                         "whitespace-nowrap px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500"
@@ -446,7 +449,7 @@ const UserPointsDetailModal = ({
                   {data.items.some((item) => item.match_stage === "F") && (<>
                     <tr>
                       <td colSpan={2} className={[
-                        "static md:sticky left-0 z-20 w-[345px] min-w-[345px] max-w-[345px]",
+                        "static md:sticky left-0 z-20 w-[190px] min-w-[190px] max-w-[190px] md:w-[345px] md:min-w-[345px] md:max-w-[345px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
@@ -455,7 +458,7 @@ const UserPointsDetailModal = ({
                       </td>
                       {/* Score pts */}
                       <td className={[
-                        "static md:sticky left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
+                        "static md:sticky left-[190px] md:left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "whitespace-nowrap px-3 py-2.5 text-center"
@@ -470,7 +473,7 @@ const UserPointsDetailModal = ({
                     </tr>
                     <tr>
                       <td colSpan={2} className={[
-                        "static md:sticky left-0 z-20 w-[356px] min-w-[356px] max-w-[356px]",
+                        "static md:sticky left-0 z-20 w-[190px] min-w-[190px] max-w-[190px] md:w-[345px] md:min-w-[345px] md:max-w-[345px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
@@ -479,7 +482,7 @@ const UserPointsDetailModal = ({
                       </td>
                       {/* Score pts */}
                       <td className={[
-                        "static md:sticky left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
+                        "static md:sticky left-[190px] md:left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "whitespace-nowrap px-3 py-2.5 text-center"
@@ -498,7 +501,7 @@ const UserPointsDetailModal = ({
                     <>
                       <tr>
                         <td colSpan={2} className={[
-                          "static md:sticky left-0 z-20 w-[356px] min-w-[356px] max-w-[356px]",
+                          "static md:sticky left-0 z-20 w-[190px] min-w-[190px] max-w-[190px] md:w-[345px] md:min-w-[345px] md:max-w-[345px]",
                           "bg-white dark:bg-zinc-950",
                           "border-b border-zinc-200 dark:border-zinc-800",
                           "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
@@ -507,7 +510,7 @@ const UserPointsDetailModal = ({
                         </td>
                         {/* Score pts */}
                         <td className={[
-                          "static md:sticky left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
+                          "static md:sticky left-[190px] md:left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
                           "bg-white dark:bg-zinc-950",
                           "border-b border-zinc-200 dark:border-zinc-800",
                           "whitespace-nowrap px-3 py-2.5 text-center"
@@ -523,7 +526,7 @@ const UserPointsDetailModal = ({
                     </>)}
                   <tr>
                     <td colSpan={2} className={[
-                      "static md:sticky left-0 z-20 w-[356px] min-w-[356px] max-w-[356px]",
+                      "static md:sticky left-0 z-20 w-[190px] min-w-[190px] max-w-[190px] md:w-[345px] md:min-w-[345px] md:max-w-[345px]",
                       "bg-white dark:bg-zinc-950",
                       "border-b border-zinc-200 dark:border-zinc-800",
                       "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
@@ -532,7 +535,7 @@ const UserPointsDetailModal = ({
                     </td>
                     {/* Total pts */}
                     <td className={[
-                      "static md:sticky left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
+                      "static md:sticky left-[190px] md:left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
                       "bg-white dark:bg-zinc-950",
                       "border-b border-zinc-200 dark:border-zinc-800",
                       "whitespace-nowrap px-3 py-2.5 text-center"
@@ -608,24 +611,23 @@ const LeaderboardRow = ({
   return (
     <tr className="dark:hover:bg-zinc-800/40 transition-colors">
       <td className={[
-        "static md:sticky left-0 z-20 w-16 min-w-[75px] max-w-[64px]",
+        "static md:sticky left-0 z-20 w-[30px] min-w-[30px] max-w-[30px]",
         "bg-white dark:bg-zinc-950",
         "border-b border-zinc-200 dark:border-zinc-800",
         "px-3 py-4 font-semibold text-zinc-950 dark:text-zinc-100 text-center"
       ].join(" ")}>{row.rank}</td>
       <td className={[
-        "static md:sticky left-[75px] z-20 w-[150px] min-w-[150px] max-w-[150px]",
+        "static z-20 left-[30px] w-[80px] min-w-[80px] max-w-[80px] md:sticky md:left-[75px] md:w-[150px] md:min-w-[150px] md:max-w-[150px]",
         "bg-white dark:bg-zinc-950",
         "border-b border-zinc-200 dark:border-zinc-800",
         "px-3 py-3 font-medium text-zinc-950 dark:text-zinc-50"
       ].join(" ")}>
-        <button
-          type="button"
+        <div
           onClick={() => onUserClick(row.user_id, row.name)}
-          className="font-medium text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer text-left dark:text-indigo-400 dark:hover:text-indigo-300"
+          className="font-medium text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer text-left dark:text-indigo-400 dark:hover:text-indigo-300 truncate"
         >
           {row.name}
-        </button>
+        </div>
       </td>
       <td className={[
         "static md:sticky left-[225px] z-20 w-[90px] min-w-[90px] max-w-[90px]",
@@ -726,12 +728,9 @@ const RaceChartRow = ({
         : "bg-zinc-500";
 
   return (
-    <div className="grid min-w-[42rem] grid-cols-[75px_150px_90px_1fr_100px] items-center pl-0 pr-4 py-3 text-sm">
+    <div className="grid min-w-[10-rem] md:min-w-[42rem] grid-cols-[30px_80px_auto_40px] md:grid-cols-[75px_150px_auto_100px] items-center pl-0 pr-4 py-3 text-sm">
       <div className={"px-3 font-semibold text-zinc-950 dark:text-zinc-100 text-center"}>{standing.rank}</div>
       <div className="px-3 truncate font-medium text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer text-left dark:text-indigo-400 dark:hover:text-indigo-300" onClick={() => onUserClick(standing.user_id, standing.name)}>{standing.name}</div>
-      <div className="px-3 text-right font-semibold text-zinc-950 dark:text-zinc-100">
-        {standing.total_points}
-      </div>
       <div className="h-9 overflow-hidden rounded-md bg-zinc-100 dark:bg-zinc-700">
         <div
           className={`flex h-full items-center justify-end rounded-md px-3 text-xs font-semibold text-white transition-[width] duration-700 ease-out ${barColor}`}
@@ -816,13 +815,14 @@ const RaceChart = ({ frames, onUserClick }: { frames: LeaderboardRaceFrameRespon
         </div>
       </div>
       <div className="overflow-x-auto">
-        <div className="min-w-[42rem] border-b border-zinc-100 bg-zinc-50 pl-0 pr-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800/70 dark:text-zinc-400">
-          <div className="grid grid-cols-[75px_150px_90px_1fr_100px] items-center">
-            <span className="px-3 dark:text-zinc-400 text-center">Rank</span>
+        <div className="min-w-[10rem] md:min-w-[42rem] border-b border-zinc-100 bg-zinc-50 pl-0 pr-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800/70 dark:text-zinc-400">
+          <div className="grid grid-cols-[30px_80px_auto_40px] md:grid-cols-[75px_150px_auto_100px] items-center">
+            <span className="block md:hidden px-3 dark:text-zinc-400 text-center">#</span>
+            <span className="hidden md:block px-3 dark:text-zinc-400 text-center">Rank</span>
             <span className="px-3 dark:text-zinc-400 text-left">User</span>
-            <span className="px-3 dark:text-zinc-400 text-right">Total</span>
             <span className="dark:text-zinc-400 text-left">Total</span>
-            <span className="pl-3 dark:text-zinc-400 text-right">Match Pts</span>
+            <span className="block md:hidden pl-3 dark:text-zinc-400 text-right">Pts</span>
+            <span className="hidden md:block pl-3 dark:text-zinc-400 text-right">Match Pts</span>
           </div>
         </div>
         <div className="max-h-[35rem] divide-y divide-zinc-100 overflow-y-auto dark:divide-zinc-800">
@@ -979,13 +979,21 @@ export const LeaderboardDashboard = () => {
               <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800/70 dark:text-zinc-400">
                 <tr>
                   <th className={[
+                    "static md:sticky left-0 top-0 z-40 w-30px min-w-[30px] max-w-[30px]",
+                    "bg-zinc-100 dark:bg-zinc-900",
+                    "border-b border-zinc-200 dark:border-zinc-700",
+                    "px-3 py-3 dark:text-zinc-400 text-center",
+                    "table-cell md:hidden"
+                  ].join(" ")}>#</th>
+                  <th className={[
                     "static md:sticky left-0 top-0 z-40 w-16 min-w-[75px] max-w-[64px]",
                     "bg-zinc-100 dark:bg-zinc-900",
                     "border-b border-zinc-200 dark:border-zinc-700",
-                    "px-3 py-3 dark:text-zinc-400 text-center"
+                    "px-3 py-3 dark:text-zinc-400 text-center",
+                    "hidden md:table-cell"
                   ].join(" ")}>Rank</th>
                   <th className={[
-                    "static md:sticky left-[75px] top-0 z-40 w-[150px] min-w-[150px] max-w-[150px]",
+                    "static md:sticky top-0 z-40 left-[30px] w-[80px] min-w-[80px] max-w-[80px] md:sticky md:left-[75px] md:w-[150px] md:min-w-[150px] md:max-w-[150px]",
                     "bg-zinc-100 dark:bg-zinc-900",
                     "font-semibold text-sm",
                     "px-3 py-3 dark:text-zinc-400",

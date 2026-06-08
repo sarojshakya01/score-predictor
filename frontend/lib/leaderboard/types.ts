@@ -49,7 +49,9 @@ export type UserPointsDetailsResponse = {
   match_label: string;
   match_day: number;
   team1_name: string;
+  team1_name_short: string;
   team2_name: string;
+  team2_name_short: string;
   team1_score: number;
   team2_score: number;
   predicted_team1_score: number;

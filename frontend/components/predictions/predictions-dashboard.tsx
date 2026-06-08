@@ -1200,11 +1200,11 @@ export const PredictionsDashboard = () => {
                   "pl-3 pr-3 py-3"
                 ].join(" ")}>S.N.</th>
                 <th className={[
-                  "static md:sticky left-[64px] top-0 z-40 w-[320px] min-w-[300px] max-w-[300px]",
+                  "static md:sticky left-[64px] top-0 z-40 w-[120px] min-w-[120px] max-w-[120px] md:w-[300px] md:min-w-[300px] md:max-w-[300px]",
                   "bg-zinc-100 dark:bg-zinc-900",
                   "text-center font-semibold text-sm",
                   "border-b border-zinc-200 dark:border-zinc-700",
-                  "pl-2 pr-3 py-3 text-center"
+                  "pl-2 pr-3 py-3 text-center",
                 ].join(" ")}>Match</th>
                 <th className={[
                   "static md:sticky top-0 z-30",
@@ -1264,13 +1264,25 @@ export const PredictionsDashboard = () => {
                         "pl-3 pr-3 py-4 text-left text-zinc-700 dark:text-zinc-300"
                       ].join(" ")}>{idx + 1}</td>
                       <td className={[
-                        "static md:sticky left-[64px] z-20 w-[320px] min-w-[320px] max-w-[320px]",
+                        "static md:sticky left-[64px] z-20 md:w-[300px] md:min-w-[300px] md:max-w-[300px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
-                        "pl-2 pr-3 py-4 font-medium text-zinc-950 dark:text-zinc-50"
+                        "pl-2 pr-3 py-4 font-medium text-zinc-950 dark:text-zinc-50",
+                        "hidden md:table-cell"
                       ].join(" ")}>
                         {predictionMatch
                           ? getMatchLabelWithFlag(predictionMatch)
+                          : `Match #${prediction.match_id}`}
+                      </td>
+                      <td className={[
+                        "static md:sticky left-[64px] z-20 w-[120px] min-w-[120px] max-w-[120px]",
+                        "bg-white dark:bg-zinc-950",
+                        "border-b border-zinc-200 dark:border-zinc-800",
+                        "pl-2 pr-3 py-4 font-medium text-zinc-950 dark:text-zinc-50",
+                        "table-cell md:hidden"
+                      ].join(" ")}>
+                        {predictionMatch
+                          ? `${predictionMatch.team1_name_short} vs ${predictionMatch.team2_name_short}`
                           : `Match #${prediction.match_id}`}
                       </td>
                       <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">
