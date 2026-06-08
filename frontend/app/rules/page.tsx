@@ -57,6 +57,11 @@ const RulesPage = () => {
                 className="flex flex-col rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900"
               >
                 {/* group header */}
+                <header className="border-b border-zinc-100 px-4 py-3 dark:border-zinc-800 bg-gray-100 dark:bg-zinc-700">
+                  <h2 className="text-lg font-semibold text-zinc-800 dark:text-zinc-50">
+                    {"Winner Prediction Rule"}
+                  </h2>
+                </header>
                 <header className="border-b border-zinc-100 px-4 py-3 dark:border-zinc-800">
                   <h2 className="text-sm font-semibold text-zinc-950 dark:text-zinc-50">
                     {group.friend_name}
@@ -102,6 +107,12 @@ const RulesPage = () => {
               </article>
             ))}
           </section>
+          <hr className="border-gray-300 dark:border-gray-700 my-2" />
+          <header className="border border-zinc-200 rounded-md px-4 py-3 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-700">
+            <h2 className="text-lg font-semibold text-zinc-800 dark:text-zinc-50">
+              {"Match Prediction Rules"}
+            </h2>
+          </header>
           <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
             {groups.filter((group) => group.name !== "winners").map((group) => (
               <article
