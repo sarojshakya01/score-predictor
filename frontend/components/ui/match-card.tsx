@@ -1,4 +1,4 @@
-import { MatchResponse } from "@/lib/matches"
+import { MatchResponse, matchStageLabels, matchStages } from "@/lib/matches"
 import { PillTone, StatusPill } from "./status-pill";
 import { JSX } from "react";
 import { PredictionStatus } from "@/lib/matches/types";
@@ -74,6 +74,17 @@ export const formatDateTime = (value: string, isUTC: boolean = true): string => 
   }).format(date);
 };
 
+export const isMatchPlayedOrLive = (match: MatchResponse): { isMatchPlayed: boolean, isMatchLive: boolean } => {
+  const now = new Date();
+  const kickoff = new Date(`${match.match_datetime}Z`);
+  const isMatchPlayed = match.match_locked && match.team1_score !== null && match.team2_score !== null;
+  const matchMinutes = match.match_stage === matchStageLabels.GROUP ? (45 + 15 + 45 + 10) : (45 + 15 + 45 + 10 + 35 + 15); // tentative total minutes for group stage and knockout matches
+  const isMatchCompleted = isMatchPlayed && now.getTime() > kickoff.getTime() + matchMinutes * 60 * 1000;
+  const isMatchLive = now.getTime() > kickoff.getTime() && !isMatchCompleted;
+
+  return { isMatchPlayed, isMatchLive };
+}
+
 const formatGroupLabel = (group: string): string => {
   const normalizedGroup = group.trim();
   if (!normalizedGroup) return "Group TBA";
@@ -89,6 +100,7 @@ const formatMatchGroup = (match: MatchResponse): string => {
 const MatchDayNGroupNStatus = (match: MatchResponse) => {
   const status = getPredictionStatus(match);
   const urgency = getLockUrgency(match);
+  const { isMatchPlayed, isMatchLive } = isMatchPlayedOrLive(match);
   return (
     <dl className="items-start justify-between gap-3">
       <div className="flex items-start justify-between gap-3">
@@ -96,7 +108,9 @@ const MatchDayNGroupNStatus = (match: MatchResponse) => {
           Match day {match.match_day}
         </p>
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">{formatMatchGroup(match)}</p>
-        <StatusPill tone={getStatusTone(status)} urgency={urgency}>{status}</StatusPill>
+        {isMatchPlayed
+          ? (<StatusPill tone="green" urgency="none">{isMatchLive ? "Live: " : "FT: "}{match.team1_score} - {match.team2_score}</StatusPill>)
+          : (<StatusPill tone={getStatusTone(status)} urgency={urgency}>{status}</StatusPill>)}
       </div>
     </dl>
   );

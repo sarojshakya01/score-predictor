@@ -35,6 +35,7 @@ import {
   getMatchLabelWithFlag,
   getPredictionStatus,
   getStatusTone,
+  isMatchPlayedOrLive,
   SelectableMatchCard,
 } from "../ui/match-card";
 import Image from "next/image";
@@ -937,6 +938,8 @@ export const PredictionsDashboard = () => {
   const selectCls = "mt-1 h-10 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:disabled:bg-zinc-700 dark:disabled:text-zinc-500 dark:focus:ring-emerald-900";
   const labelTextCls = "flex items-center gap-2 text-sm font-medium text-zinc-700 dark:text-zinc-300";
 
+  const { isMatchPlayed, isMatchLive } = selectedMatch ? isMatchPlayedOrLive(selectedMatch) : { isMatchPlayed: false, isMatchLive: false };
+
   return (
     <>
       <ToastViewport onDismiss={dismissToast} toasts={toasts} />
@@ -1032,7 +1035,10 @@ export const PredictionsDashboard = () => {
       ) : null}
 
       <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
-        <div className="hidden lg:flex w-40 h-[500px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48">
+        <div className={[
+          "hidden lg:flex w-40 h-[500px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48",
+          (selectedMatch?.winner_id && selectedMatch?.winner_id === selectedMatch?.team2_id) ? "opacity-50" : (selectedMatch?.team1_score === selectedMatch?.team2_score) ? "opacity-70" : "opacity-100"
+        ].join(" ")}>
           <ImageWithFallback width={530} height={530} src={"/images/players/" + selectedMatch?.team1_name_short?.toLowerCase() + ".png"} alt={selectedMatch?.team1_name || "Captain Image"} />
         </div>
         <form
@@ -1067,9 +1073,11 @@ export const PredictionsDashboard = () => {
             </div>
           </div>
           <div className="absolute right-[20px] top-[20px]">
-            <StatusPill tone={getStatusTone(selectedStatus)} urgency={selectedMatch ? getLockUrgency(selectedMatch) : "none"}>
-              {selectedStatus}
-            </StatusPill>
+            {selectedMatch && isMatchPlayed
+              ? (<StatusPill tone="green" urgency="none">{isMatchLive ? "Live: " : "FT: "}{selectedMatch.team1_score} - {selectedMatch.team2_score}</StatusPill>)
+              : (<StatusPill tone={getStatusTone(selectedStatus)} urgency={selectedMatch ? getLockUrgency(selectedMatch) : "none"}>
+                {selectedStatus}
+              </StatusPill>)}
           </div>
 
           <div className="mt-6 grid gap-4 sm:grid-cols-2" id="prediction-fields">
@@ -1175,7 +1183,10 @@ export const PredictionsDashboard = () => {
             </button>
           </div>
         </form>
-        <div className="hidden lg:flex w-40 h-[500px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48">
+        <div className={[
+          "hidden lg:flex w-40 h-[500px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48",
+          (selectedMatch?.winner_id && selectedMatch?.winner_id === selectedMatch?.team1_id) ? "opacity-50" : (selectedMatch?.team1_score === selectedMatch?.team2_score) ? "opacity-70" : "opacity-100"
+        ].join(" ")}>
           <ImageWithFallback width={530} height={530} src={"/images/players/" + selectedMatch?.team2_name_short?.toLowerCase() + ".png"} alt={selectedMatch?.team2_name || "Captain Image"} />
         </div>
       </section >
