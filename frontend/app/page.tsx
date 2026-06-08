@@ -137,7 +137,7 @@ const Home = async () => {
   const dashboardMetrics = buildDashboardMetrics(summary);
   const nextLock = summary?.next_lock ?? null;
   const nextFirstMatch = matches[0];
-  const predictionStartDate = new Date(`${nextFirstMatch.match_datetime}Z`);
+  const predictionStartDate = nextFirstMatch ? new Date(`${nextFirstMatch.match_datetime}Z`) : new Date();
   predictionStartDate.setDate(predictionStartDate.getDate() - 2);
   predictionStartDate.setHours(predictionStartDate.getHours() - 3);
 
