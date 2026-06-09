@@ -312,7 +312,7 @@ const AdminUsersPage = () => {
                         </StatusPill>
                       </td>
                       <td className="px-5 py-4">
-                        {formatDateTime(user.created_at)}
+                        {formatDateTime(user.created_at, false)}
                       </td>
                       <td className="px-5 py-4 text-right">
                         <div className="flex justify-end gap-1">
