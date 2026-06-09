@@ -199,7 +199,7 @@ const Home = async () => {
         role="alert"
       >
         <li className="list-decimal">Everyday at 10AM {`(${getTimezoneOffsetString(DEFAULT_TIMEZONE)})`}, you will receive an email listing the scheduled matches in next 24 hours in your registered email</li>
-        <li className="list-decimal">You will get notification for every match 3 hours before the match starts.</li>
+        <li className="list-decimal">You will get prediction reminder notification for every match 3 hours before the match starts.</li>
         <li className="list-decimal">Prediction for a match will be locked 1 hour before the match kicks-off.</li>
         <li className="list-decimal">Prediction for the final matches (Winner, Runner-up and third place) will be available for 7 days from the date of the tournament start.</li>
       </section>}
