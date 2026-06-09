@@ -194,7 +194,7 @@ const Home = async () => {
         {`Announcement: This site is under testing. Prediction will be available after ${formatDateTime(predictionStartDate.toString(), false)}. Please try using and report the bugs to the Admin. Thank you.`}
       </section>}
 
-      {nextFirstMatch.match_day <= 5 && <section
+      {nextFirstMatch && nextFirstMatch.match_day <= 5 && <section
         className="rounded-md border border-yellow-700 dark:bg-yellow-950 px-5 py-4 text-sm dark:text-amber-500 dark:border-amber-700 bg-yellow-100 dark:bg-amber-950 dark:text-amber-300"
         role="alert"
       >
