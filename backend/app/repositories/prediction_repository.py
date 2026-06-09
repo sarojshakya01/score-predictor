@@ -9,7 +9,7 @@ from sqlalchemy.orm import selectinload
 
 from app.models.match import Match
 from app.models.prediction import Prediction
-from app.models.user import User
+from app.models.user import User, UserRole
 
 
 class PredictionRepository:
@@ -140,6 +140,25 @@ class PredictionRepository:
         final_result.sort(key=lambda x: x.match_id)
 
         return final_result
+
+    async def list_predictions_for_match(self, match_id: int) -> list[Prediction]:
+        """Fetch active users' predictions for one match with display relationships."""
+        statement = (
+            select(Prediction)
+            .join(Prediction.user)
+            .options(
+                selectinload(Prediction.user),
+                selectinload(Prediction.kick_off_team),
+                selectinload(Prediction.first_scoring_team),
+            )
+            .where(Prediction.match_id == match_id)
+            .where(User.is_active.is_(True))
+            .where(User.role == UserRole.USER)
+            .order_by(User.created_at.asc(), User.id.asc())
+        )
+
+        result = await self._db.execute(statement)
+        return list(result.scalars().all())
 
 
     async def list_scored_predictions(self) -> list[Prediction]:

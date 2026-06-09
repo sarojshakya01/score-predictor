@@ -1,4 +1,5 @@
 export {
+  getMatchPointsDetails,
   getUserPredictionDetails,
   leaderboardService,
   listLeaderboard,
@@ -9,6 +10,8 @@ export type {
   LeaderboardRaceUserResponse,
   LeaderboardResponse,
   ListLeaderboardParams,
+  MatchPointsDetailsResponse,
+  MatchUserPointsDetailsResponse,
   UserPointsDetailsListResponse,
   UserPointsDetailsResponse,
 } from "@/lib/leaderboard/types";

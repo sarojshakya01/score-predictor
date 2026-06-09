@@ -11,6 +11,7 @@ import type { HomeSummaryResponse } from "@/lib/home";
 import { listMatchResults, listUpcomingMatches } from "@/lib/matches";
 import type { MatchResponse } from "@/lib/matches";
 import { formatDateTime, MatchCard } from "@/components/ui/match-card";
+import { DEFAULT_TIMEZONE } from "@/lib/api/config";
 
 type HomePageData = {
   errors: string[];
@@ -30,6 +31,19 @@ const getLoadErrorMessage = (error: unknown, fallback: string): string => {
 
   return fallback;
 };
+
+const getTimezoneOffsetString = (timeZone: string, date = new Date()) => {
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    timeZoneName: 'shortOffset'
+  });
+
+  // Example output of parts: [{type: "timeZoneName", value: "GMT-4"}]
+  const parts = formatter.formatToParts(date);
+  const tzPart = parts.find(part => part.type === 'timeZoneName');
+
+  return tzPart ? tzPart.value : 'GMT';
+}
 
 const loadHomePageData = async (): Promise<HomePageData> => {
   const [summaryResult, matchesResult, resultsResult] =
@@ -172,11 +186,22 @@ const Home = async () => {
         </section>
       ) : null}
 
+      {/* Announcements */}
       {(new Date() < predictionStartDate) && <section
         className="rounded-md border border-yellow-700 dark:bg-yellow-950 px-5 py-4 text-sm dark:text-amber-500 dark:border-amber-700 bg-yellow-100 dark:bg-amber-950 dark:text-amber-300"
         role="alert"
       >
         {`Announcement: This site is under testing. Prediction will be available after ${formatDateTime(predictionStartDate.toString(), false)}. Please try using and report the bugs to the Admin. Thank you.`}
+      </section>}
+
+      {nextFirstMatch.match_day <= 5 && <section
+        className="rounded-md border border-yellow-700 dark:bg-yellow-950 px-5 py-4 text-sm dark:text-amber-500 dark:border-amber-700 bg-yellow-100 dark:bg-amber-950 dark:text-amber-300"
+        role="alert"
+      >
+        <li className="list-decimal">Everyday at 10AM {`(${getTimezoneOffsetString(DEFAULT_TIMEZONE)})`}, you will receive an email listing the scheduled matches in next 24 hours in your registered email</li>
+        <li className="list-decimal">You will get notification for every match 3 hours before the match starts.</li>
+        <li className="list-decimal">Prediction for a match will be locked 1 hour before the match kicks-off.</li>
+        <li className="list-decimal">Prediction for the final matches (Winner, Runner-up and third place) will be available for 7 days from the date of the tournament start.</li>
       </section>}
 
       <section>

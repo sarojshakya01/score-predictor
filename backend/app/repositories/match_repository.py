@@ -26,6 +26,8 @@ class MatchRepository:
                 selectinload(Match.team1),
                 selectinload(Match.team2),
                 selectinload(Match.winner),
+                selectinload(Match.kick_off_team),
+                selectinload(Match.first_scoring_team),
             )
             .where(Match.id == match_id),
         )
@@ -90,6 +92,7 @@ class MatchRepository:
         *,
         offset: int = 0,
         limit: int | None = None,
+        latest_first: bool = False,
     ) -> list[Match]:
         """Fetch matches with final scores for standings calculations."""
         statement = (
@@ -98,12 +101,21 @@ class MatchRepository:
                 selectinload(Match.team1),
                 selectinload(Match.team2),
                 selectinload(Match.winner),
+                selectinload(Match.kick_off_team),
+                selectinload(Match.first_scoring_team),
             )
             .where(Match.match_locked.is_(True))
             .where(Match.team1_score.is_not(None))
             .where(Match.team2_score.is_not(None))
-            .order_by(Match.match_datetime.asc(), Match.id.asc())
         )
+
+        order_by = (
+            (Match.match_datetime.desc(), Match.id.desc())
+            if latest_first
+            else (Match.match_datetime.asc(), Match.id.asc())
+        )
+
+        statement = statement.order_by(*order_by)
 
         if limit is not None:
             statement = statement.offset(offset).limit(limit)

@@ -154,6 +154,7 @@ class MatchService:
             matches = await self._match_repository.list_completed_matches(
                 offset=offset,
                 limit=limit,
+                latest_first=True,
             )
             total = await self._match_repository.count_completed_matches()
 

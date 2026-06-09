@@ -17,6 +17,8 @@ from app.repositories.setting_repository import SettingRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.leaderboard import (
     LeaderboardEntryResponse,
+    MatchPointsDetailsResponse,
+    MatchUserPointsDetailsResponse,
     LeaderboardRaceFrameResponse,
     LeaderboardRaceUserResponse,
     LeaderboardResponse,
@@ -394,6 +396,99 @@ class LeaderboardService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An unexpected error occurred: could not read user points details",
+            )
+
+    async def get_match_points_details(
+        self,
+        *,
+        match_id: int,
+    ) -> MatchPointsDetailsResponse:
+        """Return scored points details for every active user on one match."""
+        try:
+            rules = await self._get_scoring_rules()
+            match = await self._match_repository.get_by_id(match_id)
+            if match is None:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Match not found",
+                )
+
+            if (
+                not match.match_locked
+                or match.team1_score is None
+                or match.team2_score is None
+            ):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Match result is not available yet",
+                )
+
+            users = await self._user_repository.list_active_normal_users()
+            predictions = await self._prediction_repository.list_predictions_for_match(match_id)
+            predictions_by_user = {prediction.user_id: prediction for prediction in predictions}
+            items: list[MatchUserPointsDetailsResponse] = []
+
+            for user in users:
+                prediction = predictions_by_user.get(user.id)
+                if prediction is None:
+                    prediction = self._prediction_repository.to_dummy_prediction_for_match(
+                        user.id,
+                        match,
+                    )
+
+                score = self._score_prediction(prediction, rules)
+                items.append(
+                    MatchUserPointsDetailsResponse(
+                        user_id=user.id,
+                        user_name=self._format_user_name(user),
+                        predicted_team1_score=prediction.team1_score,
+                        predicted_team2_score=prediction.team2_score,
+                        score_points=score.score_points,
+                        goal_difference_points=score.goal_difference_points,
+                        predicted_yellow_card_count=prediction.yellow_card_count,
+                        yellow_card_points=score.yellow_card_points,
+                        predicted_red_card_count=prediction.red_card_count,
+                        red_card_points=score.red_card_points,
+                        predicted_kick_off_team=prediction.kick_off_team.name if prediction.kick_off_team else None,
+                        kick_off_team_points=score.kick_off_team_points,
+                        predicted_first_scoring_team=prediction.first_scoring_team.name if prediction.first_scoring_team else None,
+                        first_scoring_team_points=score.first_scoring_team_points,
+                        predicted_first_goal_in=prediction.first_goal_in,
+                        first_goal_in_points=score.first_goal_in_points,
+                        predicted_match_duration=prediction.match_duration.value if prediction.match_duration else None,
+                        match_duration_points=score.match_duration_points,
+                        total_points=score.total_points,
+                    )
+                )
+
+            items.sort(key=lambda item: (item.total_points, item.user_name.lower(), item.user_id))
+
+            return MatchPointsDetailsResponse(
+                match_id=match.id,
+                match_label=self._format_match_label(match),
+                match_day=match.match_day,
+                team1_name=match.team1.name,
+                team1_name_short=match.team1.fifa_code,
+                team2_name=match.team2.name,
+                team2_name_short=match.team2.fifa_code,
+                team1_score=match.team1_score,
+                team2_score=match.team2_score,
+                yellow_card_count=match.yellow_card_count,
+                red_card_count=match.red_card_count,
+                kick_off_team=match.kick_off_team.name if match.kick_off_team else None,
+                first_scoring_team=match.first_scoring_team.name if match.first_scoring_team else None,
+                first_goal_in=match.first_goal_in,
+                match_duration=match.match_duration.value if match.match_duration else None,
+                items=items,
+                total=len(items),
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.exception("Unexpected error during get_match_points_details", e)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected error occurred: could not read match points details",
             )
 
     async def _get_prediction_data(

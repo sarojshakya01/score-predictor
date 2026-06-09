@@ -95,3 +95,45 @@ export type UserPointsDetailsListResponse = {
   runner_up_points: number;
   third_place_points: number;
 };
+
+export type MatchUserPointsDetailsResponse = {
+  user_id: number;
+  user_name: string;
+  predicted_team1_score: number | null;
+  predicted_team2_score: number | null;
+  score_points: number;
+  goal_difference_points: number;
+  predicted_yellow_card_count: number | null;
+  yellow_card_points: number;
+  predicted_red_card_count: number | null;
+  red_card_points: number;
+  predicted_kick_off_team: string | null;
+  kick_off_team_points: number;
+  predicted_first_scoring_team: string | null;
+  first_scoring_team_points: number;
+  predicted_first_goal_in: string | null;
+  first_goal_in_points: number;
+  predicted_match_duration: string | null;
+  match_duration_points: number;
+  total_points: number;
+};
+
+export type MatchPointsDetailsResponse = {
+  match_id: number;
+  match_label: string;
+  match_day: number;
+  team1_name: string;
+  team1_name_short: string;
+  team2_name: string;
+  team2_name_short: string;
+  team1_score: number | null;
+  team2_score: number | null;
+  yellow_card_count: number | null;
+  red_card_count: number | null;
+  kick_off_team: string | null;
+  first_scoring_team: string | null;
+  first_goal_in: string | null;
+  match_duration: string | null;
+  items: MatchUserPointsDetailsResponse[];
+  total: number;
+};
