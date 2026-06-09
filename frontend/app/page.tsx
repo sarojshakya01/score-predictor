@@ -138,8 +138,8 @@ const Home = async () => {
   const nextLock = summary?.next_lock ?? null;
   const nextFirstMatch = matches[0];
   const predictionStartDate = nextFirstMatch ? new Date(`${nextFirstMatch.match_datetime}Z`) : new Date();
-  predictionStartDate.setDate(predictionStartDate.getDate() - 2);
-  predictionStartDate.setHours(predictionStartDate.getHours() - 3);
+  predictionStartDate.setDate(predictionStartDate.getDate() - 3);
+  predictionStartDate.setHours(predictionStartDate.getHours() - 6);
 
   return (
     <PageShell
