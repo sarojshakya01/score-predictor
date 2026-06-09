@@ -246,7 +246,7 @@ const MatchPointsModal = ({
 
       {!isLoading && details && !error ? (
         <>
-          <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="mb-4 grid gap-3 grid-cols-2 md:grid-cols-4">
             <div className="rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800/50">
               <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
                 FT Score
@@ -259,7 +259,7 @@ const MatchPointsModal = ({
               <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
                 Winner
               </p>
-              <p className="mt-1 text-2xl font-bold text-zinc-950 dark:text-zinc-50">
+              <p className="mt-1 text-2xl font-bold text-zinc-950 dark:text-zinc-50 truncate">
                 {match ? formatWinner(match) : "--"}
               </p>
             </div>
@@ -288,7 +288,7 @@ const MatchPointsModal = ({
                   <th
                     rowSpan={2}
                     className={[
-                      "static md:sticky left-0 top-0 z-40 w-16 min-w-[64px] max-w-[64px]",
+                      "static md:sticky left-0 top-0 z-40 w-10 min-w-[50px] max-w-[50px]",
                       "bg-zinc-100 dark:bg-zinc-900",
                       "border-b border-zinc-200 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:border-zinc-700 dark:text-zinc-500",
                     ].join(" ")}
@@ -298,7 +298,7 @@ const MatchPointsModal = ({
                   <th
                     rowSpan={2}
                     className={[
-                      "static md:sticky left-[64px] top-0 z-40 w-[220px] min-w-[220px] max-w-[220px]",
+                      "static md:sticky left-[50px] top-0 z-40 w-[100px] min-w-[100px] max-w-[100px]",
                       "bg-zinc-100 dark:bg-zinc-900",
                       "border-b border-zinc-200 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:border-zinc-700 dark:text-zinc-500",
                     ].join(" ")}
@@ -308,7 +308,7 @@ const MatchPointsModal = ({
                   <th
                     rowSpan={2}
                     className={[
-                      "static md:sticky left-[284px] top-0 z-40 w-[90px] min-w-[90px] max-w-[90px]",
+                      "static md:sticky left-[150px] top-0 z-40 w-[80px] min-w-[80px] max-w-[80px]",
                       "bg-zinc-100 dark:bg-zinc-900",
                       "border-b border-zinc-200 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:border-zinc-700 dark:text-zinc-500",
                     ].join(" ")}
@@ -353,7 +353,7 @@ const MatchPointsModal = ({
                   >
                     <td
                       className={[
-                        "static md:sticky left-0 z-20 w-16 min-w-[64px] max-w-[64px]",
+                        "static md:sticky left-0 z-20 w-10 min-w-[50px] max-w-[50px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 px-3 py-3 text-center text-zinc-700 dark:border-zinc-800 dark:text-zinc-300",
                       ].join(" ")}
@@ -362,16 +362,16 @@ const MatchPointsModal = ({
                     </td>
                     <td
                       className={[
-                        "static md:sticky left-[64px] z-20 w-[220px] min-w-[220px] max-w-[220px]",
+                        "static md:sticky left-[50px] z-20 w-[100px] min-w-[100px] max-w-[100px]",
                         "bg-white dark:bg-zinc-950",
-                        "border-b border-zinc-200 px-3 py-3 font-medium text-zinc-950 dark:border-zinc-800 dark:text-zinc-50",
+                        "border-b border-zinc-200 px-3 py-3 font-medium text-zinc-950 dark:border-zinc-800 dark:text-zinc-50 truncate",
                       ].join(" ")}
                     >
                       <span className="block truncate">{row.user_name}</span>
                     </td>
                     <td
                       className={[
-                        "static md:sticky left-[284px] z-20 w-[90px] min-w-[90px] max-w-[90px]",
+                        "static md:sticky left-[150px] z-20 w-[80px] min-w-[80px] max-w-[80px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 px-3 py-3 text-center dark:border-zinc-800",
                       ].join(" ")}

@@ -398,7 +398,7 @@ async def send_autolock_email() -> None:
 
             body = build_base_html(
                 f"<p>Dear all,</p>"
-                f"<p>Predictions for <strong>{match_title}</strong> are now locked. Match will starts at {match.match_datetime.replace(tzinfo=UTC).astimezone().strftime('%Y-%m-%d %H:%M')}.</p>"
+                f"<p>Predictions for <strong>{match_title}</strong> are now locked. Match will starts at {match.match_datetime.replace(tzinfo=UTC).astimezone().strftime('%Y-%m-%d %I:%M %p')}.</p>"
                 f"{table_html}"
             )
 
@@ -465,7 +465,7 @@ async def send_reminder_email() -> None:
             team1_name = match.team1.name
             team2_name = match.team2.name
             match_title = f"{team1_name} vs {team2_name}"
-            match_time_str = match.match_datetime.replace(tzinfo=UTC).astimezone().strftime("%Y-%m-%d %H:%M")
+            match_time_str = match.match_datetime.replace(tzinfo=UTC).astimezone().strftime("%Y-%m-%d %I:%M %p")
 
             # Fetch existing predictions for this match
             pred_result = await db.execute(
@@ -576,7 +576,7 @@ async def send_todays_matches_email() -> None:
             f"<tr>"
             f"<td>Day {m.match_day}</td>"
             f"<td>{m.team1.name} vs {m.team2.name}</td>"
-            f"<td>{m.match_datetime.replace(tzinfo=UTC).astimezone().strftime('%Y-%m-%d %H:%M')}</td>"
+            f"<td>{m.match_datetime.replace(tzinfo=UTC).astimezone().strftime('%Y-%m-%d %I:%M %p')}</td>"
             f"</tr>"
             for m in matches
         )
@@ -588,7 +588,7 @@ async def send_todays_matches_email() -> None:
     body = build_base_html(
         f"<p>Dear all,</p>"
         f"<p>Here is the match schedule for the next 24 hours "
-        f"(as of {now.replace(tzinfo=UTC).astimezone().strftime('%Y-%m-%d %H:%M')}):</p>"
+        f"(as of {now.replace(tzinfo=UTC).astimezone().strftime('%Y-%m-%d %I:%M %p')}):</p>"
         f"{table_html}"
         f"<p>Don't forget to submit your predictions before kick-off!</p>"
     )
