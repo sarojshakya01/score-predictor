@@ -583,7 +583,7 @@ export const PredictionsDashboard = () => {
         ...current,
         firstGoalIn: randomFirstGoalIn,
         firstScoringTeamId: randomFirstScoringTeamId,
-        kickoffTeamId: isKnockout ? randomKickoffTeamId : current.kickoffTeamId,
+        kickoffTeamId: randomKickoffTeamId,
         matchDuration: isKnockout ? randomMatchDuration : current.matchDuration,
         redCardCount: String(randomRedCards),
         team1Score: String(team1Score),
