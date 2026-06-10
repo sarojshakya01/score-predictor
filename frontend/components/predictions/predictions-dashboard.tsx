@@ -572,9 +572,7 @@ export const PredictionsDashboard = () => {
           : "";
 
       // Random kick-off team (only for knockout stage)
-      const randomKickoffTeamId = isKnockout
-        ? String(Math.random() < 0.5 ? selectedMatch.team1_id : selectedMatch.team2_id)
-        : "";
+      const randomKickoffTeamId = String(Math.random() < 0.5 ? selectedMatch.team1_id : selectedMatch.team2_id);
 
       // Random match duration (only for knockout stage, weighted toward 90)
       const randomMatchDuration = isKnockout
