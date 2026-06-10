@@ -461,7 +461,7 @@ class LeaderboardService:
                     )
                 )
 
-            items.sort(key=lambda item: (item.total_points, item.user_name.lower(), item.user_id))
+            items.sort(key=lambda item: (item.total_points, item.user_name.lower(), item.user_id), reverse=True)
 
             return MatchPointsDetailsResponse(
                 match_id=match.id,

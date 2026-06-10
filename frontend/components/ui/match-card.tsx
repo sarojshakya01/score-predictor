@@ -265,7 +265,7 @@ export const MatchCard = (props: { match: MatchResponse; className?: string }) =
         </div>
         <div className="flex justify-end">
           <Link
-            href="/predictions"
+            href={`/predictions?matchday=${match.match_day}&id=${match.id}`}
             className={(match.match_locked ? "pointer-events-none cursor-default " : "") + "inline-flex h-10 items-center justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary"}
           >
             Predict

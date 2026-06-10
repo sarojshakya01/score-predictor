@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import React, { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Modal } from "@/components/ui/modal";
@@ -174,6 +175,19 @@ const getReferenceMatchDay = (matches: MatchResponse[]): number | null => {
 };
 
 export const PredictionsDashboard = () => {
+  const searchParams = useSearchParams();
+  // Parse and validate query params — ignore non-numeric / out-of-range values.
+  const paramMatchDay = (() => {
+    const raw = searchParams.get("matchday");
+    const n = raw ? Number(raw) : NaN;
+    return Number.isInteger(n) && n > 0 ? n : null;
+  })();
+  const paramMatchId = (() => {
+    const raw = searchParams.get("id");
+    const n = raw ? Number(raw) : NaN;
+    return Number.isInteger(n) && n > 0 ? n : null;
+  })();
+
   const [authRequired, setAuthRequired] = useState(false);
   const [currentMatchDay, setCurrentMatchDay] = useState<number | null>(null);
   const [formState, setFormState] = useState<PredictionFormState>(emptyFormState);
@@ -220,22 +234,26 @@ export const PredictionsDashboard = () => {
   const applyMatchSelection = useCallback((
     nextMatches: MatchResponse[],
     nextPredictions: PredictionResponse[],
+    preferredMatchId?: number | null,
   ) => {
-    let firstMatch = nextMatches.find((match) => !match.match_locked) ?? null;
-    if (!firstMatch) {
-      firstMatch = nextMatches.find((match) => match) ?? null;
-    }
-    const firstMatchPrediction = firstMatch
-      ? nextPredictions.find(
-        (prediction) => prediction.match_id === firstMatch.id,
-      )
+    // Prefer the match from the URL `id` param; fall back to first unlocked match.
+    let selectedMatch =
+      (preferredMatchId != null
+        ? nextMatches.find((m) => m.id === preferredMatchId)
+        : undefined)
+      ?? nextMatches.find((m) => !m.match_locked)
+      ?? nextMatches[0]
+      ?? null;
+
+    const matchPrediction = selectedMatch
+      ? nextPredictions.find((p) => p.match_id === selectedMatch!.id)
       : undefined;
 
     setMatches(nextMatches);
-    setSelectedMatchId(firstMatch?.id ?? null);
+    setSelectedMatchId(selectedMatch?.id ?? null);
     setFormState(
-      firstMatch
-        ? buildFormState(firstMatch, firstMatchPrediction)
+      selectedMatch
+        ? buildFormState(selectedMatch, matchPrediction)
         : emptyFormState,
     );
   }, []);
@@ -248,53 +266,80 @@ export const PredictionsDashboard = () => {
       setLoadError(null);
       const hasAuthToken = isAuthenticated();
       setAuthRequired(!hasAuthToken);
-      try {
-        const matchList = await listUpcomingMatches({
-          includeLocked: true,
-          limit: 50,
-        });
 
+      try {
+        // ── Step 1: Resolve which match day to display ─────────────────────
+        // Priority: URL param → server current match day → fallback (upcoming)
+        let resolvedMatchDay: number | null = paramMatchDay;
+
+        if (resolvedMatchDay === null) {
+          try {
+            const setting = await getCurrentMatchDay();
+            resolvedMatchDay = setting?.value ? Number(setting.value) : null;
+          } catch {
+            console.warn("Failed to load current match day from server");
+          }
+        }
+
+        // ── Step 2: Fetch matches for the resolved match day ───────────────
+        let matchListItems: MatchResponse[] = [];
+
+        if (resolvedMatchDay !== null) {
+          try {
+            const matchListResponse = await listMatches({ matchDay: resolvedMatchDay });
+            matchListItems = matchListResponse.items;
+          } catch {
+            console.warn(`Failed to load matches for match day ${resolvedMatchDay}`);
+          }
+        }
+
+        // ── Step 3: Fall back to upcoming matches if nothing was found ──────
+        if (matchListItems.length === 0) {
+          if (paramMatchDay !== null) {
+            // Param was supplied but yielded no results — warn the user.
+            setLoadError(`No matches found for match day ${paramMatchDay}.`);
+          }
+          resolvedMatchDay = null;
+          try {
+            const upcomingResponse = await listUpcomingMatches({ includeLocked: true, limit: 50 });
+            matchListItems = upcomingResponse.items;
+            // Use the match day of the first upcoming match as the reference.
+            resolvedMatchDay = matchListItems[0]?.match_day ?? null;
+          } catch {
+            console.warn("Failed to load upcoming matches");
+          }
+        }
+
+        // ── Step 4: Prefetch all matches for the match-day navigator ───────
         try {
-          const allMatches = await listMatches({ limit: 1000 });
-          if (allMatches?.items?.length) {
-            setAllMatches(allMatches.items);
+          const allMatchesResponse = await listMatches({ limit: 1000 });
+          if (allMatchesResponse?.items?.length) {
+            setAllMatches(allMatchesResponse.items);
           }
         } catch { }
 
-        let matchDaySetting = null;
-        try {
-          matchDaySetting = await getCurrentMatchDay();
-        } catch {
-          console.warn("Failed to load match day setting");
-        }
+        if (!isMounted) return;
 
-        const nextMatches = matchList.items;
+        // ── Step 5: Apply the match list (unauthenticated path) ────────────
         if (!hasAuthToken) {
-          if (!isMounted) {
-            return;
-          }
-
-          applyMatchSelection(nextMatches, []);
-          setCurrentMatchDay(matchDaySetting?.value ? Number(matchDaySetting.value) : null);
+          applyMatchSelection(matchListItems, [], paramMatchId);
+          setCurrentMatchDay(resolvedMatchDay);
           setAuthRequired(true);
           setPredictions([]);
           return;
         }
 
+        // ── Step 6: Fetch predictions and apply (authenticated path) ───────
         const predictionList = await listCurrentUserPredictions({ limit: 500 });
 
-        if (!isMounted) {
-          return;
-        }
+        if (!isMounted) return;
 
-        applyMatchSelection(nextMatches, predictionList.items);
-        setCurrentMatchDay(null);
+        applyMatchSelection(matchListItems, predictionList.items, paramMatchId);
+        setCurrentMatchDay(resolvedMatchDay);
         setAuthRequired(false);
         setPredictions(predictionList.items);
       } catch (error) {
-        if (!isMounted) {
-          return;
-        }
+        if (!isMounted) return;
 
         if (
           error instanceof SessionExpiredError ||
@@ -312,14 +357,16 @@ export const PredictionsDashboard = () => {
           setIsLoading(false);
         }
       }
-    }
+    };
 
     void loadPageData();
 
     return () => {
       isMounted = false;
     };
-  }, [applyMatchSelection]);
+  // Re-run whenever URL params change (navigation from match card "Predict" button).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [applyMatchSelection, paramMatchDay, paramMatchId]);
 
   const updateField = (field: keyof PredictionFormState, value: string) => {
 
