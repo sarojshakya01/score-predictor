@@ -20,6 +20,7 @@ Register it in app/main.py:
     from app.workers.scheduler import lifespan
     app = FastAPI(..., lifespan=lifespan)
 """
+from app.models.team import Team
 from app.models.user import UserRole
 from datetime import UTC
 import logging
@@ -47,8 +48,18 @@ logger = logging.getLogger(__name__)
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
-UEFA_LIVESCORE_URL = "https://match.uefa.com/v5/livescore?competitionId=3"
-UEFA_STATS_BASE_URL = "https://matchstats.uefa.com/v1/team-statistics/"
+LIVESCORE_URL = "https://match.uefa.com/v5/livescore?competitionId=3"
+STATS_BASE_URL = "https://matchstats.uefa.com/v1/team-statistics/"
+RANKING_URL = "https://api.fifa.com/api/v3/fifarankings/rankings/live?gender=1&sportType=0&language=en"
+
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/91.0.4472.124 Safari/537.36"
+    ),
+    "Content-Type": "application/json",
+}
 
 _FIRST_GOAL_IN_LABELS: dict[str, str] = {
     "1H": "1st Half",
@@ -127,19 +138,10 @@ async def extract_live_match_data() -> None:
 
         logger.info("[JOB1] %d active match(es) found", len(active_matches))
 
-        headers = {
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/91.0.4472.124 Safari/537.36"
-            ),
-            "Content-Type": "application/json",
-        }
-
         async with httpx.AsyncClient(timeout=15) as client:
             # ── Fetch livescore ───────────────────────────────────────────────
             try:
-                resp = await client.get(UEFA_LIVESCORE_URL, headers=headers)
+                resp = await client.get(LIVESCORE_URL, headers=HEADERS)
                 resp.raise_for_status()
             except Exception:
                 logger.exception("[JOB1] Failed to fetch livescore data")
@@ -190,7 +192,7 @@ async def extract_live_match_data() -> None:
                 # Fetch per-team statistics
                 try:
                     stat_resp = await client.get(
-                        f"{UEFA_STATS_BASE_URL}{uef_id}", headers=headers
+                        f"{STATS_BASE_URL}{uef_id}", headers=HEADERS
                     )
                     stat_resp.raise_for_status()
                     stat_data: list[dict] = stat_resp.json()
@@ -533,7 +535,7 @@ async def send_reminder_email() -> None:
 
 async def send_todays_matches_email() -> None:
     """
-    Sent once per day at 07:00 server time.
+    Sent once per day at 10:00 server time.
 
     Emails all active users a table listing every match scheduled within
     the next 24 hours so they remember to submit predictions.
@@ -602,6 +604,77 @@ async def send_todays_matches_email() -> None:
     logger.info("[JOB5] send_todays_matches_email – done")
 
 
+async def update_fifa_ranking():
+    """
+    Fetches the latest FIFA rankings and updates all teams.
+    """
+    logger.info("[JOB6] update_fifa_ranking – starting")
+
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.get(RANKING_URL, headers=HEADERS)
+            resp.raise_for_status()
+
+        results = resp.json().get("Results", [])
+
+        if not results:
+            logger.info("[JOB6] No ranking entries found – skipping")
+            return
+
+        ranking_map = {
+            item["IdCountry"]: item["Rank"]
+            for item in results
+        }
+
+        logger.info(
+            "[JOB6] Retrieved rankings for %d countries",
+            len(ranking_map),
+        )
+
+    except Exception:
+        logger.exception("[JOB6] Failed to fetch FIFA ranking data")
+        return
+
+    async with async_session_factory() as db:
+        try:
+            result = await db.execute(
+                select(Team)
+            )
+            teams: list[Team] = list(result.scalars().all())
+
+            if not teams:
+                logger.info("[JOB6] No teams found – skipping")
+                return
+
+            updated_count = 0
+
+            for team in teams:
+                fifa_rank = ranking_map.get(team.fifa_code)
+
+                if fifa_rank is None:
+                    logger.debug(
+                        "[JOB6] No ranking found for team %s",
+                        team.fifa_code,
+                    )
+                    continue
+
+                if team.fifa_rank != fifa_rank:
+                    team.fifa_rank = fifa_rank
+                    updated_count += 1
+
+            await db.commit()
+
+            logger.info(
+                "[JOB6] Updated rankings for %d teams",
+                updated_count,
+            )
+
+        except Exception:
+            await db.rollback()
+            logger.exception("[JOB6] Failed to update FIFA rankings")
+            raise
+
+
 # ═════════════════════════════════════════════════════════════════════════════
 # Scheduler bootstrap
 # ═════════════════════════════════════════════════════════════════════════════
@@ -661,6 +734,17 @@ def _create_scheduler() -> AsyncIOScheduler:
         trigger=CronTrigger(hour=settings.TODAYS_MATCH_REMINDER_TIME_HR, minute=0),
         id="send_todays_matches_email",
         name="Send today's matches morning digest",
+        replace_existing=True,
+        max_instances=1,
+        misfire_grace_time=600,
+    )
+
+    # Job 6 – Fifa ranking update: daily at 00:00 Local time
+    scheduler.add_job(
+        update_fifa_ranking,
+        trigger=CronTrigger(hour=0, minute=0),
+        id="update_fifa_ranking",
+        name="Update FIFA ranking",
         replace_existing=True,
         max_instances=1,
         misfire_grace_time=600,

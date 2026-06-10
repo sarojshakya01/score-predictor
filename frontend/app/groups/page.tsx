@@ -73,7 +73,7 @@ const GroupsPage = () => {
                   <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
                     <tr>
                       <th className="px-5 py-3 min-w-[100px] md:min-w-[230px]">Team</th>
-                      <th className="px-3 py-3 text-right">Rank (Jun)</th>
+                      <th className="px-3 py-3 text-right">Rank</th>
                       <th className="px-3 py-3 text-right">P</th>
                       <th className="px-3 py-3 text-right">W</th>
                       <th className="px-3 py-3 text-right">D</th>

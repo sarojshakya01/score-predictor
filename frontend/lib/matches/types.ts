@@ -76,18 +76,25 @@ export type H2HResult = {
 
 export type TeamHistory = {
   date: string | null;
+  goals_against?: number | null;
+  goals_for?: number | null;
   opponent: string;
-  score: number;
+  score: string;
   result: string;
 };
 
 export type MatchInsightResponse = {
   results: H2HResult[];
+  h2h_results: H2HResult[];
   team1_match_history: TeamHistory[];
   team2_match_history: TeamHistory[];
   summary: string;
   team1_name: string;
   team2_name: string;
+  predicted_team1_score: number | null;
+  predicted_team2_score: number | null;
+  prediction_source: string | null;
+  prediction_basis: string[];
 };
 
 export type ListUpcomingMatchesParams = {

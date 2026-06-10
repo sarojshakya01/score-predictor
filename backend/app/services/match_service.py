@@ -21,6 +21,7 @@ from app.schemas.match import (
     MatchResponse,
     MatchUpdate,
 )
+from app.services.match_prediction_service import MatchScorePredictionService
 from app.services.team_service import TeamService
 
 logger = logging.getLogger(__name__)
@@ -33,6 +34,7 @@ class MatchService:
         self._team_repository = TeamRepository(db)
         self._setting_repository = SettingRepository(db)
         self._user_repository = UserRepository(db)
+        self._score_prediction_service = MatchScorePredictionService()
 
     async def list_matches(
         self,
@@ -198,39 +200,52 @@ class MatchService:
         """Return match insight for a match."""
         try:
             match = await self._get_match_or_404(match_id)
-            team1_name = match.team1.name.replace("-H", "").replace("-A", "")
-            team2_name = match.team2.name.replace("-H", "").replace("-A", "")
-            if True or team1_name == "TBA" or team2_name == "TBA":
+            team1_name = self._clean_team_name(match.team1.name)
+            team2_name = self._clean_team_name(match.team2.name)
+
+            if self._team_is_unavailable(team1_name) or self._team_is_unavailable(team2_name):
                 return MatchInsightResponse(
                     results=[],
+                    h2h_results=[],
                     summary="Teams not available",
                     team1_name=team1_name,
                     team2_name=team2_name,
                 )
-            else:
-                insight = OpenAIService().get_insights_from_ai(team1_name, team2_name)
-                return MatchInsightResponse(
-                    team1_match_history=insight.get("team1_match_history", []),
-                    team2_match_history=insight.get("team2_match_history", []),
-                    h2h_results=insight.get("head_to_head", []),
-                    summary=insight.get("summary", ""),
-                    team1_name=team1_name,
-                    team2_name=team2_name,
-                )
+
+            insight = OpenAIService().get_insights_from_ai(team1_name, team2_name)
+            completed_matches = await self._match_repository.list_completed_matches(
+                limit=None,
+            )
+            score_prediction = self._score_prediction_service.predict(
+                match=match,
+                insights=insight,
+                completed_matches=completed_matches,
+                limit=limit,
+            )
+
+            return MatchInsightResponse(
+                results=score_prediction.h2h_results,
+                h2h_results=score_prediction.h2h_results,
+                team1_match_history=score_prediction.team1_match_history,
+                team2_match_history=score_prediction.team2_match_history,
+                summary=score_prediction.summary,
+                team1_name=team1_name,
+                team2_name=team2_name,
+                predicted_team1_score=score_prediction.team1_score,
+                predicted_team2_score=score_prediction.team2_score,
+                prediction_source=score_prediction.source,
+                prediction_basis=score_prediction.basis,
+            )
         except HTTPException:
             raise
         except Exception as e:
             logger.exception("Unexpected error during get_head_to_head", e)
             return MatchInsightResponse(
-                items=[],
-                limit=limit,
-                query=(
-                    f"{team1_name} vs {team2_name} football head to head "
-                    "last 7 matches scores"
-                ),
-                team1_name=team1_name,
-                team2_name=team2_name,
-                total=0,
+                results=[],
+                h2h_results=[],
+                summary="Unable to build match insight",
+                team1_name=locals().get("team1_name", ""),
+                team2_name=locals().get("team2_name", ""),
             )
 
     async def create_match(self, data: MatchCreate) -> MatchResponse:
@@ -383,6 +398,17 @@ class MatchService:
                 detail="Match not found",
             )
         return match
+
+    @staticmethod
+    def _clean_team_name(team_name: str) -> str:
+        """Return a team display name without placeholder side suffixes."""
+        return team_name.replace("-H", "").replace("-A", "")
+
+    @staticmethod
+    def _team_is_unavailable(team_name: str) -> bool:
+        """Return whether a team is still a tournament placeholder."""
+        normalized_name = team_name.strip().upper()
+        return normalized_name in {"TBA", "TBD"}
 
     async def _validate_team_references(
         self,

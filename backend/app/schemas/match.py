@@ -148,25 +148,33 @@ class H2HResult(BaseModel):
     """Parsed match result."""
 
     date: str | None = None
-    opponent: str
-    score: int
-    result: str
+    team1_score: int = Field(..., ge=0)
+    team2_score: int = Field(..., ge=0)
+    result: str = ""
+
 
 class TeamHistory(BaseModel):
     """Parsed match result."""
 
     date: str | None = None
-    opponent: str
-    score: int
-    result: str
+    opponent: str = ""
+    score: str = ""
+    result: str = ""
+    goals_for: int | None = Field(default=None, ge=0)
+    goals_against: int | None = Field(default=None, ge=0)
 
 
 class MatchInsightResponse(BaseModel):
     """Match insight."""
 
-    results: list[H2HResult] = []
-    team1_match_history: list[TeamHistory] = []
-    team2_match_history: list[TeamHistory] = []
-    summary: str
+    results: list[H2HResult] = Field(default_factory=list)
+    h2h_results: list[H2HResult] = Field(default_factory=list)
+    team1_match_history: list[TeamHistory] = Field(default_factory=list)
+    team2_match_history: list[TeamHistory] = Field(default_factory=list)
+    summary: str = ""
     team1_name: str
     team2_name: str
+    predicted_team1_score: int | None = Field(default=None, ge=0)
+    predicted_team2_score: int | None = Field(default=None, ge=0)
+    prediction_source: str | None = None
+    prediction_basis: list[str] = Field(default_factory=list)
