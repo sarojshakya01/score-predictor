@@ -979,7 +979,7 @@ export const PredictionsDashboard = () => {
                   "pl-3 pr-3 py-3"
                 ].join(" ")}>S.N.</th>
                 <th className={[
-                  "static md:sticky left-[50px] top-0 z-40 w-[120px] min-w-[120px] max-w-[120px] md:w-[300px] md:min-w-[300px] md:max-w-[300px]",
+                  "static md:sticky left-[50px] top-0 z-40 w-[120px] min-w-[120px] max-w-[120px] md:w-[350px] md:min-w-[350px] md:max-w-[350px]",
                   "bg-zinc-100 dark:bg-zinc-900",
                   "text-center font-semibold text-sm",
                   "border-b border-zinc-200 dark:border-zinc-700",
@@ -1043,7 +1043,7 @@ export const PredictionsDashboard = () => {
                         "pl-3 pr-3 py-4 text-left text-zinc-700 dark:text-zinc-300"
                       ].join(" ")}>{idx + 1}</td>
                       <td className={[
-                        "static md:sticky left-[50px] z-20 md:w-[300px] md:min-w-[300px] md:max-w-[300px]",
+                        "static md:sticky left-[50px] z-20 md:w-[350px] md:min-w-[350px] md:max-w-[350px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "pl-2 pr-3 py-4 font-medium text-zinc-950 dark:text-zinc-50",
