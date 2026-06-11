@@ -69,7 +69,7 @@ const emptyFormState: MatchFormState = {
   yellowCardCount: "",
 };
 
-function convertTimeZone(isoString: string, fromZone: string, toZone: string) {
+const convertTimeZone = (isoString: string, fromZone: string, toZone: string) => {
   if (!isoString) return "";
   const formatterFrom = new Intl.DateTimeFormat('en-US', {
     timeZone: fromZone,

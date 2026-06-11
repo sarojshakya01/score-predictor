@@ -6,11 +6,11 @@ import Image, { ImageProps } from "next/image";
 
 const fallbackSrc = "/images/logo-tournament.avif";
 
-export default function ImageWithFallback({
+const ImageWithFallback = ({
   src,
   alt,
   ...rest
-}: ImageProps) {
+}: ImageProps) => {
   const [imgSrc, setImgSrc] = useState(src);
 
   // Sync state if the parent component updates the primary src prop
@@ -36,3 +36,5 @@ export default function ImageWithFallback({
     />
   );
 }
+
+export default ImageWithFallback;

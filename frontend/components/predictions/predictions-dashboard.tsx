@@ -364,8 +364,8 @@ export const PredictionsDashboard = () => {
     return () => {
       isMounted = false;
     };
-  // Re-run whenever URL params change (navigation from match card "Predict" button).
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Re-run whenever URL params change (navigation from match card "Predict" button).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applyMatchSelection, paramMatchDay, paramMatchId]);
 
   const updateField = (field: keyof PredictionFormState, value: string) => {
@@ -896,7 +896,7 @@ export const PredictionsDashboard = () => {
             <label className="flex flex-col gap-1">
               <span className={labelTextCls}>First Score by</span>
               <select disabled={!hasAnyPredictedGoals} name="first_scoring_team_id" value={hasAnyPredictedGoals ? formState.firstScoringTeamId : ""} onChange={(e) => updateField("firstScoringTeamId", e.target.value)} className={selectCls}>
-                <option value="">{hasAnyPredictedGoals ? "Select Time" : "N/A"}</option>
+                <option value="">{hasAnyPredictedGoals ? "Select Team" : "N/A"}</option>
                 {selectedMatch && (<>
                   {Number(formState.team1Score || 0) > 0 && <option value={selectedMatch.team1_id}>{selectedMatch.team1_name}</option>}
                   {Number(formState.team2Score || 0) > 0 && <option value={selectedMatch.team2_id}>{selectedMatch.team2_name}</option>}

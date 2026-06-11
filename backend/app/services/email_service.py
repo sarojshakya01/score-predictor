@@ -46,8 +46,8 @@ def _send_sync(
     """Blocking SMTP send — called from a thread pool by the async wrapper."""
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
-    msg["From"] = settings.EMAIL_FROM
-    msg["To"] = ", ".join(recipients)
+    msg["From"] = "World Cup Prediction<noreply@worldcup.com>"
+    msg["To"] = settings.ADMIN_EMAIL
     msg.attach(MIMEText(html_body, "html"))
 
     with smtplib.SMTP(settings.EMAIL_SMTP, settings.EMAIL_PORT) as mail:

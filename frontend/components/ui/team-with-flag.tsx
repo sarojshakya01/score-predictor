@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { MatchResponse } from "@/lib/matches";
 
-export default function TeamWithFlag({ match, size, isHomeTeam }: { match: MatchResponse, size: string, isHomeTeam: boolean }) {
+const TeamWithFlag = ({ match, size, isHomeTeam }: { match: MatchResponse, size: string, isHomeTeam: boolean }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   if (isHomeTeam) {
@@ -54,3 +54,5 @@ export default function TeamWithFlag({ match, size, isHomeTeam }: { match: Match
     </div>)
   }
 }
+
+export default TeamWithFlag;
