@@ -10,7 +10,8 @@ import { getHomeSummary } from "@/lib/home";
 import type { HomeSummaryResponse } from "@/lib/home";
 import { listMatchResults, listUpcomingMatches } from "@/lib/matches";
 import type { MatchResponse } from "@/lib/matches";
-import { formatDateTime, MatchCard } from "@/components/ui/match-card";
+import { formatDateTime } from "@/components/ui/match-card";
+import { UpcomingMatchesSection } from "@/components/home/upcoming-matches-section";
 import { DEFAULT_TIMEZONE } from "@/lib/api/config";
 
 type HomePageData = {
@@ -265,49 +266,7 @@ const Home = async () => {
         <MatchResultsList matches={results} />
       </section>
 
-      <section>
-        <div className="mb-4 flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
-              Upcoming matches
-            </h2>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-              Select the fixtures and make your predictions.
-            </p>
-          </div>
-          <Link
-            href="/predictions"
-            className="hidden text-sm font-semibold text-emerald-700 hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-300 sm:inline"
-          >
-            All predictions
-          </Link>
-        </div>
-        {matches.length > 0 ? (
-          <div className={[
-            "flex gap-4 overflow-x-auto p-4 overflow-hidden rounded-md",
-            "border border-zinc-200 dark:border-zinc-700",
-            "shadow-sm dark:shadow-zinc-950",
-            "bg-white dark:bg-zinc-900"
-          ].join(" ")}>
-            {matches.map((match) => (
-              <MatchCard
-                key={match.id}
-                match={match}
-                className="w-[280px] h-60 shrink-0 sm:w-80 lg:w-[360px]"
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-md border border-zinc-200 bg-white px-5 py-10 text-center shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-            <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
-              No upcoming matches
-            </h2>
-            <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-              Fixtures will appear here as soon as the matches are scheduled.
-            </p>
-          </div>
-        )}
-      </section>
+      <UpcomingMatchesSection matches={matches} />
     </PageShell>
   );
 };

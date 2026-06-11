@@ -150,6 +150,7 @@ export const MatchVenue = (match: MatchResponse) => (
     <div className="flex w-full flex-col items-center justify-center">
       <Link
         href={`https://google.com/search?q=${match.venue_name?.trim()}`}
+        onClick={(e) => e.stopPropagation()}
         target="_blank"
         className="flex items-center justify-center cursor-pointer p-2 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-300 transition"
       >
@@ -207,9 +208,10 @@ export const SelectableMatchCard = (props: {
       key={match.id}
       className={[
         match.match_locked ? "opacity-70" : "",
-        "border " + (isSelected ? "border-tournament bg-white dark:bg-zinc-700" : "border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800"),
+        "border " + (isSelected ? "border-tournament bg-gray-200 dark:bg-zinc-700" : "border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800"),
         "relative overflow-hidden cursor-pointer rounded-md p-4",
         "shadow-sm dark:shadow-zinc-950",
+        "hover:bg-gray-100 hover:dark:bg-zinc-500/40",
         className,
       ].join(" ")}
       onClick={() => handleCardClick(match)}
@@ -237,19 +239,28 @@ export const SelectableMatchCard = (props: {
   );
 };
 
-export const MatchCard = (props: { match: MatchResponse; className?: string }) => {
-  const { match, className } = props;
+export const MatchCard = (props: {
+  match: MatchResponse;
+  className?: string;
+  isSaved?: boolean;
+  isPredictionAvailable?: boolean;
+}) => {
+  const { match, className, isSaved = false, isPredictionAvailable = false } = props;
+  const predictionHref = `/predictions?matchday=${match.match_day}&id=${match.id}`;
 
-  return (
+  const cardContent = (
     <article
       className={[
-        match.match_locked ? "opacity-70 mouse-events-none" : "",
+        match.match_locked ? "opacity-70" : "",
+        isSaved ? "cursor-pointer" : "",
         "relative overflow-hidden rounded-md p-4",
         "bg-zinc-50 dark:bg-zinc-800",
         "border border-zinc-200 dark:border-zinc-700",
         "shadow-sm dark:shadow-zinc-950",
+        "hover:bg-gray-100 hover:dark:bg-zinc-500/40",
         className,
       ].join(" ")}
+      onClick={(e: React.MouseEvent) => { e.stopPropagation(); window.location.href = predictionHref }}
     >
       <>
         {MatchDayNGroupNStatus(match)}
@@ -264,14 +275,30 @@ export const MatchCard = (props: { match: MatchResponse; className?: string }) =
           </dd>
         </div>
         <div className="flex justify-end">
-          <Link
-            href={`/predictions?matchday=${match.match_day}&id=${match.id}`}
-            className={(match.match_locked ? "pointer-events-none cursor-default " : "") + "inline-flex h-10 items-center justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary"}
-          >
-            Predict
-          </Link>
+          {isSaved ? (
+            <dd className="font-medium text-zinc-950 dark:text-zinc-50">
+              {MatchSaveStatus(isPredictionAvailable, isSaved, match.match_locked)}
+            </dd>
+          ) : (
+            <Link
+              href={predictionHref}
+              onClick={(e) => e.stopPropagation()}
+              className={
+                (match.match_locked ? "pointer-events-none cursor-default " : "") +
+                "inline-flex h-10 items-center justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary"
+              }
+            >
+              Predict
+            </Link>
+          )}
         </div>
       </dl>
     </article>
   );
+
+  if (isSaved) {
+    return cardContent;
+  }
+
+  return cardContent;
 };
