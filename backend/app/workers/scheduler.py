@@ -20,6 +20,8 @@ Register it in app/main.py:
     from app.workers.scheduler import lifespan
     app = FastAPI(..., lifespan=lifespan)
 """
+from app.models.match import MatchStage
+from app.models.match import MatchDuration
 from app.models.team import Team
 from app.models.user import UserRole
 from datetime import UTC
@@ -48,9 +50,12 @@ logger = logging.getLogger(__name__)
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 
-LIVESCORE_URL = "https://match.uefa.com/v5/livescore?competitionId=3"
-STATS_BASE_URL = "https://matchstats.uefa.com/v1/team-statistics/"
-RANKING_URL = "https://api.fifa.com/api/v3/fifarankings/rankings/live?gender=1&sportType=0&language=en"
+UEFA_LIVESCORE_ENDPOINT = "https://match.uefa.com/v5/livescore?competitionId=3"
+UEFA_STATS_ENDPOINT = "https://matchstats.uefa.com/v1/team-statistics/"
+COMPETITIONS_NAME = "FIFA World Cup™"
+SEASON_NAME = "FIFA World Cup 2026™"
+RANKING_ENDPOINT = "https://api.fifa.com/api/v3/fifarankings/rankings/live?gender=1&sportType=0&language=en"
+FIFA_LIVE_MATCH_ENDPOINT = "https://api.fifa.com/api/v3/live/football"
 
 HEADERS = {
     "User-Agent": (
@@ -105,10 +110,9 @@ def _now_utc() -> datetime:
 # JOB 1 – Live match data extraction
 # ═════════════════════════════════════════════════════════════════════════════
 
-
-async def extract_live_match_data() -> None:
+async def extract_live_match_data_uefa() -> None:
     """
-    Poll the UEFA livescore API every 2 minutes.
+    Poll the UEFA livescore API every settings.LIVE_MATH_UPDATE_INTERVAL_MIN minutes.
 
     For each locked match currently in-play (started within the last 140 minutes):
       • fetch live score from the livescore endpoint
@@ -141,7 +145,7 @@ async def extract_live_match_data() -> None:
         async with httpx.AsyncClient(timeout=15) as client:
             # ── Fetch livescore ───────────────────────────────────────────────
             try:
-                resp = await client.get(LIVESCORE_URL, headers=HEADERS)
+                resp = await client.get(UEFA_LIVESCORE_ENDPOINT, headers=HEADERS)
                 resp.raise_for_status()
             except Exception:
                 logger.exception("[JOB1] Failed to fetch livescore data")
@@ -192,7 +196,7 @@ async def extract_live_match_data() -> None:
                 # Fetch per-team statistics
                 try:
                     stat_resp = await client.get(
-                        f"{STATS_BASE_URL}{uef_id}", headers=HEADERS
+                        f"{UEFA_STATS_ENDPOINT}{uef_id}", headers=HEADERS
                     )
                     stat_resp.raise_for_status()
                     stat_data: list[dict] = stat_resp.json()
@@ -227,6 +231,181 @@ async def extract_live_match_data() -> None:
                     team2_score,
                     yellow_cards,
                     red_cards,
+                )
+
+        await db.commit()
+
+    logger.info("[JOB1] extract_live_match_data – done")
+
+
+
+async def extract_live_match_data_fifa() -> None:
+    """
+    Poll the FIFA livescore API every settings.LIVE_MATH_UPDATE_INTERVAL_MIN minutes.
+
+    For each locked match currently in-play (started within the last 140 minutes):
+      • fetch live score from the livescore endpoint
+      • fetch per-team card stats from the team-statistics endpoint
+      • update team1_score, team2_score, yellow_card_count, red_card_count in DB
+    """
+    logger.info("[JOB1] extract_live_match_data – starting")
+
+    window_start = _now_utc() - timedelta(minutes=140)
+    window_end = _now_utc()
+
+    async with async_session_factory() as db:
+        # Fetch locked matches that could be live right now
+        result = await db.execute(
+            select(Match)
+            .options(selectinload(Match.team1), selectinload(Match.team2))
+            .where(Match.match_locked.is_(True))
+            .where(Match.match_datetime <= window_end)
+            .where(Match.match_datetime >= window_start)
+            .order_by(Match.match_datetime.asc(), Match.id.asc()),
+        )
+        active_matches: list[Match] = list(result.scalars().all())
+
+        if not active_matches:
+            logger.info("[JOB1] No active matches in the live window – nothing to do")
+            return
+
+        logger.info("[JOB1] %d active match(es) found", len(active_matches))
+
+        async with httpx.AsyncClient(timeout=15) as client:
+            # ── Fetch live scores ───────────────────────────────────────────────
+            try:
+                resp = await client.get(FIFA_LIVE_MATCH_ENDPOINT, headers=HEADERS)
+                resp.raise_for_status()
+            except Exception:
+                logger.exception("[JOB1] Failed to fetch livescore data")
+                return
+
+            def minute_key(goal):
+                minute = goal["Minute"].replace("'", "")
+                parts = minute.split("+")
+                base = int(parts[0])
+                extra = int(parts[1]) if len(parts) > 1 else 0
+                return (base, extra)
+
+            live_entries: list[dict] = []
+            all_results = resp.json().get("Results", [])
+            fifa_wc_results = [
+                x for x in all_results
+                if x.get("CompetitionName", [{}])[0].get("Description") == COMPETITIONS_NAME
+                and x.get("SeasonName", [{}])[0].get("Description") == SEASON_NAME
+            ]
+
+            for result in fifa_wc_results:
+                home_country_code = result.get('HomeTeam').get('IdCountry').upper()
+                away_country_code = result.get('AwayTeam').get('IdCountry').upper()
+                match_to_update = next((active_match for active_match in active_matches if (active_match.team1.fifa_code.upper() == home_country_code or active_match.team1.fifa_code.upper() == away_country_code) or (active_match.team1.fifa_code.upper() == away_country_code and active_match.team2.fifa_code.upper() == home_country_code)), None)
+
+                if match_to_update:
+                    team1_score = 0
+                    team2_score = 0
+                    first_goal_in = None
+                    first_score_by = None
+                    match_duration = match_to_update.match_duration
+
+                    if home_country_code == match_to_update.team1.fifa_code:
+                        team1_score = result.get('HomeTeam').get('Score')
+                        team2_score = result.get('AwayTeam').get('Score')
+                    else:
+                        team1_score = result.get('AwayTeam').get('Score')
+                        team2_score = result.get('HomeTeam').get('Score')
+
+                    goals = []
+                    goals.extend(result.get('HomeTeam').get('Goals') if result.get('HomeTeam').get('Score') > 0 else [])
+                    goals.extend(result.get('AwayTeam').get('Goals') if result.get('AwayTeam').get('Score') > 0 else [])
+
+                    first_goal = min(goals, key=minute_key) if goals else None
+
+                    first_goal_min = int(first_goal.get('Minute').split("'")[0])
+                    if first_goal_min <= 45:
+                        first_goal_in = '1H'
+                    elif first_goal_min > 45 and first_goal_min <= 90:
+                        first_goal_in = '2H'
+                    elif first_goal_min > 90 and first_goal_min <= 120:
+                        first_goal_in = 'ET'
+
+                    if first_goal.get('IdTeam') == result.get('HomeTeam').get('IdTeam'):
+                        first_score_by = match_to_update.team1_id
+                    elif first_goal.get('IdTeam') == result.get('AwayTeam').get('IdTeam'):
+                        first_score_by = match_to_update.team2_id
+
+                    bookings = []
+                    bookings.extend(result.get('HomeTeam').get('Bookings'))
+                    bookings.extend(result.get('AwayTeam').get('Bookings'))
+
+                    yellow_card_count = len([booking for booking in bookings if booking.get('Card') == 1])
+                    red_card_count = len([booking for booking in bookings if booking.get('Card') == 2])
+
+                    if match_to_update.match_stage != MatchStage.GROUP:
+                        match_time = result.get('MatchTime').split("'")[0]
+                        match_duration = MatchDuration.REGULAR if int(match_time) <= 90 else MatchDuration.EXTRA_TIME if int(match_time) <= 120 else MatchDuration.PENALTY
+                    live_entries.append(
+                        {
+                            "id": match_to_update.id,
+                            "team1_score": team1_score,
+                            "team2_score": team2_score,
+                            "first_goal_in": first_goal_in,
+                            "first_scoring_team_id": first_score_by,
+                            "yellow_card_count": yellow_card_count,
+                            "red_card_count": red_card_count,
+                            "match_duration": match_duration,
+                            "match_status": "LIVE" if result.get('MatchStatus') > 0 else "COMPLETED" if result.get('MatchStatus') == 0 else "SCHEDULED"
+                        }
+                    )
+
+            if len(live_entries) == 0:
+                logger.info("[JOB1] Livescore API returned no LIVE/FINISHED matches")
+                return
+
+            if len(live_entries) >= 2:
+                live_only = [e for e in live_entries if e["match_status"] == "LIVE"]
+                if live_only:
+                    live_entries = live_only
+
+            # ── Match live entries to DB rows by position ─────────────────
+            paired = list(zip(active_matches, live_entries))
+
+            for db_match, live in paired:
+                team1_score: int = live.get("team1_score", 0)
+                team2_score: int = live.get("team2_score", 0)
+                yellow_card_count = live.get("yellow_card_count", 0)
+                red_card_count = live.get("red_card_count", 0)
+                first_goal_in = live.get("first_goal_in", None)
+                first_scoring_team_id = live.get("first_scoring_team_id", None)
+                kick_off_team_id = live.get("kick_off_team_id", db_match.kick_off_team_id)
+                match_duration = live.get("match_duration", db_match.match_duration)
+                winner_id = db_match.team1_id if team1_score > team2_score else db_match.team2_id if team2_score > team1_score else None
+
+                await db.execute(
+                    update(Match)
+                    .where(Match.id == db_match.id)
+                    .values(
+                        team1_score=team1_score,
+                        team2_score=team2_score,
+                        first_goal_in=first_goal_in,
+                        first_scoring_team_id=first_scoring_team_id,
+                        yellow_card_count=yellow_card_count,
+                        red_card_count=red_card_count,
+                        kick_off_team_id=kick_off_team_id,
+                        match_duration=match_duration,
+                        winner_id=winner_id,
+                    )
+                )
+                logger.info(
+                    "[JOB1] Updated match id=%d  %d–%d  Y=%d R=%d  FGI:%s  FST:%s  KOT:%s  MD:%s  WD:%s",
+                    db_match.id,
+                    team1_score,
+                    team2_score,
+                    yellow_card_count,
+                    red_card_count,
+                    first_goal_in,
+                    first_scoring_team_id,
+                    kick_off_team_id,
+                    match_duration,
                 )
 
         await db.commit()
@@ -612,7 +791,7 @@ async def update_fifa_ranking():
 
     try:
         async with httpx.AsyncClient(timeout=15) as client:
-            resp = await client.get(RANKING_URL, headers=HEADERS)
+            resp = await client.get(RANKING_ENDPOINT, headers=HEADERS)
             resp.raise_for_status()
 
         results = resp.json().get("Results", [])
@@ -685,15 +864,15 @@ def _create_scheduler() -> AsyncIOScheduler:
     scheduler = AsyncIOScheduler(timezone=settings.TIMEZONE)
 
     # Job 1 – Live data extraction: every settings.LIVE_MATH_UPDATE_INTERVAL_MIN minutes
-    # scheduler.add_job(
-    #     extract_live_match_data,
-    #     trigger=IntervalTrigger(minutes=settings.LIVE_MATH_UPDATE_INTERVAL_MIN),
-    #     id="extract_live_match_data",
-    #     name="Live match data extraction",
-    #     replace_existing=True,
-    #     max_instances=1,
-    #     misfire_grace_time=30,
-    # )
+    scheduler.add_job(
+        extract_live_match_data_fifa,
+        trigger=IntervalTrigger(minutes=settings.LIVE_MATH_UPDATE_INTERVAL_MIN),
+        id="extract_live_match_data",
+        name="Live match data extraction",
+        replace_existing=True,
+        max_instances=1,
+        misfire_grace_time=30,
+    )
 
     # Job 2 – Auto-lock & locked email: every settings.MATCH_LOCK_CHECK_INTERVAL_MIN minutes
     scheduler.add_job(
