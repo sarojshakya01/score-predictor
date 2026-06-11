@@ -807,17 +807,17 @@ export const PredictionsDashboard = () => {
 
       <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-center">
         <div className={[
-          "hidden lg:flex w-40 h-[500px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48",
+          "hidden lg:flex w-40 h-[504px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48",
           (selectedMatch?.winner_id && selectedMatch?.winner_id === selectedMatch?.team2_id) ? "opacity-50" : (selectedMatch?.team1_score === selectedMatch?.team2_score) ? "opacity-70" : "opacity-100"
         ].join(" ")}>
           <ImageWithFallback width={530} height={530} src={"/images/players/" + selectedMatch?.team1_name_short?.toLowerCase() + ".png"} alt={selectedMatch?.team1_name || "Captain Image"} />
         </div>
         <form
-          className={(selectedStatus === "Locked" ? "opacity-50 pointer-events-none " : "") + "relative w-full lg:max-w-2xl rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 p-3 sm:p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:bg-black"}
+          className={(selectedStatus === "Locked" ? "opacity-50 pointer-events-none " : "") + "relative w-full lg:max-w-2xl rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 p-2 sm:p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:bg-black"}
           onSubmit={handleSubmit}
         >
           <div className="absolute inset-0 bg-[url('/images/logo-tournament.avif')] bg-center bg-no-repeat bg-cover opacity-[0.07] dark:opacity-[0.05] pointer-events-none bg-prediction"></div>
-          <div className="absolute left-[20px] top-[20px]">
+          <div className="absolute left-[15px] top-[15px]">
             <button
               type="button"
               title="Predict the score from H2H, recent form, tournament form, and FIFA ranking"
@@ -843,7 +843,7 @@ export const PredictionsDashboard = () => {
               </p>
             </div>
           </div>
-          <div className="absolute right-[20px] top-[20px]">
+          <div className="absolute right-[15px] top-[15px]">
             {selectedMatch && isMatchPlayed
               ? (<StatusPill tone="green" urgency="none">{isMatchLive ? "Live: " : "FT: "}{selectedMatch.team1_score} - {selectedMatch.team2_score}</StatusPill>)
               : (<StatusPill tone={getStatusTone(selectedStatus)} urgency={selectedMatch ? getLockUrgency(selectedMatch) : "none"}>
@@ -955,7 +955,7 @@ export const PredictionsDashboard = () => {
           </div>
         </form>
         <div className={[
-          "hidden lg:flex w-40 h-[500px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48",
+          "hidden lg:flex w-40 h-[504px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48",
           (selectedMatch?.winner_id && selectedMatch?.winner_id === selectedMatch?.team1_id) ? "opacity-50" : (selectedMatch?.team1_score === selectedMatch?.team2_score) ? "opacity-70" : "opacity-100"
         ].join(" ")}>
           <ImageWithFallback width={530} height={530} src={"/images/players/" + selectedMatch?.team2_name_short?.toLowerCase() + ".png"} alt={selectedMatch?.team2_name || "Captain Image"} />
