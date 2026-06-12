@@ -182,7 +182,7 @@ export default function RaceChart({
   function pause() {
     const btn = btnRef.current!;
     const chart = chartRef.current?.chart as any;
-    btn.title = 'play';
+    btn.innerHTML = '▶️';
     clearTimeout(chart.sequenceTimer);
     chart.sequenceTimer = undefined;
   }
@@ -194,6 +194,7 @@ export default function RaceChart({
     if (increment) {
       input.value = String(parseInt(input.value, 10) + increment);
     }
+
     if (parseInt(input.value, 10) >= endMatch) {
       pause();
     }
@@ -201,9 +202,9 @@ export default function RaceChart({
     const matchNum = parseInt(input.value, 10);
     const data = getData(dataset, stableNames, matchNum, previousOrderRef.current);
 
-    // chart.setTitle(undefined, { text: getSubtitle(matchNum) }, false);
     chart.series[0].name = input.value;
     chart.xAxis[0].setCategories(getCategories(data), false);
+    console.log(111, data)
     chart.series[0].setData(
       data,
       true,
@@ -221,9 +222,11 @@ export default function RaceChart({
   }
 
   function handleBtnClick() {
+    const btn = btnRef.current!;
     const chart = chartRef.current?.chart as any;
     if (chart.sequenceTimer) {
       pause();
+      btn.innerHTML = '▶️';
     } else {
       // Restart from beginning if at end
       if (inputRef.current && parseInt(inputRef.current.value, 10) >= endMatch) {
@@ -232,6 +235,7 @@ export default function RaceChart({
         update();
       }
       play();
+      btn.innerHTML = '⏸️';
     }
   }
 
@@ -309,11 +313,11 @@ export default function RaceChart({
         <div className="flex flex-wrap items-center gap-3">
           <button
             ref={btnRef}
-            className="inline-flex h-8 items-center justify-center cursor-pointer rounded-md border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:bg-zinc-700"
+            className="inline-flex items-center justify-center cursor-pointer  transition"
             title="play"
             onClick={handleBtnClick}
           >
-            Play
+            ▶️
           </button>
           <input
             aria-label="Race chart frame"

@@ -662,16 +662,18 @@ export const FinalsWinnerSelector = () => {
         </div>
 
         <div className="flex flex-row items-start gap-3 sm:items-center">
-          {(!predictionLocked && predictionStatus) ? (
-            <StatusPill
-              tone={getStatusTone(predictionStatus)}
-              urgency={activeMatch ? getLockUrgency(activeMatch) : "none"}
-            >
-              {predictionStatus}
-            </StatusPill>
-          ) : (
-            <StatusPill tone="primary">Final picks</StatusPill>
-          )}
+          <div className="">
+            {(!predictionLocked && predictionStatus) ? (
+              <StatusPill
+                tone={getStatusTone(predictionStatus)}
+                urgency={activeMatch ? getLockUrgency(activeMatch) : "none"}
+              >
+                {predictionStatus}
+              </StatusPill>
+            ) : (
+              <StatusPill tone="primary">Final picks</StatusPill>
+            )}
+          </div>
           <button
             type="button"
             onClick={handleAiPick}
@@ -682,9 +684,9 @@ export const FinalsWinnerSelector = () => {
             <p className="hidden sm:hidden lg:block text-sm">Auto pick with AI</p>
             <p className="hidden md:block lg:hidden xl:hidden 2xl:hidden text-sm">AI Pick</p>
           </button>
-          <WorldCupHistoryTooltip />
+          <div className="hidden sm:block"><WorldCupHistoryTooltip /></div>
 
-          <div className="relative w-full sm:w-auto text-sm">
+          <div className="hidden sm:block relative w-full sm:w-auto text-sm">
             <label className="sr-only" htmlFor="winner-team-search">
               Search teams
             </label>

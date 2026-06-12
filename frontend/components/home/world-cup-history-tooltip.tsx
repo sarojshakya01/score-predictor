@@ -47,7 +47,7 @@ const recentWorldCupEditions = [
 
 export const WorldCupHistoryTooltip = () => {
   return (
-    <span className="group relative inline-flex">
+    <span className="hidden group relative inline-flex">
       <button
         type="button"
         aria-label="Recent World Cup finalists and quarterfinalists"
