@@ -21,11 +21,24 @@ class LeaderboardEntryResponse(BaseModel):
     predicted_matches: int = Field(..., ge=0)
 
 
+class AccumulatedPoints(BaseModel):
+    """Points for a single match."""
+    match_num: int
+    acc_points: int
+
+
+class LeaderboardFrame(BaseModel):
+    """Cumulative standings after one completed match."""
+    user_id: int
+    user_name: str | None
+    acc_points: list[AccumulatedPoints]
+
+
 class LeaderboardResponse(BaseModel):
     """Paginated leaderboard response."""
 
     items: list[LeaderboardEntryResponse]
-    race_frames: dict[str, dict[str, int]]
+    race_frames: list[LeaderboardFrame]
     total: int = Field(..., ge=0)
     limit: int = Field(..., ge=1)
     offset: int = Field(..., ge=0)

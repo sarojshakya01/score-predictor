@@ -320,18 +320,21 @@ async def extract_live_match_data_fifa() -> None:
 
                     first_goal = min(goals, key=minute_key) if goals else None
 
-                    first_goal_min = int(first_goal.get('Minute').split("'")[0])
-                    if first_goal_min <= 45:
-                        first_goal_in = '1H'
-                    elif first_goal_min > 45 and first_goal_min <= 90:
-                        first_goal_in = '2H'
-                    elif first_goal_min > 90 and first_goal_min <= 120:
-                        first_goal_in = 'ET'
+                    first_goal_min = int(first_goal.get('Minute').split("'")[0]) if first_goal else None
+                    
+                    if first_goal_min is not None:
+                        if first_goal_min <= 45:
+                            first_goal_in = '1H'
+                        elif first_goal_min > 45 and first_goal_min <= 90:
+                            first_goal_in = '2H'
+                        elif first_goal_min > 90 and first_goal_min <= 120:
+                            first_goal_in = 'ET'
 
-                    if first_goal.get('IdTeam') == result.get('HomeTeam').get('IdTeam'):
-                        first_score_by = match_to_update.team1_id
-                    elif first_goal.get('IdTeam') == result.get('AwayTeam').get('IdTeam'):
-                        first_score_by = match_to_update.team2_id
+                    if first_goal is not None:
+                        if first_goal.get('IdTeam') == result.get('HomeTeam').get('IdTeam'):
+                            first_score_by = match_to_update.team1_id
+                        elif first_goal.get('IdTeam') == result.get('AwayTeam').get('IdTeam'):
+                            first_score_by = match_to_update.team2_id
 
                     bookings = []
                     bookings.extend(result.get('HomeTeam').get('Bookings'))
@@ -380,6 +383,11 @@ async def extract_live_match_data_fifa() -> None:
                 match_duration = live.get("match_duration", db_match.match_duration)
                 winner_id = db_match.team1_id if team1_score > team2_score else db_match.team2_id if team2_score > team1_score else None
 
+                if db_match.match_datetime.tzinfo is None:
+                    match_datetime = db_match.match_datetime.replace(tzinfo=timezone.utc)
+                else:
+                    match_datetime = db_match.match_datetime.astimezone(timezone.utc)
+
                 await db.execute(
                     update(Match)
                     .where(Match.id == db_match.id)
@@ -393,6 +401,7 @@ async def extract_live_match_data_fifa() -> None:
                         kick_off_team_id=kick_off_team_id,
                         match_duration=match_duration,
                         winner_id=winner_id,
+                        match_datetime=match_datetime
                     )
                 )
                 logger.info(

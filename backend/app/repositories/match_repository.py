@@ -59,7 +59,7 @@ class MatchRepository:
             statement = statement.where(Match.match_locked == match_locked)
 
         result = await self._db.execute(
-            statement.order_by(Match.match_datetime.asc(), Match.id.asc())
+            statement.order_by(Match.updated_at.desc(), Match.id.asc())
             .offset(offset)
             .limit(limit),
         )

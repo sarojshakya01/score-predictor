@@ -1,14 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
-import { formatDateTime, getMatchLabelWithFlag } from "@/components/ui/match-card";
+import { formatDateTime } from "@/components/ui/match-card";
 import { Modal } from "@/components/ui/modal";
 import { StatusPill } from "@/components/ui/status-pill";
 import { ApiError } from "@/lib/api";
-import { DEFAULT_TIMEZONE } from "@/lib/api/config";
 import {
   isAuthenticated,
   MissingAuthTokenError,

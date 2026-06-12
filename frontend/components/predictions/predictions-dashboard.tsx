@@ -237,7 +237,7 @@ export const PredictionsDashboard = () => {
     preferredMatchId?: number | null,
   ) => {
     // Prefer the match from the URL `id` param; fall back to first unlocked match.
-    let selectedMatch =
+    const selectedMatch =
       (preferredMatchId != null
         ? nextMatches.find((m) => m.id === preferredMatchId)
         : undefined)
@@ -365,7 +365,6 @@ export const PredictionsDashboard = () => {
       isMounted = false;
     };
     // Re-run whenever URL params change (navigation from match card "Predict" button).
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applyMatchSelection, paramMatchDay, paramMatchId]);
 
   const updateField = (field: keyof PredictionFormState, value: string) => {

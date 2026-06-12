@@ -1,4 +1,4 @@
-import { MatchResponse, matchStageLabels, matchStages } from "@/lib/matches"
+import { MatchResponse, matchStageLabels } from "@/lib/matches"
 import { PillTone, StatusPill } from "./status-pill";
 import { JSX } from "react";
 import { PredictionStatus } from "@/lib/matches/types";

@@ -14,11 +14,10 @@ type UpcomingMatchesSectionProps = {
 
 export const UpcomingMatchesSection = ({ matches }: UpcomingMatchesSectionProps) => {
   const [predictions, setPredictions] = useState<PredictionResponse[]>([]);
-  const [isPredictionsLoaded, setIsPredictionsLoaded] = useState(false);
+  const [isPredictionsLoaded, setIsPredictionsLoaded] = useState(!isAuthenticated());
 
   useEffect(() => {
     if (!isAuthenticated()) {
-      setIsPredictionsLoaded(true);
       return;
     }
 

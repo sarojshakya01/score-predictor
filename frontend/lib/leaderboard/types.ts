@@ -30,12 +30,21 @@ export type LeaderboardRaceFrameResponse = {
   standings: LeaderboardRaceUserResponse[];
 };
 
+export type RaceFrame = {
+  user_id: number;
+  user_name: string;
+  acc_points: Array<{
+    match_num: number;
+    acc_points: number;
+  }>;
+}
+
 export type LeaderboardResponse = {
   completed_matches: number;
   items: LeaderboardEntryResponse[];
   limit: number;
   offset: number;
-  race_frames: Record<string, Record<string, number>>;
+  race_frames: RaceFrame[];
   total: number;
 };
 

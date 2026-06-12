@@ -1,5 +1,5 @@
 """Leaderboard scoring business logic."""
-
+from app.schemas.leaderboard import LeaderboardFrame, AccumulatedPoints
 from app.api.deps import CurrentUser
 import logging
 from dataclasses import dataclass, field
@@ -314,8 +314,10 @@ class LeaderboardService:
 
             locked_matches = await self._match_repository.list_locked_matches()
 
+            current_match_day = await self._setting_repository.get_by_name("current_match_day")
+
             points_from_predictions = await self._prediction_repository.list_points_from_predictions_of_user(
-                current_user=current_user, user_id=user_id, locked_matches=locked_matches
+                current_user=current_user, user_id=user_id, current_match_day=int(current_match_day.value['day']), locked_matches=locked_matches
             )
 
             items: list[UserPointsDetailsResponse] = []
@@ -571,48 +573,81 @@ class LeaderboardService:
         completed_matches: list[Match],
         predictions: list[Prediction],
         rules: ScoringRules,
-    ) -> dict[str, dict[str, int]]:
+    ) -> list[LeaderboardFrame]:
         """Build cumulative leaderboard frames after each completed match."""
+
         user_names = {
-            user.id: LeaderboardService._format_user_name(user) for user in users
-        }
-
-        finalist_points = {user.id: 0 for user in users}
-        for user in users:
-            winner_points, runner_up_points, third_place_points = LeaderboardService._calculate_finalist_points(completed_matches, user, rules)
-            finalist_points[user.id] = winner_points + runner_up_points + third_place_points
-
-        cumulative_points = {user.id: finalist_points[user.id] for user in users}
-        predictions_by_match: dict[int, list[Prediction]] = {}
-
-        for prediction in predictions:
-            predictions_by_match.setdefault(prediction.match_id, []).append(prediction)
-
-        # Output format: { user_name: { match_label: total_points } }
-        output: dict[str, dict[str, int]] = {
-            user_names[user.id]: {}
+            user.id: LeaderboardService._format_user_name(user)
             for user in users
         }
 
-        for match in completed_matches:
-            match_label = LeaderboardService._format_match_label(match)
+        # Starting points from finalist predictions
+        cumulative_points = {}
+
+        for user in users:
+            winner_points, runner_up_points, third_place_points = (
+                LeaderboardService._calculate_finalist_points(
+                    completed_matches,
+                    user,
+                    rules,
+                )
+            )
+
+            cumulative_points[user.id] = (
+                winner_points
+                + runner_up_points
+                + third_place_points
+            )
+
+        predictions_by_match: dict[int, list[Prediction]] = {}
+
+        for prediction in predictions:
+            predictions_by_match.setdefault(
+                prediction.match_id,
+                [],
+            ).append(prediction)
+
+        user_match_points: dict[int, list[AccumulatedPoints]] = {
+            user.id: []
+            for user in users
+        }
+
+        for idx, match in enumerate(completed_matches, start=1):
 
             for prediction in predictions_by_match.get(match.id, []):
-                score = LeaderboardService._score_prediction(prediction, rules)
-                cumulative_points[prediction.user_id] = (
-                    cumulative_points.get(prediction.user_id, 0) + score.total_points
+                score = LeaderboardService._score_prediction(
+                    prediction,
+                    rules,
                 )
-            
-            for user in users:
-                output[user_names[user.id]][match_label] = cumulative_points[user.id]
 
-        return output
+                cumulative_points[prediction.user_id] += (
+                    score.total_points
+                )
+
+            # Capture standings after this match
+            for user in users:
+                user_match_points[user.id].append(
+                    AccumulatedPoints(
+                        match_num=idx,
+                        acc_points=cumulative_points[user.id],
+                    )
+                )
+
+        return [
+            LeaderboardFrame(
+                user_id=user.id,
+                user_name=user_names[user.id],
+                acc_points=user_match_points[user.id],
+            )
+            for user in users
+        ]
 
     @staticmethod
     def _format_match_label(match: Match) -> str:
         """Build the label shown for a leaderboard race frame."""
         return (
-            f"Match {match.id}"
+            f"Match day {match.match_day}: "
+            f"{match.team1.name} vs {match.team2.name}"
         )
 
     @staticmethod

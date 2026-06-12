@@ -109,8 +109,10 @@ class PredictionRepository:
         result = await self._db.execute(statement)
         return int(result.scalar_one())
 
-    async def list_points_from_predictions_of_user(self, current_user: CurrentUser, user_id: int, locked_matches: list[Match]) -> list[Prediction]:
+    async def list_points_from_predictions_of_user(self, current_user: CurrentUser, user_id: int, current_match_day: int | None, locked_matches: list[Match]) -> list[Prediction]:
         """Fetch scored predictions for a specific user where the match has a final score."""
+
+        current_match_day = current_match_day if current_match_day is not None else locked_matches[-1].match_day
 
         statement = (
             select(Prediction)
@@ -121,6 +123,7 @@ class PredictionRepository:
                 selectinload(Prediction.user),
             )
             .where(Prediction.user_id == user_id)
+            .where(Match.match_day <= current_match_day + 1)
             .order_by(Prediction.match_id.asc())
         )
 

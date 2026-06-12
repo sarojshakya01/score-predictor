@@ -27,7 +27,7 @@ export const PredictionsMetricCard = ({ defaultMetric }: PredictionsMetricCardPr
           label: "Your predictions",
           value: new Intl.NumberFormat("en").format(response.predictions_made),
         });
-      } catch (e) {
+      } catch {
         // Fallback to default metric if authenticated fetch fails
       }
     };
