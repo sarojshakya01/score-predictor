@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import * as Highcharts from "highcharts";
-import HighchartsReact from "highcharts-react-official";
 
 import { Modal } from "@/components/ui/modal";
 import { ApiError } from "@/lib/api";
@@ -11,13 +9,13 @@ import { isAuthenticated, MissingAuthTokenError, SessionExpiredError } from "@/l
 import { getUserPredictionDetails, listLeaderboard } from "@/lib/leaderboard";
 import type {
   LeaderboardEntryResponse,
-  LeaderboardRaceFrameResponse,
   LeaderboardResponse,
   UserPointsDetailsListResponse,
   UserPointsDetailsResponse,
 } from "@/lib/leaderboard";
 import { firstGoalInLabels, MatchDuration, matchDurationLabels } from "@/lib/matches";
 import { FirstGoalIn } from "@/lib/matches/types";
+import RaceChart from "./race-chart";
 
 export type LeaderboardRow = {
   name: string;
@@ -647,177 +645,6 @@ const LeaderboardRow = ({
   );
 };
 
-// ── Race Chart ────────────────────────────────────────────────────────────────
-
-const RACE_CHART_COLORS = [
-  "#2563eb", // blue-600
-  "#e11d48", // rose-600
-  "#d97706", // amber-600
-  "#9333ea", // purple-600
-  "#059669", // emerald-600
-  "#ea580c", // orange-600
-  "#db2777", // pink-600
-  "#4f46e5", // indigo-600
-  "#0891b2", // cyan-600
-  "#0d9488", // teal-600
-  "#7c3aed", // violet-600
-  "#c026d3", // fuchsia-600
-];
-
-const getUserColor = (userId: number) => {
-  // Use a simple hash to shuffle the user ID so it's not strictly sequential
-  const hash = (userId * 2654435761) % Math.pow(2, 32);
-  return RACE_CHART_COLORS[hash % RACE_CHART_COLORS.length];
-};
-
-const RaceChart = ({ frames, onUserClick }: { frames: LeaderboardRaceFrameResponse[]; onUserClick: (userId: number, userName: string) => void }) => {
-  const safeFrames = frames.length > 0 ? frames : [];
-  const [frameIndex, setFrameIndex] = useState(safeFrames.length - 1);
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  useEffect(() => {
-    if (!isPlaying || safeFrames.length <= 1) {
-      return;
-    }
-
-    const intervalId = window.setInterval(() => {
-      setFrameIndex((currentFrameIndex) =>
-        currentFrameIndex >= safeFrames.length - 1 ? 1 : currentFrameIndex + 1,
-      );
-    }, 1600);
-
-    return () => window.clearInterval(intervalId);
-  }, [isPlaying, safeFrames.length]);
-
-  const frame = safeFrames[frameIndex] ?? null;
-
-  if (!frame) {
-    return null;
-  }
-
-  const chartData = frame.standings.map((standing) => ({
-    name: standing.name,
-    y: standing.total_points,
-    color: standing.total_points < 0 ? '#e11d48' : getUserColor(standing.user_id),
-    dataLabels: standing.total_points === 0 ? { align: 'left', x: 2 } : undefined,
-    custom: {
-      userId: standing.user_id,
-      rank: standing.rank,
-      matchPoints: standing.match_points,
-    }
-  }));
-
-  const options: Highcharts.Options = {
-    chart: {
-      type: 'bar',
-      animation: {
-        duration: 1000,
-      },
-      height: Math.max(400, frame.standings.length * 40 + 80),
-      backgroundColor: 'transparent',
-    },
-    title: { text: undefined },
-    xAxis: {
-      type: 'category',
-      labels: {
-        style: {
-          fontSize: '13px',
-          fontWeight: '500',
-        }
-      }
-    },
-    yAxis: {
-      title: { text: 'Total Points' }
-    },
-    legend: { enabled: false },
-    plotOptions: {
-      series: {
-        animation: false,
-        borderWidth: 0,
-        dataLabels: {
-          enabled: true,
-          format: '{point.y}',
-          style: { fontSize: '12px', fontWeight: 'bold' }
-        }
-      }
-    },
-    series: [{
-      type: 'bar',
-      name: 'Total Points',
-      dataSorting: {
-        enabled: true,
-        matchByName: true
-      },
-      data: chartData,
-      events: {
-        click: (e) => {
-          const point = e.point as Highcharts.Point & { custom?: { userId: number; matchPoints: number; rank: number } };
-          if (point && point.custom) {
-            onUserClick(point.custom.userId, point.name || "");
-          }
-        }
-      }
-    }],
-    tooltip: {
-      formatter: function (this: Highcharts.Point) {
-        const point = this as Highcharts.Point & { custom?: { userId: number; matchPoints: number; rank: number } };
-        const custom = point.custom;
-        if (!custom) return point.name;
-
-        const matchPts = custom.matchPoints;
-        const ptsSign = matchPts > 0 ? '+' : '';
-        return `<b>${point.name}</b><br/>Rank: ${custom.rank}<br/>Total Points: ${point.y}<br/>Match Points: ${ptsSign}${matchPts}`;
-      }
-    },
-    credits: { enabled: false }
-  };
-
-  return (
-    <section className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-      <div className="flex flex-col gap-4 border-b border-zinc-200 px-5 py-4 lg:flex-row lg:items-end lg:justify-between dark:border-zinc-700">
-        <div>
-          <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-100">Leaderboard Race</h2>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">{frame.label}</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            onClick={() => {
-              if (!isPlaying) {
-                setFrameIndex(1);
-              }
-              setIsPlaying((currentValue) => !currentValue);
-            }}
-            disabled={safeFrames.length <= 1}
-            className="inline-flex h-10 items-center justify-center cursor-pointer rounded-md border border-zinc-200 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-zinc-500 dark:hover:bg-zinc-700 dark:disabled:text-zinc-600"
-          >
-            {isPlaying ? "Pause" : "Play"}
-          </button>
-          <input
-            aria-label="Race chart frame"
-            className="w-40 accent-emerald-700"
-            disabled={safeFrames.length <= 1}
-            max={Math.max(safeFrames.length - 1, 0)}
-            min={1}
-            type="range"
-            value={frameIndex}
-            onChange={(event) => {
-              setFrameIndex(Number(event.target.value));
-              setIsPlaying(false);
-            }}
-          />
-          <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">
-            {frameIndex + 1} / {safeFrames.length}
-          </span>
-        </div>
-      </div>
-      <div className="overflow-x-auto p-4">
-        <HighchartsReact highcharts={Highcharts} options={options} />
-      </div>
-    </section>
-  );
-};
-
 // ── Main Component ────────────────────────────────────────────────────────────
 export const LeaderboardDashboard = () => {
   const [authRequired, setAuthRequired] = useState(false);
@@ -942,7 +769,7 @@ export const LeaderboardDashboard = () => {
         </section>
       ) : null}
 
-      {leaderboard ? <RaceChart frames={leaderboard.race_frames} onUserClick={handleUserClick} /> : null}
+      {leaderboard ? <RaceChart dataset={leaderboard.race_frames} /> : null}
 
       {rows.length > 0 ? (
         <section className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">

@@ -35,7 +35,7 @@ export type LeaderboardResponse = {
   items: LeaderboardEntryResponse[];
   limit: number;
   offset: number;
-  race_frames: LeaderboardRaceFrameResponse[];
+  race_frames: Record<string, Record<string, number>>;
   total: number;
 };
 

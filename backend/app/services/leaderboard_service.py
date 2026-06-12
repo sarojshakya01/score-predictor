@@ -19,8 +19,6 @@ from app.schemas.leaderboard import (
     LeaderboardEntryResponse,
     MatchPointsDetailsResponse,
     MatchUserPointsDetailsResponse,
-    LeaderboardRaceFrameResponse,
-    LeaderboardRaceUserResponse,
     LeaderboardResponse,
 )
 from app.schemas.prediction import (
@@ -573,7 +571,7 @@ class LeaderboardService:
         completed_matches: list[Match],
         predictions: list[Prediction],
         rules: ScoringRules,
-    ) -> list[LeaderboardRaceFrameResponse]:
+    ) -> dict[str, dict[str, int]]:
         """Build cumulative leaderboard frames after each completed match."""
         user_names = {
             user.id: LeaderboardService._format_user_name(user) for user in users
@@ -590,75 +588,31 @@ class LeaderboardService:
         for prediction in predictions:
             predictions_by_match.setdefault(prediction.match_id, []).append(prediction)
 
-        frames = [
-            LeaderboardRaceFrameResponse(
-                frame=0,
-                match_id=None,
-                match_day=None,
-                label="Tournament start",
-                standings=LeaderboardService._build_race_standings(
-                    user_names=user_names,
-                    cumulative_points=cumulative_points,
-                    match_points={},
-                ),
-            ),
-        ]
+        # Output format: { user_name: { match_label: total_points } }
+        output: dict[str, dict[str, int]] = {
+            user_names[user.id]: {}
+            for user in users
+        }
 
-        for frame_index, match in enumerate(completed_matches, start=1):
-            match_points: dict[int, int] = {}
+        for match in completed_matches:
+            match_label = LeaderboardService._format_match_label(match)
 
             for prediction in predictions_by_match.get(match.id, []):
                 score = LeaderboardService._score_prediction(prediction, rules)
-                match_points[prediction.user_id] = score.total_points
                 cumulative_points[prediction.user_id] = (
                     cumulative_points.get(prediction.user_id, 0) + score.total_points
                 )
+            
+            for user in users:
+                output[user_names[user.id]][match_label] = cumulative_points[user.id]
 
-            frames.append(
-                LeaderboardRaceFrameResponse(
-                    frame=frame_index,
-                    match_id=match.id,
-                    match_day=match.match_day,
-                    label=LeaderboardService._format_match_label(match),
-                    standings=LeaderboardService._build_race_standings(
-                        user_names=user_names,
-                        cumulative_points=cumulative_points,
-                        match_points=match_points,
-                    ),
-                ),
-            )
-
-        return frames
-
-    @staticmethod
-    def _build_race_standings(
-        *,
-        user_names: dict[int, str],
-        cumulative_points: dict[int, int],
-        match_points: dict[int, int],
-    ) -> list[LeaderboardRaceUserResponse]:
-        """Build ranked race standings from cumulative user points."""
-        ranked_users = sorted(
-            user_names.items(),
-            key=lambda item: (-cumulative_points.get(item[0], 0), item[1]),
-        )
-        return [
-            LeaderboardRaceUserResponse(
-                rank=index + 1,
-                user_id=user_id,
-                name=name,
-                total_points=cumulative_points.get(user_id, 0),
-                match_points=match_points.get(user_id, 0),
-            )
-            for index, (user_id, name) in enumerate(ranked_users)
-        ]
+        return output
 
     @staticmethod
     def _format_match_label(match: Match) -> str:
         """Build the label shown for a leaderboard race frame."""
         return (
-            f"Match day {match.match_day}: "
-            f"{match.team1.name} vs {match.team2.name}"
+            f"Match {match.id}"
         )
 
     @staticmethod
