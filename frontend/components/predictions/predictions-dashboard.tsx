@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import React, { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Modal } from "@/components/ui/modal";
 import { StatusPill } from "@/components/ui/status-pill";
@@ -415,7 +415,7 @@ export const PredictionsDashboard = () => {
         formState.kickoffTeamId,
         "Kick-off team",
       ) : null,
-      match_duration: isMatchDuration(formState.matchDuration) ? formState.matchDuration : null,
+      match_duration: isMatchDuration(formState.matchDuration) ? formState.matchDuration : (selectedMatch?.match_stage === "GROUP" ? '90' : null),
       red_card_count: formState.redCardCount !== '' ? parseNonNegativeInteger(
         formState.redCardCount,
         "Red cards",
@@ -630,7 +630,7 @@ export const PredictionsDashboard = () => {
         firstGoalIn: randomFirstGoalIn,
         firstScoringTeamId: randomFirstScoringTeamId,
         kickoffTeamId: randomKickoffTeamId,
-        matchDuration: isKnockout ? randomMatchDuration : current.matchDuration,
+        matchDuration: isKnockout ? randomMatchDuration : current.matchDuration || "90",
         redCardCount: String(randomRedCards),
         team1Score: String(team1Score),
         team2Score: String(team2Score),
@@ -1158,10 +1158,10 @@ export const PredictionsDashboard = () => {
                   ["First Score By", pendingPredictionFields.first_scoring_team_id
                     ? getTeamNameById(selectedMatch, pendingPredictionFields.first_scoring_team_id)
                     : "Not Predicted"],
-                  ["Yellow Cards", pendingPredictionFields.yellow_card_count !== null ? String(pendingPredictionFields.yellow_card_count) : "Not Predicted"],
-                  ["Red Cards", pendingPredictionFields.red_card_count !== null ? String(pendingPredictionFields.red_card_count) : "Not Predicted"],
+                  ["Total Yellow Cards", pendingPredictionFields.yellow_card_count !== null ? String(pendingPredictionFields.yellow_card_count) : "Not Predicted"],
+                  ["Total Red Cards", pendingPredictionFields.red_card_count !== null ? String(pendingPredictionFields.red_card_count) : "Not Predicted"],
                   ["Kick-off Team", pendingPredictionFields.kick_off_team_id ? getTeamNameById(selectedMatch, pendingPredictionFields.kick_off_team_id) : "Not Predicted"],
-                  ["Duration", pendingPredictionFields.match_duration ? matchDurationLabels[pendingPredictionFields.match_duration] : "Not Predicted"],
+                  ["Match Duration", pendingPredictionFields.match_duration ? matchDurationLabels[pendingPredictionFields.match_duration] : "Not Predicted"],
                 ] as [string, string][]).map(([label, value]) => (
                   <div key={label} className="flex flex-col gap-0.5 bg-white dark:bg-zinc-900 px-4 py-3">
                     <dt className="text-xs text-zinc-500 dark:text-zinc-400">{label}</dt>
