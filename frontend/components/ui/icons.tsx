@@ -714,3 +714,52 @@ export const IconLocation = ({ className = "h-4 w-4" }: IconProps) => (
     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
   </svg>
 );
+
+export const IconLiveDot = ({ className = "h-4 w-4" }: IconProps) => (
+  <svg
+    xmlns="http://w3.org"
+    viewBox="0 0 24 24"
+    className={className}
+  >
+    <style>
+      {`
+        @keyframes ripple {
+          0% { transform: scale(0.8); opacity: 0.5; }
+          100% { transform: scale(2.2); opacity: 0; }
+        }
+        @keyframes core-pulse {
+          0%, 100% { transform: scale(0.95); opacity: 0.9; }
+          50% { transform: scale(1.05); opacity: 1; }
+        }
+        .dot-ripple {
+          animation: ripple 1.8s infinite cubic-bezier(0.24, 0, 0.38, 1);
+          transform-origin: 12px 12px;
+        }
+        .dot-core {
+          animation: core-pulse 1.8s infinite ease-in-out;
+          transform-origin: 12px 12px;
+        }
+      `}
+    </style>
+
+    {/* Expanding Outer Glimmer Ring */}
+    <circle
+      cx="12"
+      cy="12"
+      r="4.5"
+      className="dot-ripple"
+      fill="#22c55e"
+    />
+
+    {/* Sharp Center Core Indicator */}
+    <circle
+      cx="12"
+      cy="12"
+      r="4"
+      className="dot-core"
+      fill="#22c55e"
+      stroke="#15803d"
+      strokeWidth="0.5"
+    />
+  </svg>
+);

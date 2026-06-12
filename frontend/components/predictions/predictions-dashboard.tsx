@@ -40,7 +40,7 @@ import {
   SelectableMatchCard,
 } from "../ui/match-card";
 import Image from "next/image";
-import { IconChevronLeft, IconChevronRight, IconSave } from "../ui/icons";
+import { IconChevronLeft, IconChevronRight, IconLiveDot, IconSave } from "../ui/icons";
 import { IconSparkles } from "@/components/ui/icons";
 import ImageWithFallback from "../ui/image-with-fallback";
 import { FirstGoalIn } from "@/lib/matches/types";
@@ -844,7 +844,7 @@ export const PredictionsDashboard = () => {
           </div>
           <div className="absolute right-[15px] top-[15px]">
             {selectedMatch && isMatchPlayed
-              ? (<StatusPill tone="green" urgency="none">{isMatchLive ? "Live: " : "FT: "}{selectedMatch.team1_score} - {selectedMatch.team2_score}</StatusPill>)
+              ? (<StatusPill tone={isMatchLive ? "green" : "primary"} urgency="none">{isMatchLive ? <IconLiveDot /> : null} {isMatchLive ? "Live: " : "FT: "}{selectedMatch.team1_score} - {selectedMatch.team2_score}</StatusPill>)
               : (<StatusPill tone={getStatusTone(selectedStatus)} urgency={selectedMatch ? getLockUrgency(selectedMatch) : "none"}>
                 {selectedStatus}
               </StatusPill>)}

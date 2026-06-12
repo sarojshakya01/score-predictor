@@ -4,7 +4,7 @@ import { JSX } from "react";
 import { PredictionStatus } from "@/lib/matches/types";
 import Link from "next/link";
 import { DEFAULT_TIMEZONE } from "@/lib/api/config";
-import { IconCheck, IconCross, IconLocation, IconWarning } from "./icons";
+import { IconCheck, IconCross, IconLiveDot, IconLocation, IconWarning } from "./icons";
 import TeamWithFlag from "./team-with-flag";
 
 // ---------------------------------------------------------------------------
@@ -109,7 +109,7 @@ const MatchDayNGroupNStatus = (match: MatchResponse) => {
         </p>
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">{formatMatchGroup(match)}</p>
         {isMatchPlayed
-          ? (<StatusPill tone="green" urgency="none">{isMatchLive ? "Live: " : "FT: "}{match.team1_score} - {match.team2_score}</StatusPill>)
+          ? (<StatusPill tone={isMatchLive ? "green" : "primary"} urgency="none">{isMatchLive ? <IconLiveDot /> : null} {isMatchLive ? "Live: " : "FT: "}{match.team1_score} - {match.team2_score}</StatusPill>)
           : (<StatusPill tone={getStatusTone(status)} urgency={urgency}>{status}</StatusPill>)}
       </div>
     </dl>
