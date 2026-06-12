@@ -968,7 +968,7 @@ export const PredictionsDashboard = () => {
             Prediction History
           </h2>
         </div>
-        <div className="overflow-auto max-h-[35rem]">
+        <div className="overflow-auto max-h-[40rem]">
           <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
             <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
               <tr>

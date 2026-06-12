@@ -67,8 +67,8 @@ const pointGroups: {
     {
       label: "First Score By",
       pointsKey: "first_scoring_team_points",
-      actual: (details) => details.first_scoring_team ?? "--",
-      predicted: (row) => row.predicted_first_scoring_team ?? "--",
+      actual: (details) => details.first_scoring_team ?? "—",
+      predicted: (row) => row.predicted_first_scoring_team ?? "—",
     },
     {
       label: "Yellow Card",
@@ -85,8 +85,8 @@ const pointGroups: {
     {
       label: "Kick-off",
       pointsKey: "kick_off_team_points",
-      actual: (details) => details.kick_off_team ?? "--",
-      predicted: (row) => row.predicted_kick_off_team ?? "--",
+      actual: (details) => details.kick_off_team ?? "—",
+      predicted: (row) => row.predicted_kick_off_team ?? "—",
     },
     {
       label: "Duration",
@@ -109,15 +109,15 @@ const getLoadErrorMessage = (error: unknown, fallback: string): string => {
 };
 
 const formatNullableNumber = (value: number | null | undefined): string => {
-  return value === null || value === undefined ? "--" : String(value);
+  return value === null || value === undefined ? "—" : String(value);
 };
 
 const formatScore = (
   team1Score: number | null | undefined,
   team2Score: number | null | undefined,
 ): string => {
-  if (team1Score === null || team1Score === undefined) return "--";
-  if (team2Score === null || team2Score === undefined) return "--";
+  if (team1Score === null || team1Score === undefined) return "—";
+  if (team2Score === null || team2Score === undefined) return "—";
   return `${team1Score} - ${team2Score}`;
 };
 
@@ -125,18 +125,18 @@ const formatGoalDifference = (
   team1Score: number | null | undefined,
   team2Score: number | null | undefined,
 ): string => {
-  if (team1Score === null || team1Score === undefined) return "--";
-  if (team2Score === null || team2Score === undefined) return "--";
+  if (team1Score === null || team1Score === undefined) return "—";
+  if (team2Score === null || team2Score === undefined) return "—";
   return String(Math.abs(team1Score - team2Score));
 };
 
 const formatFirstGoalIn = (value: string | null | undefined): string => {
-  if (!value || !(value in firstGoalInLabels)) return "--";
+  if (!value || !(value in firstGoalInLabels)) return "—";
   return firstGoalInLabels[value as keyof typeof firstGoalInLabels];
 };
 
 const formatMatchDuration = (value: string | null | undefined): string => {
-  if (!value || !(value in matchDurationLabels)) return "--";
+  if (!value || !(value in matchDurationLabels)) return "—";
   return matchDurationLabels[value as keyof typeof matchDurationLabels];
 };
 
@@ -155,8 +155,8 @@ const formatGroup = (match: MatchResponse): string => {
   const team1Group = formatGroupLabel(match.team1_group);
   const team2Group = formatGroupLabel(match.team2_group);
 
-  if (!team1Group && !team2Group) return "--";
-  if (team1Group === team2Group) return team1Group || "--";
+  if (!team1Group && !team2Group) return "—";
+  if (team1Group === team2Group) return team1Group || "—";
   return [team1Group, team2Group].filter(Boolean).join(" / ");
 };
 
@@ -260,7 +260,7 @@ const MatchPointsModal = ({
                 Winner
               </p>
               <p className="mt-1 text-2xl font-bold text-zinc-950 dark:text-zinc-50 truncate">
-                {match ? formatWinner(match) : "--"}
+                {match ? formatWinner(match) : "—"}
               </p>
             </div>
             <div className="rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800/50">
@@ -657,7 +657,7 @@ export const ResultsDashboard = () => {
                       {formatFirstGoalIn(match.first_goal_in)}
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
-                      {getTeamNameById(match, match.first_scoring_team_id) ?? "--"}
+                      {getTeamNameById(match, match.first_scoring_team_id) ?? "—"}
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
                       {formatNullableNumber(match.yellow_card_count)}
@@ -666,7 +666,7 @@ export const ResultsDashboard = () => {
                       {formatNullableNumber(match.red_card_count)}
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
-                      {getTeamNameById(match, match.kick_off_team_id) ?? "--"}
+                      {getTeamNameById(match, match.kick_off_team_id) ?? "—"}
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
                       {formatMatchDuration(match.match_duration)}

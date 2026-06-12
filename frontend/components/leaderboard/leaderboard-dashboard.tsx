@@ -2,16 +2,16 @@
 
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
+import * as Highcharts from "highcharts";
+import HighchartsReact from "highcharts-react-official";
 
 import { Modal } from "@/components/ui/modal";
-import { PillTone, StatusPill } from "@/components/ui/status-pill";
 import { ApiError } from "@/lib/api";
 import { isAuthenticated, MissingAuthTokenError, SessionExpiredError } from "@/lib/auth";
 import { getUserPredictionDetails, listLeaderboard } from "@/lib/leaderboard";
 import type {
   LeaderboardEntryResponse,
   LeaderboardRaceFrameResponse,
-  LeaderboardRaceUserResponse,
   LeaderboardResponse,
   UserPointsDetailsListResponse,
   UserPointsDetailsResponse,
@@ -49,21 +49,6 @@ const getLoadErrorMessage = (error: unknown): string => {
 
 const formatSignedNumber = (value: number): string => {
   return String(value);
-};
-
-const getPointsTone = (points: number): PillTone => {
-  if (points > 0) {
-    return "primary";
-  }
-
-  return "accent";
-};
-
-const getFrameMaxPoints = (frame: LeaderboardRaceFrameResponse): number => {
-  return Math.max(
-    1,
-    ...frame.standings.map((standing) => Math.abs(standing.total_points)),
-  );
 };
 
 
@@ -662,91 +647,7 @@ const LeaderboardRow = ({
   );
 };
 
-const getRaceChartBg = () => {
-  const colors = [
-    "bg-tournament-primary-light",
-    "bg-tournament-secondary-light",
-    "bg-tournament-accent-light",
-    "bg-rose-600",
-    "bg-amber-600",
-    "bg-purple-600",
-    "bg-tournament-primary-light",
-    "bg-tournament-secondary-light",
-    "bg-tournament-accent-light",
-    "bg-emerald-600",
-    "bg-orange-600",
-    "bg-pink-600",
-    "bg-indigo-600",
-    "bg-tournament-primary-light",
-    "bg-tournament-secondary-light",
-    "bg-tournament-accent-light",
-    "bg-cyan-600",
-    "bg-teal-600",
-    "bg-violet-600",
-    "bg-fuchsia-600",
-    "bg-tournament-primary-light",
-    "bg-tournament-secondary-light",
-    "bg-tournament-accent-light",
-    "bg-amber-600",
-    "bg-purple-600",
-    "bg-emerald-600",
-    "bg-orange-600",
-    "bg-tournament-primary-light",
-    "bg-tournament-secondary-light",
-    "bg-tournament-accent-light",
-    "bg-pink-600",
-    "bg-indigo-600",
-    "bg-cyan-600",
-    "bg-teal-600",
-    "bg-violet-600",
-    "bg-fuchsia-600",
-  ];
-  const randomColor = colors[Math.floor(Math.random() * colors.length)];
-  return randomColor;
-}
 // ── Race Chart ────────────────────────────────────────────────────────────────
-
-const RaceChartRow = ({
-  maxPoints,
-  standing,
-  onUserClick,
-}: {
-  maxPoints: number;
-  standing: LeaderboardRaceUserResponse;
-  onUserClick: (userId: number, userName: string) => void;
-}) => {
-  const barWidth =
-    standing.total_points === 0
-      ? 2
-      : Math.max(8, (Math.abs(standing.total_points) / maxPoints) * 100);
-
-  const barColor =
-    standing.total_points < 0
-      ? "bg-rose-600"
-      : standing.match_points > 0
-        ? getRaceChartBg()
-        : "bg-zinc-500";
-
-  return (
-    <div className="grid min-w-[10-rem] md:min-w-[42rem] grid-cols-[30px_80px_auto_40px] md:grid-cols-[75px_150px_auto_100px] items-center pl-0 pr-4 py-3 text-sm">
-      <div className={"px-3 font-semibold text-zinc-950 dark:text-zinc-100 text-center"}>{standing.rank}</div>
-      <div className="px-3 truncate font-medium text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer text-left dark:text-indigo-400 dark:hover:text-indigo-300" onClick={() => onUserClick(standing.user_id, standing.name)}>{standing.name}</div>
-      <div className="h-9 overflow-hidden rounded-md bg-zinc-100 dark:bg-zinc-700">
-        <div
-          className={`flex h-full items-center justify-end rounded-md px-3 text-xs font-semibold text-white transition-[width] duration-700 ease-out ${barColor}`}
-          style={{ width: `${barWidth}%` }}
-        >
-          {standing.total_points}
-        </div>
-      </div>
-      <div className="text-right">
-        <StatusPill tone={getPointsTone(standing.match_points)}>
-          {formatSignedNumber(standing.match_points)}
-        </StatusPill>
-      </div>
-    </div>
-  );
-};
 
 const RaceChart = ({ frames, onUserClick }: { frames: LeaderboardRaceFrameResponse[]; onUserClick: (userId: number, userName: string) => void }) => {
   const safeFrames = frames.length > 0 ? frames : [];
@@ -768,11 +669,86 @@ const RaceChart = ({ frames, onUserClick }: { frames: LeaderboardRaceFrameRespon
   }, [isPlaying, safeFrames.length]);
 
   const frame = safeFrames[frameIndex] ?? null;
-  const maxPoints = frame ? getFrameMaxPoints(frame) : 1;
 
   if (!frame) {
     return null;
   }
+
+  const chartData = frame.standings.map((standing) => ({
+    name: standing.name,
+    y: standing.total_points,
+    color: standing.total_points < 0 ? '#e11d48' : standing.match_points > 0 ? '#059669' : '#a1a1aa',
+    custom: {
+      userId: standing.user_id,
+      rank: standing.rank,
+      matchPoints: standing.match_points,
+    }
+  }));
+
+  const options: Highcharts.Options = {
+    chart: {
+      type: 'bar',
+      animation: {
+        duration: 1000,
+      },
+      height: Math.max(400, frame.standings.length * 40 + 80),
+      backgroundColor: 'transparent',
+    },
+    title: { text: undefined },
+    xAxis: {
+      type: 'category',
+      labels: {
+        style: {
+          fontSize: '13px',
+          fontWeight: '500',
+        }
+      }
+    },
+    yAxis: {
+      title: { text: 'Total Points' }
+    },
+    legend: { enabled: false },
+    plotOptions: {
+      series: {
+        animation: false,
+        borderWidth: 0,
+        dataLabels: {
+          enabled: true,
+          format: '{point.y}',
+          style: { fontSize: '12px', fontWeight: 'bold' }
+        }
+      }
+    },
+    series: [{
+      type: 'bar',
+      name: 'Total Points',
+      dataSorting: {
+        enabled: true,
+        matchByName: true
+      },
+      data: chartData,
+      events: {
+        click: (e) => {
+          const point = e.point as Highcharts.Point & { custom?: { userId: number; matchPoints: number; rank: number } };
+          if (point && point.custom) {
+            onUserClick(point.custom.userId, point.name || "");
+          }
+        }
+      }
+    }],
+    tooltip: {
+      formatter: function (this: Highcharts.Point) {
+        const point = this as Highcharts.Point & { custom?: { userId: number; matchPoints: number; rank: number } };
+        const custom = point.custom;
+        if (!custom) return point.name;
+
+        const matchPts = custom.matchPoints;
+        const ptsSign = matchPts > 0 ? '+' : '';
+        return `<b>${point.name}</b><br/>Rank: ${custom.rank}<br/>Total Points: ${point.y}<br/>Match Points: ${ptsSign}${matchPts}`;
+      }
+    },
+    credits: { enabled: false }
+  };
 
   return (
     <section className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
@@ -788,7 +764,6 @@ const RaceChart = ({ frames, onUserClick }: { frames: LeaderboardRaceFrameRespon
               if (!isPlaying) {
                 setFrameIndex(0);
               }
-
               setIsPlaying((currentValue) => !currentValue);
             }}
             disabled={safeFrames.length <= 1}
@@ -814,27 +789,8 @@ const RaceChart = ({ frames, onUserClick }: { frames: LeaderboardRaceFrameRespon
           </span>
         </div>
       </div>
-      <div className="overflow-x-auto">
-        <div className="min-w-[10rem] md:min-w-[42rem] border-b border-zinc-100 bg-zinc-50 pl-0 pr-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800/70 dark:text-zinc-400">
-          <div className="grid grid-cols-[30px_80px_auto_40px] md:grid-cols-[75px_150px_auto_100px] items-center">
-            <span className="block md:hidden px-3 dark:text-zinc-400 text-center">#</span>
-            <span className="hidden md:block px-3 dark:text-zinc-400 text-center">Rank</span>
-            <span className="px-3 dark:text-zinc-400 text-left">User</span>
-            <span className="dark:text-zinc-400 text-left">Total</span>
-            <span className="block md:hidden pl-3 dark:text-zinc-400 text-right">Pts</span>
-            <span className="hidden md:block pl-3 dark:text-zinc-400 text-right">Match Pts</span>
-          </div>
-        </div>
-        <div className="max-h-[35rem] divide-y divide-zinc-100 overflow-y-auto dark:divide-zinc-800">
-          {frame.standings.map((standing) => (
-            <RaceChartRow
-              key={standing.user_id}
-              maxPoints={maxPoints}
-              standing={standing}
-              onUserClick={onUserClick}
-            />
-          ))}
-        </div>
+      <div className="overflow-x-auto p-4">
+        <HighchartsReact highcharts={Highcharts} options={options} />
       </div>
     </section>
   );
@@ -974,7 +930,7 @@ export const LeaderboardDashboard = () => {
               Showing {rows.length} of {leaderboard?.total ?? 0} ranked users
             </p>
           </div>
-          <div className="overflow-auto max-h-[35rem]">
+          <div className="overflow-auto max-h-[40rem]">
             <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
               <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800/70 dark:text-zinc-400">
                 <tr>
