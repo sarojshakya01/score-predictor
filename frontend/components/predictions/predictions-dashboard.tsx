@@ -913,7 +913,7 @@ export const PredictionsDashboard = () => {
             {/* Red cards */}
             <label className="flex flex-col gap-1">
               <span className={labelTextCls}>Total Red Cards</span>
-              <input min="0" max="100" name="red_card_count" type="number" value={formState.redCardCount || ''} onChange={(e) => updateField("redCardCount", e.target.value)} className={inputCls} />
+              <input min="0" max="100" name="red_card_count" type="number" value={formState.redCardCount || 0} onChange={(e) => updateField("redCardCount", e.target.value)} className={inputCls} />
             </label>
 
             {/* Kick-off team */}
