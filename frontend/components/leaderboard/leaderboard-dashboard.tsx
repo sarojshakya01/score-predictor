@@ -649,6 +649,27 @@ const LeaderboardRow = ({
 
 // ── Race Chart ────────────────────────────────────────────────────────────────
 
+const RACE_CHART_COLORS = [
+  "#2563eb", // blue-600
+  "#e11d48", // rose-600
+  "#d97706", // amber-600
+  "#9333ea", // purple-600
+  "#059669", // emerald-600
+  "#ea580c", // orange-600
+  "#db2777", // pink-600
+  "#4f46e5", // indigo-600
+  "#0891b2", // cyan-600
+  "#0d9488", // teal-600
+  "#7c3aed", // violet-600
+  "#c026d3", // fuchsia-600
+];
+
+const getUserColor = (userId: number) => {
+  // Use a simple hash to shuffle the user ID so it's not strictly sequential
+  const hash = (userId * 2654435761) % Math.pow(2, 32);
+  return RACE_CHART_COLORS[hash % RACE_CHART_COLORS.length];
+};
+
 const RaceChart = ({ frames, onUserClick }: { frames: LeaderboardRaceFrameResponse[]; onUserClick: (userId: number, userName: string) => void }) => {
   const safeFrames = frames.length > 0 ? frames : [];
   const [frameIndex, setFrameIndex] = useState(safeFrames.length - 1);
@@ -661,7 +682,7 @@ const RaceChart = ({ frames, onUserClick }: { frames: LeaderboardRaceFrameRespon
 
     const intervalId = window.setInterval(() => {
       setFrameIndex((currentFrameIndex) =>
-        currentFrameIndex >= safeFrames.length - 1 ? 0 : currentFrameIndex + 1,
+        currentFrameIndex >= safeFrames.length - 1 ? 1 : currentFrameIndex + 1,
       );
     }, 1600);
 
@@ -677,7 +698,8 @@ const RaceChart = ({ frames, onUserClick }: { frames: LeaderboardRaceFrameRespon
   const chartData = frame.standings.map((standing) => ({
     name: standing.name,
     y: standing.total_points,
-    color: standing.total_points < 0 ? '#e11d48' : standing.match_points > 0 ? '#059669' : '#a1a1aa',
+    color: standing.total_points < 0 ? '#e11d48' : getUserColor(standing.user_id),
+    dataLabels: standing.total_points === 0 ? { align: 'left', x: 2 } : undefined,
     custom: {
       userId: standing.user_id,
       rank: standing.rank,
@@ -762,7 +784,7 @@ const RaceChart = ({ frames, onUserClick }: { frames: LeaderboardRaceFrameRespon
             type="button"
             onClick={() => {
               if (!isPlaying) {
-                setFrameIndex(0);
+                setFrameIndex(1);
               }
               setIsPlaying((currentValue) => !currentValue);
             }}
@@ -776,7 +798,7 @@ const RaceChart = ({ frames, onUserClick }: { frames: LeaderboardRaceFrameRespon
             className="w-40 accent-emerald-700"
             disabled={safeFrames.length <= 1}
             max={Math.max(safeFrames.length - 1, 0)}
-            min={0}
+            min={1}
             type="range"
             value={frameIndex}
             onChange={(event) => {
