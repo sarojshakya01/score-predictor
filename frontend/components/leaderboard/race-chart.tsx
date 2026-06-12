@@ -67,7 +67,6 @@ function applyHighchartsPatch() {
 }
 
 const startMatch = 1;
-const endMatch = 4;
 const nbr = 20;
 const barRowHeight = 28;
 const chartVerticalPadding = 120;
@@ -153,6 +152,7 @@ export default function RaceChart({
   const chartRef = useRef<HighchartsReact.RefObject>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
+  const endMatch = Object.keys(dataset[Object.keys(dataset)[0]]).length;
 
   // Stable name set computed once — never changes between frames
   const stableNames = useMemo(() => getStableNames(dataset, endMatch, nbr), [dataset]);
