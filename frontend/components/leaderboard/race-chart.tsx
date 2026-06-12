@@ -5,7 +5,6 @@ import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { useRef, useState } from 'react';
 
-const STARTING_MATCH_NUM = 1;
 const TOP_PERFORMER = 20;
 const BAR_ROW_HEIGHT = 20;
 const CHART_VERTICAL_PADDING = 10;
@@ -21,6 +20,7 @@ export default function RaceChart({
   const matchValRef = useRef<HTMLButtonElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
+  const startMatch = dataset[0].acc_points.length;
   const endMatch = dataset[0].acc_points.length;
 
   function getData(
@@ -75,7 +75,7 @@ export default function RaceChart({
   const play = () => {
     const input = inputRef.current!;
     if (parseInt(input.value, 10) >= endMatch) {
-      input.value = String(STARTING_MATCH_NUM);
+      input.value = String(startMatch);
     }
     const btn = btnRef.current!;
     const chart = chartRef.current?.chart as any; // eslint-disable-line
@@ -144,7 +144,7 @@ export default function RaceChart({
         pointWidth: BAR_ROW_HEIGHT,
         maxPaddingWitdh: 2 * BAR_ROW_HEIGHT,
         name: 'Points',
-        data: getData(STARTING_MATCH_NUM),
+        data: getData(startMatch),
       } as any, // eslint-disable-line
     ],
     responsive: {
@@ -178,7 +178,7 @@ export default function RaceChart({
       <div className="flex flex-col gap-4 border-b border-zinc-200 px-5 py-4 lg:flex-row lg:justify-between dark:border-zinc-700 items-center">
         <div>
           <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-100">Leaderboard Race</h2>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Match Number: <span ref={matchValRef}>{STARTING_MATCH_NUM}</span></p>
+          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Match Number: <span ref={matchValRef}>{startMatch}</span></p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <button
@@ -194,9 +194,9 @@ export default function RaceChart({
             className="w-40 accent-emerald-700"
             ref={inputRef}
             type="range"
-            defaultValue={STARTING_MATCH_NUM}
+            defaultValue={startMatch}
             onClick={handleSliderClick}
-            min={STARTING_MATCH_NUM}
+            min={1}
             max={endMatch}
           />
         </div>
