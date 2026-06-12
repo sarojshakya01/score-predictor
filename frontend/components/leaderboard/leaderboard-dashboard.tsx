@@ -332,7 +332,7 @@ const UserPointsDetailModal = ({
                 label: "Avg per Match",
                 value:
                   data.items.length > 0
-                    ? (data.total_points - (data.winner_points + data.runner_up_points + data.third_place_points) / data.items.length).toFixed(1)
+                    ? ((data.total_points - (data.winner_points + data.runner_up_points + data.third_place_points)) / data.items.filter((i) => i.kick_off_team).length).toFixed(1)
                     : "—",
                 color: "text-zinc-900",
               },
@@ -1039,13 +1039,13 @@ export const LeaderboardDashboard = () => {
                   <th className={[
                     "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
-                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right"
-                  ].join(" ")}>Duration</th>
+                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[100px]"
+                  ].join(" ")}>Kick-off</th>
                   <th className={[
                     "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
-                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[100px]"
-                  ].join(" ")}>Kick-off</th>
+                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right"
+                  ].join(" ")}>Duration</th>
                   <th className={[
                     "static md:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",

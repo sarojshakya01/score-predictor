@@ -4,10 +4,10 @@ CREATE TABLE predictions (
     user_id INT NOT NULL,
     match_id INT NOT NULL,
 
-    team1_score INT NOT NULL,
-    team2_score INT NOT NULL,
-    yellow_card_count INT NOT NULL,
-    red_card_count INT NOT NULL,
+    team1_score INT NULL DEFAULT NULL,
+    team2_score INT NULL DEFAULT NULL,
+    yellow_card_count INT NULL DEFAULT NULL,
+    red_card_count INT NULL DEFAULT NULL,
 
     -- First Goal Information
     first_goal_in ENUM('1H', '2H', 'ET') NULL DEFAULT NULL,
@@ -50,16 +50,16 @@ CREATE TABLE predictions (
 
     -- Check Constraints
     CONSTRAINT ck_predictions_team1_score_nonnegative
-        CHECK (team1_score >= 0),
+        CHECK (team1_score IS NULL OR team1_score >= 0),
 
     CONSTRAINT ck_predictions_team2_score_nonnegative
-        CHECK (team2_score >= 0),
+        CHECK (team2_score IS NULL OR team2_score >= 0),
 
     CONSTRAINT ck_predictions_yellow_card_count_nonnegative
-        CHECK (yellow_card_count >= 0),
+        CHECK (yellow_card_count IS NULL OR yellow_card_count >= 0),
 
     CONSTRAINT ck_predictions_red_card_count_nonnegative
-        CHECK (red_card_count >= 0),
+        CHECK (red_card_count IS NULL OR red_card_count >= 0),
 
     -- Indexes
     INDEX ix_predictions_user_id (user_id),

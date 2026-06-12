@@ -11,6 +11,7 @@ import type { HomeSummaryResponse } from "@/lib/home";
 import { listMatchResults, listUpcomingMatches } from "@/lib/matches";
 import type { MatchResponse } from "@/lib/matches";
 import { formatDateTime } from "@/components/ui/match-card";
+import { PredictionsMetricCard } from "@/components/home/predictions-metric-card";
 import { UpcomingMatchesSection } from "@/components/home/upcoming-matches-section";
 import { DEFAULT_TIMEZONE } from "@/lib/api/config";
 
@@ -224,9 +225,12 @@ const Home = async () => {
 
       <section className="grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {dashboardMetrics.map((metric) => (
-            <MetricCard key={metric.label} metric={metric} />
-          ))}
+          {dashboardMetrics.map((metric) => {
+            if (metric.label === "Predictions made") {
+              return <PredictionsMetricCard key={metric.label} defaultMetric={metric} />;
+            }
+            return <MetricCard key={metric.label} metric={metric} />;
+          })}
         </div>
 
         <div className="countdown-container relative min-h-64 overflow-hidden rounded-md border border-emerald-900/20 p-5 text-white shadow-sm">

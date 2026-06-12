@@ -240,7 +240,7 @@ class PredictionService:
             )
 
     @staticmethod
-    def _validate_kick_off_team(match: Match, kick_off_team_id: int) -> None:
+    def _validate_kick_off_team(match: Match, kick_off_team_id: int | None) -> None:
         """Ensure kickoff team is one of the match participants."""
         if kick_off_team_id is not None and kick_off_team_id not in {match.team1_id, match.team2_id}:
             raise HTTPException(
@@ -252,13 +252,16 @@ class PredictionService:
     def _validate_goal_prediction_fields(
         *,
         match: Match,
-        team1_score: int,
-        team2_score: int,
+        team1_score: int | None,
+        team2_score: int | None,
         first_goal_in: FirstGoalIn | None,
         first_scoring_team_id: int | None,
     ) -> None:
         """Validate fields that only apply when goals are predicted."""
-        if team1_score + team2_score == 0:
+        if PredictionService._scores_have_no_goals(
+            team1_score=team1_score,
+            team2_score=team2_score,
+        ):
             return
 
         # commented as null/empty values can be sent from frontend by dump users
@@ -281,7 +284,11 @@ class PredictionService:
             )
 
     @staticmethod
-    def _scores_have_no_goals(*, team1_score: int, team2_score: int) -> bool:
+    def _scores_have_no_goals(
+        *,
+        team1_score: int | None,
+        team2_score: int | None,
+    ) -> bool:
         """Return whether the predicted score is goal-less."""
         return team1_score == 0 and team2_score == 0
 

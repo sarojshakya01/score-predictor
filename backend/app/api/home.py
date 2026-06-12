@@ -1,5 +1,6 @@
 """Home-page summary API routes."""
 
+from app.api.deps import OptionalCurrentUser
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
@@ -15,11 +16,13 @@ router = APIRouter(prefix="/home", tags=["Home"])
 @router.get(
     "/summary",
     response_model=HomeSummaryResponse,
-    summary="Get home-page summary",
+    operation_id="get_home_summary",
 )
 async def get_home_summary(
     db: Annotated[AsyncSession, Depends(get_db)],
+    current_user: OptionalCurrentUser = None,
 ) -> HomeSummaryResponse:
     """Return public home-page tournament stats."""
     service = HomeService(db)
-    return await service.get_summary()
+    user_id = current_user.id if current_user else None
+    return await service.get_summary(user_id)

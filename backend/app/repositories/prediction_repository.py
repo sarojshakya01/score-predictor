@@ -100,9 +100,12 @@ class PredictionRepository:
         result = await self._db.execute(statement)
         return int(result.scalar_one())
 
-    async def count_all_predictions(self) -> int:
+    async def count_all_predictions(self, user_id: int = None) -> int:
         """Count every prediction in the system."""
-        statement = select(func.count()).select_from(Prediction)
+        if user_id is None:
+            statement = select(func.count()).select_from(Prediction)
+        else:
+            statement = select(func.count()).select_from(Prediction).where(Prediction.user_id == user_id)
         result = await self._db.execute(statement)
         return int(result.scalar_one())
 

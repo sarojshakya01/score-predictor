@@ -23,7 +23,7 @@ class HomeService:
         self._match_repository = MatchRepository(db)
         self._prediction_repository = PredictionRepository(db)
 
-    async def get_summary(self) -> HomeSummaryResponse:
+    async def get_summary(self, user_id: int = None) -> HomeSummaryResponse:
         """Return current tournament summary stats."""
         try:
             now = datetime.now(timezone.utc)
@@ -32,7 +32,7 @@ class HomeService:
 
             return HomeSummaryResponse(
                 open_matches=await self._match_repository.count_open_matches(now),
-                predictions_made=await self._count_predictions(),
+                predictions_made=await self._count_predictions(user_id),
                 locking_soon=await self._match_repository.count_locking_matches(
                     from_datetime=now,
                     to_datetime=locking_window_end,
@@ -52,10 +52,10 @@ class HomeService:
                 detail="An unexpected error occurred: could not get home summary",
             )
 
-    async def _count_predictions(self) -> int:
+    async def _count_predictions(self, user_id: int = None) -> int:
         """Count predictions, tolerating local databases before prediction setup."""
         try:
-            return await self._prediction_repository.count_all_predictions()
+            return await self._prediction_repository.count_all_predictions(user_id)
         except ProgrammingError as error:
             if self._is_missing_predictions_table_error(error):
                 logger.warning("Predictions table is missing; returning 0 predictions")

@@ -58,7 +58,7 @@ type PredictionFormState = {
 
 const emptyFormState: PredictionFormState = {
   firstScoringTeamId: "",
-  matchDuration: "90",
+  matchDuration: "",
   firstGoalIn: "",
   kickoffTeamId: "",
   redCardCount: "",
@@ -417,16 +417,16 @@ export const PredictionsDashboard = () => {
         "Kick-off team",
       ) : null,
       match_duration: isMatchDuration(formState.matchDuration) ? formState.matchDuration : null,
-      red_card_count: parseNonNegativeInteger(
+      red_card_count: formState.redCardCount !== '' ? parseNonNegativeInteger(
         formState.redCardCount,
         "Red cards",
-      ),
+      ) : null,
       team1_score: team1Score,
       team2_score: team2Score,
-      yellow_card_count: parseNonNegativeInteger(
+      yellow_card_count: formState.yellowCardCount !== '' ? parseNonNegativeInteger(
         formState.yellowCardCount,
         "Yellow cards",
-      ),
+      ) : null,
       winner_team_id: getWinnerTeamId(team1Score, team2Score, selectedMatch),
     };
   };
@@ -907,13 +907,13 @@ export const PredictionsDashboard = () => {
             {/* Yellow cards */}
             <label className="flex flex-col gap-1">
               <span className={labelTextCls}>Total Yellow Cards</span>
-              <input min="0" max="100" name="yellow_card_count" type="number" value={formState.yellowCardCount || 0} onChange={(e) => updateField("yellowCardCount", e.target.value)} className={inputCls} />
+              <input min="0" max="100" name="yellow_card_count" type="number" value={formState.yellowCardCount || ''} onChange={(e) => updateField("yellowCardCount", e.target.value)} className={inputCls} />
             </label>
 
             {/* Red cards */}
             <label className="flex flex-col gap-1">
               <span className={labelTextCls}>Total Red Cards</span>
-              <input min="0" max="100" name="red_card_count" type="number" value={formState.redCardCount || 0} onChange={(e) => updateField("redCardCount", e.target.value)} className={inputCls} />
+              <input min="0" max="100" name="red_card_count" type="number" value={formState.redCardCount || ''} onChange={(e) => updateField("redCardCount", e.target.value)} className={inputCls} />
             </label>
 
             {/* Kick-off team */}
@@ -1029,7 +1029,7 @@ export const PredictionsDashboard = () => {
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
               {predictions.length > 0 ? (
-                predictions.map((prediction, idx) => {
+                predictions.sort((a, b) => b.created_at.localeCompare(a.created_at)).map((prediction, idx) => {
                   const predictionMatch = allMatches.find(
                     (match) => match.id === prediction.match_id,
                   );
@@ -1078,10 +1078,10 @@ export const PredictionsDashboard = () => {
                         ) : "Not Predicted"}
                       </td>
                       <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">
-                        {prediction.yellow_card_count}
+                        {prediction.yellow_card_count !== null ? prediction.yellow_card_count : "Not Predicted"}
                       </td>
                       <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">
-                        {prediction.red_card_count}
+                        {prediction.red_card_count !== null ? prediction.red_card_count : "Not Predicted"}
                       </td>
                       <td className="px-3 py-4 text-zinc-700 dark:text-zinc-300">
                         {prediction.kick_off_team_id ? getTeamNameById(
@@ -1159,8 +1159,8 @@ export const PredictionsDashboard = () => {
                   ["First Score By", pendingPredictionFields.first_scoring_team_id
                     ? getTeamNameById(selectedMatch, pendingPredictionFields.first_scoring_team_id)
                     : "Not Predicted"],
-                  ["Yellow Cards", String(pendingPredictionFields.yellow_card_count)],
-                  ["Red Cards", String(pendingPredictionFields.red_card_count)],
+                  ["Yellow Cards", pendingPredictionFields.yellow_card_count !== null ? String(pendingPredictionFields.yellow_card_count) : "Not Predicted"],
+                  ["Red Cards", pendingPredictionFields.red_card_count !== null ? String(pendingPredictionFields.red_card_count) : "Not Predicted"],
                   ["Kick-off Team", pendingPredictionFields.kick_off_team_id ? getTeamNameById(selectedMatch, pendingPredictionFields.kick_off_team_id) : "Not Predicted"],
                   ["Duration", pendingPredictionFields.match_duration ? matchDurationLabels[pendingPredictionFields.match_duration] : "Not Predicted"],
                 ] as [string, string][]).map(([label, value]) => (

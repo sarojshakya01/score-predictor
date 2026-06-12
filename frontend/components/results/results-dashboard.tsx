@@ -641,8 +641,8 @@ export const ResultsDashboard = () => {
                       "border-b border-zinc-200 dark:border-zinc-800",
                       "pl-2 pr-3 py-4 font-medium text-zinc-950 dark:text-zinc-50",
                     ].join(" ")}>
-                      {<div className="flex justify-center"><p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 mr-1">{match.team1_name_short}</p>vs
-                        <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100 ml-1">{match.team2_name_short}</p></div>}
+                      {<div className="flex justify-center text-indigo-500 hover:text-indigo-600"><p className="text-sm font-semibold mr-1">{match.team1_name_short}</p>vs
+                        <p className="text-sm font-semibold ml-1">{match.team2_name_short}</p></div>}
                     </td>
                     <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
                       {formatGroup(match)}

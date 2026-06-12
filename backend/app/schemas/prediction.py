@@ -10,10 +10,10 @@ from app.models.match import FirstGoalIn, MatchDuration
 class PredictionFields(BaseModel):
     """Shared prediction fields supplied by users."""
 
-    team1_score: int = Field(..., ge=0)
-    team2_score: int = Field(..., ge=0)
-    yellow_card_count: int = Field(..., ge=0)
-    red_card_count: int = Field(..., ge=0)
+    team1_score: int | None = Field(default=None, ge=0)
+    team2_score: int | None = Field(default=None, ge=0)
+    yellow_card_count: int | None = Field(default=None, ge=0)
+    red_card_count: int | None = Field(default=None, ge=0)
     first_goal_in: FirstGoalIn | None = None
     first_scoring_team_id: int | None = Field(default=None, gt=0)
     kick_off_team_id: int | None = Field(default=None, gt=0)
@@ -22,12 +22,12 @@ class PredictionFields(BaseModel):
     @model_validator(mode="after")
     def validate_goal_timeline_fields(self) -> "PredictionFields":
         """Require first-goal details only when goals are predicted."""
-        has_predicted_goal = self.team1_score + self.team2_score > 0
+        has_scoreless_prediction = self.team1_score == 0 and self.team2_score == 0
 
-        if not has_predicted_goal and self.first_goal_in is not None:
+        if has_scoreless_prediction and self.first_goal_in is not None:
             raise ValueError("first_goal_in is only allowed when goals are predicted")
 
-        if not has_predicted_goal and self.first_scoring_team_id is not None:
+        if has_scoreless_prediction and self.first_scoring_team_id is not None:
             raise ValueError("first_scoring_team_id is only allowed when goals are predicted")
 
         return self
@@ -129,4 +129,3 @@ class UserPointsDetailsListResponse(BaseModel):
     winner_points: int
     runner_up_points: int
     third_place_points: int
-

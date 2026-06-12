@@ -680,19 +680,33 @@ class LeaderboardService:
             )
 
         match = prediction.match
-        perfect_prediction = (
-            prediction.team1_score == match.team1_score
-            and prediction.team2_score == match.team2_score
-        )
-        correct_winner = (
-            LeaderboardService._score_result_sign(prediction.team1_score, prediction.team2_score)
-            == LeaderboardService._score_result_sign(match.team1_score, match.team2_score)
+        has_score_prediction = (
+            prediction.team1_score is not None
+            or prediction.team2_score is not None
         )
 
-        if perfect_prediction:
-            score_points = rules.score.perfect
-        elif correct_winner:
-            score_points = rules.score.correct_winner
+        if has_score_prediction:
+            perfect_prediction = (
+                prediction.team1_score == match.team1_score
+                and prediction.team2_score == match.team2_score
+            )
+            correct_winner = (
+                LeaderboardService._score_result_sign(
+                    prediction.team1_score,
+                    prediction.team2_score,
+                )
+                == LeaderboardService._score_result_sign(
+                    match.team1_score,
+                    match.team2_score,
+                )
+            )
+
+            if perfect_prediction:
+                score_points = rules.score.perfect
+            elif correct_winner:
+                score_points = rules.score.correct_winner
+            else:
+                score_points = 0
         else:
             score_points = 0
 
@@ -774,6 +788,8 @@ class LeaderboardService:
         if (
             match.team1_score is None
             or match.team2_score is None
+            or prediction.team1_score is None
+            or prediction.team2_score is None
             or match.match_duration == MatchDuration.PENALTY
         ):
             return 0
@@ -847,12 +863,12 @@ class LeaderboardService:
     @staticmethod
     def _score_yellow_cards(
         *,
-        predicted: int,
+        predicted: int | None,
         actual: int | None,
         rules: BandedRules,
     ) -> int:
         """Score yellow cards with the configured tolerance bands."""
-        if predicted == 0 or actual is None:
+        if predicted is None or actual is None:
             return 0
 
         delta = abs(predicted - actual)
@@ -869,12 +885,12 @@ class LeaderboardService:
     @staticmethod
     def _score_red_cards(
         *,
-        predicted: int,
+        predicted: int | None,
         actual: int | None,
         rules: RedCardRules,
     ) -> int:
         """Score red cards, including the penalty for false positives."""
-        if predicted <= 0:
+        if predicted is None or predicted <= 0:
             return 0
         if actual is not None and predicted == actual:
             return rules.exact

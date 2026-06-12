@@ -40,21 +40,25 @@ class Prediction(TimestampMixin, Base):
         nullable=False,
     )
 
-    team1_score: Mapped[int] = mapped_column(
+    team1_score: Mapped[int | None] = mapped_column(
         Integer,
-        nullable=False,
+        nullable=True,
+        default=None,
     )
-    team2_score: Mapped[int] = mapped_column(
+    team2_score: Mapped[int | None] = mapped_column(
         Integer,
-        nullable=False,
+        nullable=True,
+        default=None,
     )
-    yellow_card_count: Mapped[int] = mapped_column(
+    yellow_card_count: Mapped[int | None] = mapped_column(
         Integer,
-        nullable=False,
+        nullable=True,
+        default=None,
     )
-    red_card_count: Mapped[int] = mapped_column(
+    red_card_count: Mapped[int | None] = mapped_column(
         Integer,
-        nullable=False,
+        nullable=True,
+        default=None,
     )
 
     first_goal_in: Mapped[FirstGoalIn | None] = mapped_column(
@@ -126,19 +130,19 @@ class Prediction(TimestampMixin, Base):
     __table_args__ = (
         UniqueConstraint("user_id", "match_id", name="uq_predictions_user_match"),
         CheckConstraint(
-            "team1_score >= 0",
+            "team1_score IS NULL OR team1_score >= 0",
             name="ck_predictions_team1_score_nonnegative",
         ),
         CheckConstraint(
-            "team2_score >= 0",
+            "team2_score IS NULL OR team2_score >= 0",
             name="ck_predictions_team2_score_nonnegative",
         ),
         CheckConstraint(
-            "yellow_card_count >= 0",
+            "yellow_card_count IS NULL OR yellow_card_count >= 0",
             name="ck_predictions_yellow_card_count_nonnegative",
         ),
         CheckConstraint(
-            "red_card_count >= 0",
+            "red_card_count IS NULL OR red_card_count >= 0",
             name="ck_predictions_red_card_count_nonnegative",
         ),
         Index("ix_predictions_user_id", "user_id"),
