@@ -825,7 +825,7 @@ export const PredictionsDashboard = () => {
           >
             <div className="absolute inset-0 bg-[url('/images/logo-tournament.avif')] bg-center bg-no-repeat bg-cover opacity-[0.07] dark:opacity-[0.05] pointer-events-none bg-prediction"></div>
             <div className="absolute left-[15px] top-[15px]">
-              <Tooltip content="Predict the score from H2H, recent form, tournament form, and FIFA ranking" side="bottom">
+              <Tooltip content="Predict the score from H2H, recent form, tournament form, and FIFA ranking" side="right">
                 <button
                   type="button"
                   disabled={isFormDisabled || isAiPicking}
