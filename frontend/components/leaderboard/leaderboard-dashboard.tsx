@@ -431,7 +431,7 @@ const UserPointsDetailModal = ({
                 </tbody>
                 {/* Totals footer */}
                 <tfoot className="border-t-2 border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/70 mb-2">
-                  {data.items.some((item) => item.match_stage !== "F") && (<>
+                  {data.items.some((item) => item.match_stage === "F") && (<>
                     <tr>
                       <td className={[
                         "static sm:sticky left-0 z-20 w-[30px] min-w-[30px] max-w-[30px]",
@@ -497,7 +497,7 @@ const UserPointsDetailModal = ({
                     </tr>
                   </>)}
 
-                  {data.items.some((item) => item.match_stage !== "3P") && (
+                  {data.items.some((item) => item.match_stage === "3P") && (
                     <>
                       <tr>
                         <td className={[
