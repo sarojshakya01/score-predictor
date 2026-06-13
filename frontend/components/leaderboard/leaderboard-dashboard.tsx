@@ -598,23 +598,23 @@ const LeaderboardRow = ({
   return (
     <tr className={[
       "transition-colors",
-      row.user_id === user?.id ? "bg-zinc-200 dark:bg-indigo-700 hover:bg-zinc-200/80 dark:hover:bg-indigo-700 font-bold" : "hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 font-medium",
+      row.user_id === user?.id ? "bg-zinc-200 dark:bg-emerald-700 hover:bg-zinc-200/80 dark:hover:bg-emerald-800 font-bold" : "hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 font-medium",
     ].join(" ")}>
       <td className={[
         "static sm:sticky left-0 z-20 w-[30px] min-w-[30px] max-w-[30px]",
         "border-b border-zinc-200 dark:border-zinc-800",
         "px-3 py-4 font-semibold text-zinc-950 dark:text-zinc-100 text-center",
-        row.user_id === user?.id ? "bg-zinc-200 dark:bg-indigo-700 font-bold" : "bg-white dark:bg-zinc-950",
+        row.user_id === user?.id ? "bg-zinc-200 dark:bg-emerald-700 font-bold" : "bg-white dark:bg-zinc-950",
       ].join(" ")}>{row.rank}</td>
       <td className={[
         "static sm:sticky z-20 left-[30px] w-[80px] min-w-[80px] max-w-[80px] md:left-[75px] md:w-[150px] md:min-w-[150px] md:max-w-[150px]",
         "border-b border-zinc-200 dark:border-zinc-800",
         "px-3 py-3 font-medium text-zinc-950 dark:text-zinc-50",
-        row.user_id === user?.id ? "bg-zinc-200 dark:bg-indigo-700 font-bold" : "bg-white dark:bg-zinc-950",
+        row.user_id === user?.id ? "bg-zinc-200 dark:bg-emerald-700 font-bold" : "bg-white dark:bg-zinc-950",
       ].join(" ")}>
         <div
           onClick={() => onUserClick(row.user_id, row.name)}
-          className="font-medium text-indigo-600 hover:text-indigo-950 transition-colors cursor-pointer text-left dark:text-indigo-300 dark:hover:text-indigo-400 truncate"
+          className="font-medium text-indigo-600 hover:text-emerald-950 transition-colors cursor-pointer text-left dark:text-indigo-300 dark:hover:text-indigo-400 truncate"
         >
           {row.name}
         </div>
@@ -623,7 +623,7 @@ const LeaderboardRow = ({
         "static sm:sticky left-[110px] md:left-[225px] z-20 w-[90px] min-w-[90px] max-w-[90px]",
         "border-b border-zinc-200 dark:border-zinc-800",
         "px-3 py-3 font-medium text-zinc-950 dark:text-zinc-50 text-right",
-        row.user_id === user?.id ? "bg-zinc-200 dark:bg-indigo-700 font-bold" : "bg-white dark:bg-zinc-950",
+        row.user_id === user?.id ? "bg-zinc-200 dark:bg-emerald-700 font-bold" : "bg-white dark:bg-zinc-950",
       ].join(" ")}>
         {row.total_points}
       </td>
