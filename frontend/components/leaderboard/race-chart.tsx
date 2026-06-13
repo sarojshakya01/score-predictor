@@ -90,7 +90,11 @@ export default function RaceChart({
   }
 
   const handleBtnClick = () => {
+    const input = inputRef.current!;
     setIsPlaying(!isPlaying);
+    if (parseInt(input.value, 10) >= endMatch) {
+      input.value = String(0);
+    }
     const chart = chartRef.current?.chart as any; // eslint-disable-line
     if (chart.sequenceTimer) {
       pause();
