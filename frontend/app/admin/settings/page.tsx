@@ -96,6 +96,11 @@ const AdminSettingsPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const refreshSettings = async () => {
+    const res = await listSetting({ limit: 100 });
+    setSettings(res.items);
+  };
+
   // search
   const filteredSettings = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -171,6 +176,7 @@ const AdminSettingsPage = () => {
 
     setIsSubmitting(true);
     try {
+      const isEditing = editingSettingId !== null;
       const payload: SettingCreate = {
         name: formState.name,
         friendly_name: formState.friendly_name,
@@ -181,17 +187,18 @@ const AdminSettingsPage = () => {
         ? await updateSetting(editingSettingId, payload)
         : await createSetting(payload);
 
-      setSettings((current) => {
-        if (editingSettingId) {
-          return current.map((s) => (s.id === saved.id ? saved : s));
-        }
-        return [...current, saved].sort((a, b) => a.name.localeCompare(b.name));
-      });
+      if (isEditing) {
+        await refreshSettings();
+      } else {
+        setSettings((current) =>
+          [...current, saved].sort((a, b) => a.name.localeCompare(b.name)),
+        );
+      }
       setIsModalOpen(false);
       showToast({
         tone: "success",
-        title: editingSettingId ? "Setting updated" : "Setting created",
-        message: `"${saved.name}" has been ${editingSettingId ? "updated" : "created"} successfully.`,
+        title: isEditing ? "Setting updated" : "Setting created",
+        message: `"${saved.name}" has been ${isEditing ? "updated" : "created"} successfully.`,
       });
     } catch (err) {
       setFormError(getErrorMessage(err, "Unable to save setting."));

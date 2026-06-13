@@ -252,6 +252,11 @@ const AdminMatchesPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const refreshMatches = async () => {
+    const matchList = await listAdminMatches({ limit: 500 });
+    setMatches(matchList.items);
+  };
+
   const filteredMatches = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return matches;
@@ -333,26 +338,28 @@ const AdminMatchesPage = () => {
         team1Score > team2Score ? formState.team1Id
           : team2Score > team1Score ? formState.team2Id
             : "";
+      const isEditing = editingMatchId !== null;
       const payload = buildMatchPayload({ ...formState, winnerId });
       const savedMatch = editingMatchId
         ? await updateMatch(editingMatchId, payload)
         : await createMatch(payload);
 
-      setMatches((currentMatches) => {
-        if (editingMatchId) {
-          return currentMatches.map((match) => match.id === savedMatch.id ? savedMatch : match);
-        }
-        return [...currentMatches, savedMatch].sort(
-          (a, b) => new Date(a.match_datetime).getTime() - new Date(b.match_datetime).getTime() || a.id - b.id,
+      if (isEditing) {
+        await refreshMatches();
+      } else {
+        setMatches((currentMatches) =>
+          [...currentMatches, savedMatch].sort(
+            (a, b) => new Date(a.match_datetime).getTime() - new Date(b.match_datetime).getTime() || a.id - b.id,
+          ),
         );
-      });
+      }
       setEditingMatchId(savedMatch.id);
       setFormState(toFormState(savedMatch));
       setIsModalOpen(false);
       showToast({
         tone: "success",
-        title: editingMatchId ? "Match updated" : "Match created",
-        message: `${savedMatch.team1_name} vs ${savedMatch.team2_name} has been ${editingMatchId ? "updated" : "created"}.`,
+        title: isEditing ? "Match updated" : "Match created",
+        message: `${savedMatch.team1_name} vs ${savedMatch.team2_name} has been ${isEditing ? "updated" : "created"}.`,
       });
     } catch (error) {
       setFormError(getErrorMessage(error, "Unable to save match."));

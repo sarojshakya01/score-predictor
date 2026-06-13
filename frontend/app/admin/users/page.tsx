@@ -88,6 +88,11 @@ const AdminUsersPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const refreshUsers = async () => {
+    const userList = await listAdminUsers({ limit: 500 });
+    setUsers(userList.items);
+  };
+
   const filteredUsers = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return users;
@@ -158,6 +163,7 @@ const AdminUsersPage = () => {
     setIsSubmitting(true);
 
     try {
+      const isEditing = editingUserId !== null;
       const payload = { ...formState };
       if (editingUserId && !payload.password) {
         delete payload.password;
@@ -167,19 +173,20 @@ const AdminUsersPage = () => {
         ? await updateUser(editingUserId, payload)
         : await createUser(payload);
 
-      setUsers((current) => {
-        if (editingUserId) {
-          return current.map((u) => (u.id === savedUser.id ? savedUser : u));
-        }
-        return [...current, savedUser].sort((a, b) =>
-          a.first_name.localeCompare(b.first_name)
+      if (isEditing) {
+        await refreshUsers();
+      } else {
+        setUsers((current) =>
+          [...current, savedUser].sort((a, b) =>
+            a.first_name.localeCompare(b.first_name),
+          ),
         );
-      });
+      }
       setIsModalOpen(false);
       showToast({
         tone: "success",
-        title: editingUserId ? "User updated" : "User created",
-        message: `${savedUser.first_name} ${savedUser.last_name} has been ${editingUserId ? "updated" : "created"} successfully.`,
+        title: isEditing ? "User updated" : "User created",
+        message: `${savedUser.first_name} ${savedUser.last_name} has been ${isEditing ? "updated" : "created"} successfully.`,
       });
     } catch (error) {
       setFormError(getErrorMessage(error, "Unable to save user."));

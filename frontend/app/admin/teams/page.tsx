@@ -80,6 +80,11 @@ const AdminTeamsPage = () => {
     };
   }, []);
 
+  const refreshTeams = async () => {
+    const teamList = await listAdminTeams({ limit: 100 });
+    setTeams(teamList.items);
+  };
+
   const filteredTeams = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return teams;
@@ -147,23 +152,25 @@ const AdminTeamsPage = () => {
     setIsSubmitting(true);
 
     try {
+      const isEditing = editingTeamId !== null;
       const savedTeam = editingTeamId
         ? await updateTeam(editingTeamId, formState)
         : await createTeam(formState);
 
-      setTeams((current) => {
-        if (editingTeamId) {
-          return current.map((t) => (t.id === savedTeam.id ? savedTeam : t));
-        }
-        return [...current, savedTeam].sort((a, b) =>
-          a.name.localeCompare(b.name)
+      if (isEditing) {
+        await refreshTeams();
+      } else {
+        setTeams((current) =>
+          [...current, savedTeam].sort((a, b) =>
+            a.name.localeCompare(b.name),
+          ),
         );
-      });
+      }
       setIsModalOpen(false);
       showToast({
         tone: "success",
-        title: editingTeamId ? "Team updated" : "Team created",
-        message: `${savedTeam.name} has been ${editingTeamId ? "updated" : "created"}.`,
+        title: isEditing ? "Team updated" : "Team created",
+        message: `${savedTeam.name} has been ${isEditing ? "updated" : "created"}.`,
       });
     } catch (error) {
       setFormError(getErrorMessage(error, "Unable to save team."));
