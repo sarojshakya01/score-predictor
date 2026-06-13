@@ -119,7 +119,7 @@ export const AuthActions = () => {
             <button
               type="button"
               onClick={handleLogout}
-              className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm text-red-600 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+              className="flex w-full cursor-pointer items-center gap-2 px-4 py-3 text-left text-sm text-red-600 hover:bg-zinc-100 dark:hover:bg-zinc-700"
             >
               <IconLogout className="h-4 w-4" />
               Logout
