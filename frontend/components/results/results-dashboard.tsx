@@ -384,7 +384,7 @@ const MatchPointsModal = ({
                       className={[
                         "static sm:sticky left-0 z-20 w-10 min-w-[50px] max-w-[50px]",
                         "border-b border-zinc-200 px-3 py-3 text-center text-zinc-700 dark:border-zinc-800 dark:text-zinc-300",
-                        row.user_id === user?.id ? "bg-zinc-200 dark:bg-indigo-700 font-bold text-lg" : "bg-white dark:bg-zinc-950",
+                        row.user_id === user?.id ? "bg-zinc-200 dark:bg-indigo-700 font-bold" : "bg-white dark:bg-zinc-950",
                       ].join(" ")}
                     >
                       {index + 1}
@@ -393,7 +393,7 @@ const MatchPointsModal = ({
                       className={[
                         "static sm:sticky left-[50px] z-20 w-[100px] min-w-[100px] max-w-[100px]",
                         "border-b border-zinc-200 px-3 py-3 font-medium text-zinc-950 dark:border-zinc-800 dark:text-zinc-50 truncate",
-                        row.user_id === user?.id ? "bg-zinc-200 dark:bg-indigo-700 font-bold text-lg" : "bg-white dark:bg-zinc-950",
+                        row.user_id === user?.id ? "bg-zinc-200 dark:bg-indigo-700 font-bold" : "bg-white dark:bg-zinc-950",
                       ].join(" ")}
                     >
                       <span className="block truncate">{row.user_name}</span>
@@ -402,7 +402,7 @@ const MatchPointsModal = ({
                       className={[
                         "static sm:sticky left-[150px] z-20 w-[80px] min-w-[80px] max-w-[80px]",
                         "border-b border-zinc-200 px-3 py-3 text-center dark:border-zinc-800",
-                        row.user_id === user?.id ? "bg-zinc-200 dark:bg-indigo-700 font-bold text-lg" : "bg-white dark:bg-zinc-950",
+                        row.user_id === user?.id ? "bg-zinc-200 dark:bg-indigo-700 font-bold" : "bg-white dark:bg-zinc-950",
                       ].join(" ")}
                     >
                       <span

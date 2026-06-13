@@ -598,7 +598,7 @@ const LeaderboardRow = ({
   return (
     <tr className={[
       "transition-colors",
-      row.user_id === user?.id ? "bg-zinc-200 dark:bg-indigo-700 hover:bg-zinc-200/80 dark:hover:bg-indigo-700 font-bold text-lg" : "hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 font-medium",
+      row.user_id === user?.id ? "bg-zinc-200 dark:bg-indigo-700 hover:bg-zinc-200/80 dark:hover:bg-indigo-700 font-bold" : "hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 font-medium",
     ].join(" ")}>
       <td className={[
         "static sm:sticky left-0 z-20 w-[30px] min-w-[30px] max-w-[30px]",

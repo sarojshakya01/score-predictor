@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { getCurrentUser, isAuthenticated, logout } from "@/lib/auth";
 import type { UserResponse } from "@/lib/auth";
@@ -15,6 +15,7 @@ export const AuthActions = () => {
   const [user, setUser] = useState<UserResponse | null>(null);
   const [isChecking, setIsChecking] = useState(true);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     return subscribeToSessionExpired(() => {
@@ -23,6 +24,22 @@ export const AuthActions = () => {
       setIsMenuOpen(false);
     });
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMenuOpen]);
 
   useEffect(() => {
     let isMounted = true;
@@ -61,6 +78,7 @@ export const AuthActions = () => {
   }, [pathname]);
 
   const handleLogout = () => {
+    setIsMenuOpen(false)
     logout();
     setUser(null);
     router.replace("/");
@@ -75,7 +93,7 @@ export const AuthActions = () => {
 
   if (user) {
     return (
-      <div className="relative">
+      <div ref={menuRef} className="relative">
         <button
           type="button"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -91,6 +109,7 @@ export const AuthActions = () => {
           <div className="absolute right-0 z-50 mt-2 w-48 overflow-hidden rounded-md border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
             <Link
               href="/change-password"
+              onClick={() => setIsMenuOpen(false)}
               className="flex items-center gap-2 px-4 py-3 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700"
             >
               <IconKey className="h-4 w-4" />
@@ -122,7 +141,7 @@ export const AuthActions = () => {
       </Link>
       <Link
         href="/signup"
-        className="inline-flex h-10 items-center gap-1.5 rounded-md bg-tournament-secondary px-3 text-sm font-semibold text-white transition hover:bg-tournament-secondary"
+        className="block lg:hidden xl:flex 2xl:flex inline-flex h-10 items-center gap-1.5 rounded-md bg-tournament-secondary px-3 text-sm font-semibold text-white transition hover:bg-tournament-secondary"
       >
         <IconUserPlus className="h-4 w-4" />
         Sign up
