@@ -32,7 +32,7 @@ export default function RaceChart({
     const output = dataset
       .map((user) => {
         return {
-          name: user.user_name,
+          name: user.user_id === userId ? 'You' : user.user_name,
           id: `user_${user.user_id}`,
           y: (user.acc_points.find((point) => point.match_num === matchNum)?.acc_points || 0),
         };
@@ -41,6 +41,15 @@ export default function RaceChart({
     const sortedOutput = output.sort((a, b) => Number(b.y) - Number(a.y));
 
     const slicedOutput = sortedOutput.slice(0, TOP_PERFORMER);
+
+    if (userId && !slicedOutput.some((data) => data.id === `user_${userId}`)) {
+      const you = dataset.find((ds) => ds.user_id === userId)
+      slicedOutput.push({
+        name: 'You',
+        id: `user_${userId}`,
+        y: (you?.acc_points.find((point) => point.match_num === matchNum)?.acc_points || 0),
+      });
+    }
 
     const data = slicedOutput.map((item, index) => ({
       ...item,
