@@ -1,5 +1,12 @@
 """Match business logic."""
 
+from app.models.match import MACTH_SOURCE_BASE_URL
+from app.models.match import MATCH_HIGHTLIGHT_ENDPOINT
+from app.workers.scheduler import SEASON_NAME
+from app.workers.scheduler import COMPETITIONS_NAME
+from app.workers.scheduler import HEADERS
+import httpx
+from app.models.match import MATCH_DETAIL_ENDPOINT
 import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
@@ -158,6 +165,56 @@ class MatchService:
                 limit=limit,
                 latest_first=True,
             )
+
+            
+            async with httpx.AsyncClient(timeout=15) as client:
+                try:
+                    match_detail_resp = await client.get(MATCH_DETAIL_ENDPOINT, headers=HEADERS)
+                    match_detail_resp.raise_for_status()
+                except Exception:
+                    logger.warning("Failed to fetch hightlight data")
+
+            match_highlight_json = {}
+            if match_detail_resp.status_code == status.HTTP_200_OK:
+                match_highlight_json = match_detail_resp.json()
+
+            # schema based on response of MATCH_DETAIL_ENDPOINT
+            match_detail_list = [result for result in match_highlight_json["Results"] if result.get("CompetitionName", [{}])[0].get("Description") == COMPETITIONS_NAME and result.get("SeasonName", [{}])[0].get("Description") == SEASON_NAME]
+
+
+            # filtered_highlights = [item["pageUrl"] for item in match_highlight_src["specialHeaders"] if "/watch/" in item["pageUrl"] and "FIFA World Cup" in item["identifier"]]
+            # print("filtered_highlights", filtered_highlights)
+
+            for match in matches:
+                match_id, stage_id = None, None
+                for match_detail in match_detail_list:
+                    home_country_code = match_detail.get('Home', {}).get('IdCountry', None).upper()
+                    away_country_code = match_detail.get('Away', {}).get('IdCountry', None).upper()
+                    if (home_country_code == match.team1.fifa_code.upper() and away_country_code == match.team2.fifa_code.upper()) or (
+                        home_country_code == match.team2.fifa_code.upper() and away_country_code == match.team1.fifa_code.upper()
+                    ):
+                        match_id = match_detail.get("IdMatch")
+                        stage_id = match_detail.get("IdStage")
+                        break
+
+                match_highlight_detail_url = MATCH_HIGHTLIGHT_ENDPOINT + f"&stageId={stage_id}&matchId={match_id}" if match_id and stage_id else ""
+
+                async with httpx.AsyncClient(timeout=15) as client:
+                    try:
+                        match_highlight_resp = await client.get(match_highlight_detail_url, headers=HEADERS)
+                        match_highlight_resp.raise_for_status()
+                    except Exception:
+                        logger.warning("Failed to fetch hightlight data")
+
+                if match_highlight_resp.status_code == status.HTTP_200_OK:
+                    match_highlight_json = match_highlight_resp.json()
+
+                if match_highlight_json:
+                    match_highlight_items = match_highlight_json.get("vodVideosBaseCarousel", {}).get("items", [{}])
+                    if len(match_highlight_items):
+                        match_highlight_path = match_highlight_items[0].get("readMorePageUrl", None)
+                        match.highlights_url = (MACTH_SOURCE_BASE_URL + match_highlight_path) if match_highlight_path else None
+
             total = await self._match_repository.count_completed_matches()
 
             return self._build_list_response(

@@ -203,6 +203,8 @@ export const SelectableMatchCard = (props: {
 }) => {
   const { match, isSelected, isSaved, isPredictionAvailable, handleCardClick, className } = props;
 
+  const { isMatchLive } = isMatchPlayedOrLive(match);
+
   return (
     <article
       key={match.id}
@@ -213,6 +215,7 @@ export const SelectableMatchCard = (props: {
         "shadow-sm dark:shadow-zinc-950",
         "hover:bg-gray-100 hover:dark:bg-zinc-500/40",
         className,
+        isMatchLive ? "animate-pulse" : ""
       ].join(" ")}
       onClick={() => handleCardClick(match)}
       data-match-id={match.id}
@@ -285,7 +288,7 @@ export const MatchCard = (props: {
               onClick={(e) => e.stopPropagation()}
               className={
                 (match.match_locked ? "pointer-events-none cursor-default " : "") +
-                "inline-flex h-10 items-center justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary"
+                "inline-flex h-9 items-center justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary border border-gray-100 dark:border-gray-700"
               }
             >
               Predict

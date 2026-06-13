@@ -1,6 +1,7 @@
 'use client';
 
 import { RaceFrame } from '@/lib/leaderboard/types';
+import { Tooltip } from '@/components/ui/tooltip';
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import { useRef, useState } from 'react';
@@ -11,8 +12,10 @@ const CHART_VERTICAL_PADDING = 10;
 
 export default function RaceChart({
   dataset,
+  userId
 }: {
   dataset: RaceFrame[];
+  userId?: number | undefined;
 }) {
   const chartRef = useRef<HighchartsReact.RefObject>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -122,6 +125,9 @@ export default function RaceChart({
       opposite: true,
       tickPixelInterval: 150,
       title: { text: undefined },
+      labels: {
+        useHTML: true,
+      }
     },
     plotOptions: {
       bar: {
@@ -134,7 +140,17 @@ export default function RaceChart({
           enabled: true,
           matchByName: true
         },
-        dataLabels: { enabled: true },
+        dataLabels: {
+          enabled: true,
+          useHTML: true,
+          formatter: function () {
+            const point = this as any; // eslint-disable-line
+            if (point.id === `user_${userId}`) {
+              return `<span class="font-bold text-white text-lg">${point.y} (You)</span>`
+            }
+            return `${point.y}`;
+          }
+        },
       },
     },
     series: [
@@ -181,14 +197,16 @@ export default function RaceChart({
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Match Number: <span ref={matchValRef}>{startMatch}</span></p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
-          <button
-            ref={btnRef}
-            className="inline-flex items-center justify-center cursor-pointer  transition"
-            title="play"
-            onClick={handleBtnClick}
-          >
-            {isPlaying ? '⏸️' : '▶️'}
-          </button>
+          <Tooltip content={isPlaying ? 'Pause' : 'Play'}>
+            <button
+              ref={btnRef}
+              aria-label={isPlaying ? 'Pause leaderboard race' : 'Play leaderboard race'}
+              className="inline-flex items-center justify-center cursor-pointer  transition"
+              onClick={handleBtnClick}
+            >
+              {isPlaying ? '⏸️' : '▶️'}
+            </button>
+          </Tooltip>
           <input
             aria-label="Race chart frame"
             className="w-40 accent-emerald-700"

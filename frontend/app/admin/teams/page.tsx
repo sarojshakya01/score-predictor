@@ -17,6 +17,7 @@ import Image from "next/image";
 import { IconCancel, IconPencil, IconPlus, IconSave, IconSearch, IconTrash, IconX } from "@/components/ui/icons";
 import { Pagination } from "@/components/ui/pagination";
 import { ToastViewport, useToast } from "@/components/ui/toast";
+import { Tooltip } from "@/components/ui/tooltip";
 
 const emptyFormState: TeamCreate = {
   name: "",
@@ -294,26 +295,30 @@ const AdminTeamsPage = () => {
                       <td className="px-5 py-4 text-zinc-700 dark:text-zinc-300">{team.fifa_rank}</td>
                       <td className="px-5 py-4 text-right">
                         <div className="flex justify-end gap-1">
-                          <button
-                            type="button"
-                            title="Edit"
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-50 cursor-pointer transition disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-400 dark:hover:bg-emerald-950"
-                            disabled={openingEditTeamId !== null}
-                            onClick={() => void handleOpenEditModal(team)}
-                          >
-                            <IconPencil className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
-                          </button>
-                          <button
-                            type="button"
-                            title="Delete"
-                            className="inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-700 hover:bg-rose-50 cursor-pointer transition disabled:opacity-40 dark:text-rose-400 dark:hover:bg-rose-950"
-                            disabled={isDeletingId === team.id}
-                            onClick={() => handleDeleteClick(team)}
-                          >
-                            <IconTrash className="h-4 w-4" />
-                            <span className="sr-only">Delete</span>
-                          </button>
+                          <Tooltip content="Edit">
+                            <button
+                              type="button"
+                              aria-label="Edit"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-50 cursor-pointer transition disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-400 dark:hover:bg-emerald-950"
+                              disabled={openingEditTeamId !== null}
+                              onClick={() => void handleOpenEditModal(team)}
+                            >
+                              <IconPencil className="h-4 w-4" />
+                              <span className="sr-only">Edit</span>
+                            </button>
+                          </Tooltip>
+                          <Tooltip content="Delete">
+                            <button
+                              type="button"
+                              aria-label="Delete"
+                              className="inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-700 hover:bg-rose-50 cursor-pointer transition disabled:opacity-40 dark:text-rose-400 dark:hover:bg-rose-950"
+                              disabled={isDeletingId === team.id}
+                              onClick={() => handleDeleteClick(team)}
+                            >
+                              <IconTrash className="h-4 w-4" />
+                              <span className="sr-only">Delete</span>
+                            </button>
+                          </Tooltip>
                         </div>
                       </td>
                     </tr>

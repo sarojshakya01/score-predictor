@@ -28,6 +28,8 @@ Predict your score and compare with your friends.
 
 `cd backend`
 
+`pip install -r requirements.txt`
+
 `cp sample.env .env` and update your variable's value
 
 `uvicorn app.main:app --reload --port 8025`

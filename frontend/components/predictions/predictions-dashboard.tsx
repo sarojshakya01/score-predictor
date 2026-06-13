@@ -7,6 +7,7 @@ import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "re
 import { Modal } from "@/components/ui/modal";
 import { StatusPill } from "@/components/ui/status-pill";
 import { ToastViewport, useToast } from "@/components/ui/toast";
+import { Tooltip } from "@/components/ui/tooltip";
 import { ApiError } from "@/lib/api";
 import { isAuthenticated, MissingAuthTokenError, SessionExpiredError } from "@/lib/auth";
 import { getErrorMessage } from "@/lib/forms/error-message";
@@ -219,17 +220,8 @@ export const PredictionsDashboard = () => {
   );
   // Scroll the selected card into view whenever selectedMatchId changes
   useEffect(() => {
-    if (!selectedMatchId || !cardStripRef.current) return;
-    const card = cardStripRef.current.querySelector<HTMLElement>(
-      `[data-match-id="${selectedMatchId}"]`,
-    );
-
-    if (!card) return;
-
-    const offset = 200; // px from top to card
-    window.scrollTo({ top: window.scrollY + card.getBoundingClientRect().top - offset, behavior: "smooth" });
-    card.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-  }, [selectedMatchId, predictions]);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [predictions]);
 
   const applyMatchSelection = useCallback((
     nextMatches: MatchResponse[],
@@ -657,6 +649,15 @@ export const PredictionsDashboard = () => {
 
     setSelectedMatchId(match.id);
     setFormState(buildFormState(match, clickedPrediction));
+
+    // scroll card to the view box
+    if (!cardStripRef.current) return;
+    const card = cardStripRef.current.querySelector<HTMLElement>(
+      `[data-match-id="${match.id}"]`,
+    );
+
+    if (!card) return;
+    card.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
   };
 
   const handleMatchDayChange = async (matchDay: number) => {
@@ -716,12 +717,12 @@ export const PredictionsDashboard = () => {
 
       {/* Card strip — ref attached so scroll-into-view can target it */}
       <section ref={cardStripRef} >
-        <div className="mb-4 flex items-end justify-between gap-4">
-          <div>
+        <div className="mb-4 flex items-end justify-end sm:justify-between gap-4">
+          <div className="hidden sm:block">
             <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
               {matchListTitle}
             </h2>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">Select match day and match to make your predictions for the match.</p>
+            <p className="hidden md:block text-sm text-zinc-500 dark:text-zinc-400">Select match day and match to make your predictions for the match.</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -811,148 +812,158 @@ export const PredictionsDashboard = () => {
         ].join(" ")}>
           <ImageWithFallback width={530} height={530} src={"/images/players/" + selectedMatch?.team1_name_short?.toLowerCase() + ".png"} alt={selectedMatch?.team1_name || "Captain Image"} />
         </div>
-        <form
-          className={(selectedStatus === "Locked" ? "opacity-50 pointer-events-none " : "") + "relative w-full lg:max-w-2xl rounded-md border border-zinc-200 dark:bg-zinc-900 dark:shadow-zinc-950 p-2 sm:p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900 dark:bg-black"}
-          onSubmit={handleSubmit}
-        >
-          <div className="absolute inset-0 bg-[url('/images/logo-tournament.avif')] bg-center bg-no-repeat bg-cover opacity-[0.07] dark:opacity-[0.05] pointer-events-none bg-prediction"></div>
-          <div className="absolute left-[15px] top-[15px]">
-            <button
-              type="button"
-              title="Predict the score from H2H, recent form, tournament form, and FIFA ranking"
-              disabled={isFormDisabled || isAiPicking}
-              onClick={() => void handleAiPick()}
-              className="mt-0 inline-flex h-8 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:border-emerald-700 dark:hover:bg-emerald-900 dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500"
-            >
-              <IconSparkles className="h-4 w-4" />
-              <p className="hidden md:block text-sm">{isAiPicking ? "Picking ..." : "Auto predict with AI"}</p>
-            </button>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <div className="text-center">
-              <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
-                Match Prediction
-              </h2>
-              <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-                {selectedMatch
-                  ? `${getMatchLabelText(selectedMatch)} - ${formatDateTime(
-                    selectedMatch.match_datetime
-                  )}`
-                  : "Select a match to continue"}
-              </p>
+        <div className="overflow-x-auto relative w-full lg:max-w-2xl rounded-md md:w-full">
+          <form
+            className={[
+              "min-w-[315px]",
+              "border border-zinc-200 dark:border-zinc-700",
+              "dark:shadow-zinc-950 p-2 sm:p-4 shadow-sm",
+              "dark:bg-zinc-900 dark:bg-zinc-900 dark:bg-black",
+              (selectedStatus === "Locked" ? "opacity-50 pointer-events-none " : ""),
+            ].join(" ")}
+            onSubmit={handleSubmit}
+          >
+            <div className="absolute inset-0 bg-[url('/images/logo-tournament.avif')] bg-center bg-no-repeat bg-cover opacity-[0.07] dark:opacity-[0.05] pointer-events-none bg-prediction"></div>
+            <div className="absolute left-[15px] top-[15px]">
+              <Tooltip content="Predict the score from H2H, recent form, tournament form, and FIFA ranking" side="bottom">
+                <button
+                  type="button"
+                  disabled={isFormDisabled || isAiPicking}
+                  onClick={() => void handleAiPick()}
+                  className="mt-0 inline-flex h-8 items-center justify-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 text-sm font-semibold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-emerald-900 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:border-emerald-700 dark:hover:bg-emerald-900 dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500"
+                >
+                  <IconSparkles className="h-4 w-4" />
+                  <p className="hidden md:block text-sm">{isAiPicking ? "Picking ..." : "Auto predict with AI"}</p>
+                </button>
+              </Tooltip>
             </div>
-          </div>
-          <div className="absolute right-[15px] top-[15px]">
-            {selectedMatch && isMatchPlayed
-              ? (<StatusPill tone={isMatchLive ? "green" : "primary"} urgency="none">{isMatchLive ? <IconLiveDot /> : null} {isMatchLive ? "Live: " : "FT: "}{selectedMatch.team1_score} - {selectedMatch.team2_score}</StatusPill>)
-              : (<StatusPill tone={getStatusTone(selectedStatus)} urgency={selectedMatch ? getLockUrgency(selectedMatch) : "none"}>
-                {selectedStatus}
-              </StatusPill>)}
-          </div>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <div className="text-center">
+                <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
+                  Match Prediction
+                </h2>
+                <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                  {selectedMatch
+                    ? `${getMatchLabelText(selectedMatch)} - ${formatDateTime(
+                      selectedMatch.match_datetime
+                    )}`
+                    : "Select a match to continue"}
+                </p>
+              </div>
+            </div>
+            <div className="absolute right-[15px] top-[15px]">
+              {selectedMatch && isMatchPlayed
+                ? (<StatusPill tone={isMatchLive ? "green" : "primary"} urgency="none">{isMatchLive ? <IconLiveDot /> : null} {isMatchLive ? "Live: " : "FT: "}{selectedMatch.team1_score} - {selectedMatch.team2_score}</StatusPill>)
+                : (<StatusPill tone={getStatusTone(selectedStatus)} urgency={selectedMatch ? getLockUrgency(selectedMatch) : "none"}>
+                  {selectedStatus}
+                </StatusPill>)}
+            </div>
 
-          <div className="mt-6 grid gap-4 sm:grid-cols-2" id="prediction-fields">
-            {/* Score row – Team 1 */}
-            <label className="flex flex-col gap-1">
-              <span className={labelTextCls}>
-                {selectedMatch ? (
-                  <>
-                    {selectedMatch.team1_flag_url && (
-                      <Image width={32} height={32} className="min-h-[30px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team1_flag_url} alt={selectedMatch.team1_name} />
-                    )}
-                    <span>{selectedMatch.team1_name}</span>
-                  </>
-                ) : "Team 1 Score"}
-              </span>
-              <input min="0" max="100" name="team1_score" type="number" value={formState.team1Score || 0} onChange={(e) => updateField("team1Score", e.target.value)} className={inputCls} />
-            </label>
 
-            {/* Score row – Team 2 */}
-            <label className="flex flex-col gap-1">
-              <span className={labelTextCls}>
-                {selectedMatch ? (
-                  <>
-                    {selectedMatch.team2_flag_url && (
-                      <Image width={32} height={32} className="min-h-[30px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team2_flag_url} alt={selectedMatch.team2_name} />
-                    )}
-                    <span>{selectedMatch.team2_name}</span>
-                  </>
-                ) : "Team 2 Score"}
-              </span>
-              <input min="0" max="100" name="team2_score" type="number" value={formState.team2Score || 0} onChange={(e) => updateField("team2Score", e.target.value)} className={inputCls} />
-            </label>
+            <div className="mt-6 grid gap-4 xs:grid-cols-1 grid-cols-2">
+              {/* Score row – Team 1 */}
+              <label className="flex flex-col gap-1">
+                <span className={labelTextCls}>
+                  {selectedMatch ? (
+                    <>
+                      {selectedMatch.team1_flag_url && (
+                        <Image width={32} height={32} className="min-h-[30px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team1_flag_url} alt={selectedMatch.team1_name} />
+                      )}
+                      <span>{selectedMatch.team1_name}</span>
+                    </>
+                  ) : "Team 1 Score"}
+                </span>
+                <input min="0" max="100" name="team1_score" type="number" value={formState.team1Score || 0} onChange={(e) => updateField("team1Score", e.target.value)} className={inputCls} />
+              </label>
 
-            {/* First Goal in */}
-            <label className="flex flex-col gap-1">
-              <span className={labelTextCls}>First Goal in</span>
-              <select disabled={!hasAnyPredictedGoals} name="first_goal_in" value={hasAnyPredictedGoals ? formState.firstGoalIn : ""} onChange={(e) => updateField("firstGoalIn", e.target.value)} className={selectCls}>
-                <option value="">{hasAnyPredictedGoals ? "Select Time" : "N/A"}</option>
-                {selectedMatch && selectedMatch.match_stage === "GROUP" && firstGoalIns.filter((fg) => fg !== "ET").map((fg) => <option key={fg} value={fg}>{firstGoalInLabels[fg]}</option>)}
-                {selectedMatch && selectedMatch.match_stage !== "GROUP" && firstGoalIns.map((fg) => <option key={fg} value={fg}>{firstGoalInLabels[fg]}</option>)}
-              </select>
-            </label>
+              {/* Score row – Team 2 */}
+              <label className="flex flex-col gap-1">
+                <span className={labelTextCls}>
+                  {selectedMatch ? (
+                    <>
+                      {selectedMatch.team2_flag_url && (
+                        <Image width={32} height={32} className="min-h-[30px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team2_flag_url} alt={selectedMatch.team2_name} />
+                      )}
+                      <span>{selectedMatch.team2_name}</span>
+                    </>
+                  ) : "Team 2 Score"}
+                </span>
+                <input min="0" max="100" name="team2_score" type="number" value={formState.team2Score || 0} onChange={(e) => updateField("team2Score", e.target.value)} className={inputCls} />
+              </label>
 
-            {/* First Scoring Team */}
-            <label className="flex flex-col gap-1">
-              <span className={labelTextCls}>First Score by</span>
-              <select disabled={!hasAnyPredictedGoals} name="first_scoring_team_id" value={hasAnyPredictedGoals ? formState.firstScoringTeamId : ""} onChange={(e) => updateField("firstScoringTeamId", e.target.value)} className={selectCls}>
-                <option value="">{hasAnyPredictedGoals ? "Select Team" : "N/A"}</option>
-                {selectedMatch && (<>
-                  {Number(formState.team1Score || 0) > 0 && <option value={selectedMatch.team1_id}>{selectedMatch.team1_name}</option>}
-                  {Number(formState.team2Score || 0) > 0 && <option value={selectedMatch.team2_id}>{selectedMatch.team2_name}</option>}
-                </>)}
-              </select>
-            </label>
+              {/* First Goal in */}
+              <label className="flex flex-col gap-1">
+                <span className={labelTextCls}>First Goal in</span>
+                <select disabled={!hasAnyPredictedGoals} name="first_goal_in" value={hasAnyPredictedGoals ? formState.firstGoalIn : ""} onChange={(e) => updateField("firstGoalIn", e.target.value)} className={selectCls}>
+                  <option value="">{hasAnyPredictedGoals ? "Select Time" : "N/A"}</option>
+                  {selectedMatch && selectedMatch.match_stage === "GROUP" && firstGoalIns.filter((fg) => fg !== "ET").map((fg) => <option key={fg} value={fg}>{firstGoalInLabels[fg]}</option>)}
+                  {selectedMatch && selectedMatch.match_stage !== "GROUP" && firstGoalIns.map((fg) => <option key={fg} value={fg}>{firstGoalInLabels[fg]}</option>)}
+                </select>
+              </label>
 
-            {/* Yellow cards */}
-            <label className="flex flex-col gap-1">
-              <span className={labelTextCls}>Total Yellow Cards</span>
-              <input min="0" max="100" name="yellow_card_count" type="number" value={formState.yellowCardCount || ''} onChange={(e) => updateField("yellowCardCount", e.target.value)} className={inputCls} />
-            </label>
+              {/* First Scoring Team */}
+              <label className="flex flex-col gap-1">
+                <span className={labelTextCls}>First Score by</span>
+                <select disabled={!hasAnyPredictedGoals} name="first_scoring_team_id" value={hasAnyPredictedGoals ? formState.firstScoringTeamId : ""} onChange={(e) => updateField("firstScoringTeamId", e.target.value)} className={selectCls}>
+                  <option value="">{hasAnyPredictedGoals ? "Select Team" : "N/A"}</option>
+                  {selectedMatch && (<>
+                    {Number(formState.team1Score || 0) > 0 && <option value={selectedMatch.team1_id}>{selectedMatch.team1_name}</option>}
+                    {Number(formState.team2Score || 0) > 0 && <option value={selectedMatch.team2_id}>{selectedMatch.team2_name}</option>}
+                  </>)}
+                </select>
+              </label>
 
-            {/* Red cards */}
-            <label className="flex flex-col gap-1">
-              <span className={labelTextCls}>Total Red Cards</span>
-              <input min="0" max="100" name="red_card_count" type="number" value={formState.redCardCount || 0} onChange={(e) => updateField("redCardCount", e.target.value)} className={inputCls} />
-            </label>
+              {/* Yellow cards */}
+              <label className="flex flex-col gap-1">
+                <span className={labelTextCls}>Total Yellow Cards</span>
+                <input min="0" max="100" name="yellow_card_count" type="number" value={formState.yellowCardCount || ''} onChange={(e) => updateField("yellowCardCount", e.target.value)} className={inputCls} />
+              </label>
 
-            {/* Kick-off team */}
-            <label className="flex flex-col gap-1">
-              <span className={labelTextCls}>Kick-off Team</span>
-              <select name="kick_off_team_id" value={formState.kickoffTeamId} onChange={(e) => updateField("kickoffTeamId", e.target.value)} className={selectCls}>
-                {selectedMatch ? (
-                  <>
-                    <option value="">Select Team</option>
-                    <option value={selectedMatch.team1_id}>{selectedMatch.team1_name}</option>
-                    <option value={selectedMatch.team2_id}>{selectedMatch.team2_name}</option>
-                  </>
-                ) : <option value="">Select match first</option>}
-              </select>
-            </label>
+              {/* Red cards */}
+              <label className="flex flex-col gap-1">
+                <span className={labelTextCls}>Total Red Cards</span>
+                <input min="0" max="100" name="red_card_count" type="number" value={formState.redCardCount || 0} onChange={(e) => updateField("redCardCount", e.target.value)} className={inputCls} />
+              </label>
 
-            {/* Match duration */}
-            <label className="flex flex-col gap-1">
-              <span className={labelTextCls}>Match Duration</span>
-              <select name="match_duration" disabled={!!(selectedMatch && selectedMatch.match_stage === "GROUP")} value={selectedMatch && selectedMatch.match_stage === "GROUP" ? matchDurations[0] : formState.matchDuration} onChange={(e) => updateField("matchDuration", e.target.value)} className={selectCls}>
-                {matchDurations.map((d) => <option key={d} value={d}>{matchDurationLabels[d]}</option>)}
-              </select>
-            </label>
-          </div>
+              {/* Kick-off team */}
+              <label className="flex flex-col gap-1">
+                <span className={labelTextCls}>Kick-off Team</span>
+                <select name="kick_off_team_id" value={formState.kickoffTeamId} onChange={(e) => updateField("kickoffTeamId", e.target.value)} className={selectCls}>
+                  {selectedMatch ? (
+                    <>
+                      <option value="">Select Team</option>
+                      <option value={selectedMatch.team1_id}>{selectedMatch.team1_name}</option>
+                      <option value={selectedMatch.team2_id}>{selectedMatch.team2_name}</option>
+                    </>
+                  ) : <option value="">Select match first</option>}
+                </select>
+              </label>
 
-          <div className="grid place-items-center w-full">
-            <button
-              type="submit"
-              disabled={isAiPicking ? true : false}
-              className="inline-flex h-10 px-4 items-center gap-2 mt-5 cursor-pointer justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400 sm:w-auto"
-            >
-              <IconSave className="h-4 w-4" />
-              {isSubmitting
-                ? "Saving..."
-                : selectedPrediction
-                  ? "Update Prediction"
-                  : "Save Prediction"}
-            </button>
-          </div>
-        </form>
+              {/* Match duration */}
+              <label className="flex flex-col gap-1">
+                <span className={labelTextCls}>Match Duration</span>
+                <select name="match_duration" disabled={!!(selectedMatch && selectedMatch.match_stage === "GROUP")} value={selectedMatch && selectedMatch.match_stage === "GROUP" ? matchDurations[0] : formState.matchDuration} onChange={(e) => updateField("matchDuration", e.target.value)} className={selectCls}>
+                  {matchDurations.map((d) => <option key={d} value={d}>{matchDurationLabels[d]}</option>)}
+                </select>
+              </label>
+            </div>
+
+            <div className="grid place-items-center w-full">
+              <button
+                type="submit"
+                disabled={isAiPicking ? true : false}
+                className="inline-flex h-10 px-4 items-center gap-2 mt-5 cursor-pointer justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400 sm:w-auto"
+              >
+                <IconSave className="h-4 w-4" />
+                {isSubmitting
+                  ? "Saving..."
+                  : selectedPrediction
+                    ? "Update Prediction"
+                    : "Save Prediction"}
+              </button>
+            </div>
+          </form>
+        </div>
         <div className={[
           "hidden lg:flex w-40 h-[504px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48",
           (selectedMatch?.winner_id && selectedMatch?.winner_id === selectedMatch?.team1_id) ? "opacity-50" : (selectedMatch?.team1_score === selectedMatch?.team2_score) ? "opacity-70" : "opacity-100"
@@ -972,55 +983,55 @@ export const PredictionsDashboard = () => {
             <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
               <tr>
                 <th className={[
-                  "static md:sticky left-0 top-0 z-40 w-[50px] min-w-[50px] max-w-[50px]",
-                  "bg-zinc-100 dark:bg-zinc-900",
+                  "static sm:sticky left-0 top-0 z-40 w-[50px] min-w-[50px] max-w-[50px]",
+                  "bg-zinc-100 dark:bg-zinc-800",
                   "border-b border-zinc-200 dark:border-zinc-700",
                   "pl-3 pr-3 py-3"
                 ].join(" ")}>S.N.</th>
                 <th className={[
-                  "static md:sticky left-[50px] top-0 z-40 w-[120px] min-w-[120px] max-w-[120px] md:w-[350px] md:min-w-[350px] md:max-w-[350px]",
-                  "bg-zinc-100 dark:bg-zinc-900",
+                  "static sm:sticky left-[50px] top-0 z-40 w-[120px] min-w-[120px] max-w-[120px] md:w-[350px] md:min-w-[350px] md:max-w-[350px]",
+                  "bg-zinc-100 dark:bg-zinc-800",
                   "text-center font-semibold text-sm",
                   "border-b border-zinc-200 dark:border-zinc-700",
                   "pl-2 pr-3 py-3 text-center",
                 ].join(" ")}>Match</th>
                 <th className={[
-                  "static md:sticky top-0 z-30",
+                  "static sm:sticky top-0 z-30",
                   "bg-zinc-100 dark:bg-zinc-700",
                   "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700"
                 ].join(" ")}>Score</th>
                 <th className={[
-                  "static md:sticky top-0 z-30",
+                  "static sm:sticky top-0 z-30",
                   "bg-zinc-100 dark:bg-zinc-700",
                   "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[135px]"
                 ].join(" ")}>First Goal in</th>
                 <th className={[
-                  "static md:sticky top-0 z-30",
+                  "static sm:sticky top-0 z-30",
                   "bg-zinc-100 dark:bg-zinc-700",
                   "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[145px]"
                 ].join(" ")}>First Score by</th>
                 <th className={[
-                  "static md:sticky top-0 z-30",
+                  "static sm:sticky top-0 z-30",
                   "bg-zinc-100 dark:bg-zinc-700",
                   "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[135px]"
                 ].join(" ")}>Yellow Card</th>
                 <th className={[
-                  "static md:sticky top-0 z-30",
+                  "static sm:sticky top-0 z-30",
                   "bg-zinc-100 dark:bg-zinc-700",
                   "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[100px]"
                 ].join(" ")}>Red Card</th>
                 <th className={[
-                  "static md:sticky top-0 z-30",
+                  "static sm:sticky top-0 z-30",
                   "bg-zinc-100 dark:bg-zinc-700",
                   "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[100px]"
                 ].join(" ")}>Kick-off</th>
                 <th className={[
-                  "static md:sticky top-0 z-30",
+                  "static sm:sticky top-0 z-30",
                   "bg-zinc-100 dark:bg-zinc-700",
                   "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[100px]"
                 ].join(" ")}>Duration</th>
                 <th className={[
-                  "static md:sticky top-0 z-30",
+                  "static sm:sticky top-0 z-30",
                   "bg-zinc-100 dark:bg-zinc-700",
                   "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[135px]"
                 ].join(" ")}>Submitted by</th>
@@ -1036,7 +1047,7 @@ export const PredictionsDashboard = () => {
                   return (
                     <tr key={prediction.id}>
                       <td className={[
-                        "static md:sticky left-0 z-20 w-[50px] min-w-[50px] max-w-[50px]",
+                        "static sm:sticky left-0 z-20 w-[50px] min-w-[50px] max-w-[50px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "pl-3 pr-3 py-4 text-left text-zinc-700 dark:text-zinc-300"
@@ -1053,7 +1064,7 @@ export const PredictionsDashboard = () => {
                           : `Match #${prediction.match_id}`}
                       </td>
                       <td className={[
-                        "static md:sticky left-[50px] z-20 w-[120px] min-w-[120px] max-w-[120px]",
+                        "static sm:sticky left-[50px] z-20 w-[120px] min-w-[120px] max-w-[120px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "pl-2 pr-3 py-4 font-medium text-zinc-950 dark:text-zinc-50",

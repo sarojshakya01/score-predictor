@@ -33,11 +33,7 @@ const RulesPage = () => {
   }, []);
 
   return (
-    <PageShell
-      eyebrow="Rules"
-      subtitle="Scoring rules used for match predictions and leaderboard totals."
-      title="Prediction Rules"
-    >
+    <PageShell>
       {error && (
         <div className="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-300">
           {error}

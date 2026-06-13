@@ -131,6 +131,7 @@ class MatchResponse(MatchBase):
     team2_name_short: str
     team2_group: str
     team2_flag_url: str
+    highlights_url: str | None = None
 
     model_config = ConfigDict(from_attributes=True)
 

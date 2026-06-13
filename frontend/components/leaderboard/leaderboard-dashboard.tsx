@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 import { Modal } from "@/components/ui/modal";
+import { SearchInput } from "@/components/ui/search-input";
 import { ApiError } from "@/lib/api";
-import { isAuthenticated, MissingAuthTokenError, SessionExpiredError } from "@/lib/auth";
+import { getCurrentUser, isAuthenticated, MissingAuthTokenError, SessionExpiredError } from "@/lib/auth";
 import { getUserPredictionDetails, listLeaderboard } from "@/lib/leaderboard";
 import type {
   LeaderboardEntryResponse,
@@ -16,6 +17,7 @@ import type {
 import { firstGoalInLabels, MatchDuration, matchDurationLabels } from "@/lib/matches";
 import { FirstGoalIn } from "@/lib/matches/types";
 import RaceChart from "./race-chart";
+import { UserResponse } from "@/lib/users";
 
 export type LeaderboardRow = {
   name: string;
@@ -123,7 +125,7 @@ const ScoreRow = ({
     <tr className="group border-b border-zinc-100 dark:border-zinc-800 transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/50">
       {/* S.N. */}
       <td className={[
-        "static md:sticky left-0 z-20 w-[70px] min-w-[70px] max-w-[70px]",
+        "static sm:sticky left-0 z-20 w-[70px] min-w-[70px] max-w-[70px]",
         "bg-white dark:bg-zinc-950",
         "border-b border-zinc-200 dark:border-zinc-800",
         "whitespace-nowrap pl-5 pr-3 py-2.5 text-center text-xs font-medium text-zinc-400 dark:text-zinc-500"
@@ -133,7 +135,7 @@ const ScoreRow = ({
 
       {/* Match */}
       <td className={[
-        "static left-[70px] z-20 w-[120px] min-w-[120px] max-w-[120px] md:sticky md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
+        "static sm:sticky left-[70px] z-20 w-[120px] min-w-[120px] max-w-[120px] md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
         "bg-white dark:bg-zinc-950",
         "border-b border-zinc-200 dark:border-zinc-800",
         "px-3 py-2.5 text-center"
@@ -148,7 +150,7 @@ const ScoreRow = ({
 
       {/* Total */}
       <td className={[
-        "static md:sticky left-[190px] md:left-[356px] z-20 w-[80px] min-w-[80px] max-w-[80px]",
+        "static sm:sticky left-[190px] md:left-[356px] z-20 w-[80px] min-w-[80px] max-w-[80px]",
         "bg-white dark:bg-zinc-950",
         "border-b border-zinc-200 dark:border-zinc-800",
         "whitespace-nowrap px-3 py-2.5 text-center"
@@ -356,7 +358,7 @@ const UserPointsDetailModal = ({
                     <th
                       rowSpan={2}
                       className={[
-                        "static md:sticky left-0 top-0 z-40 w-[70px] min-w-[70px] max-w-[70px]",
+                        "static sm:sticky left-0 top-0 z-40 w-[70px] min-w-[70px] max-w-[70px]",
                         "bg-zinc-100 dark:bg-zinc-900",
                         "border-b border-zinc-200 dark:border-zinc-700",
                         "whitespace-nowrap pl-5 pr-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500"
@@ -367,7 +369,7 @@ const UserPointsDetailModal = ({
                     <th
                       rowSpan={2}
                       className={[
-                        "static left-[70px] top-0 z-40 w-[120px] min-w-[120px] max-w-[120px] md:sticky md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
+                        "static sm:sticky left-[70px] top-0 z-40 w-[120px] min-w-[120px] max-w-[120px] md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
                         "bg-zinc-100 dark:bg-zinc-900",
                         "border-b border-zinc-200 dark:border-zinc-700",
                         "whitespace-nowrap px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500"
@@ -378,7 +380,7 @@ const UserPointsDetailModal = ({
                     <th
                       rowSpan={2}
                       className={[
-                        "static left-[190px] md:sticky md:left-[356px] top-0 z-40 w-[80px] min-w-[80px] max-w-[80px]",
+                        "static sm:sticky left-[190px] md:left-[356px] top-0 z-40 w-[80px] min-w-[80px] max-w-[80px]",
                         "bg-zinc-100 dark:bg-zinc-900",
                         "border-b border-zinc-200 dark:border-zinc-700",
                         "whitespace-nowrap px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500"
@@ -391,7 +393,7 @@ const UserPointsDetailModal = ({
                         key={label}
                         colSpan={colSpan}
                         className={[
-                          "static md:sticky top-0 z-30",
+                          "static sm:sticky top-0 z-30",
                           "bg-zinc-50 dark:bg-zinc-800",
                           "border-r border-zinc-200 dark:border-zinc-700",
                           "px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider",
@@ -410,7 +412,7 @@ const UserPointsDetailModal = ({
                         <th
                           key={`${label}-${sub}`}
                           className={[
-                            "static md:sticky top-8 z-30",
+                            "static sm:sticky top-8 z-30",
                             "bg-zinc-50 dark:bg-zinc-800",
                             "whitespace-nowrap px-3 py-1.5 text-center text-[11px] font-medium tracking-wide text-zinc-400 dark:text-zinc-500",
                             sub === "Pts" ? "border-r border-zinc-200 dark:border-zinc-700" : ""
@@ -432,7 +434,7 @@ const UserPointsDetailModal = ({
                   {data.items.some((item) => item.match_stage === "F") && (<>
                     <tr>
                       <td colSpan={2} className={[
-                        "static md:sticky left-0 z-20 w-[190px] min-w-[190px] max-w-[190px] md:w-[345px] md:min-w-[345px] md:max-w-[345px]",
+                        "static sm:sticky left-0 z-20 w-[190px] min-w-[190px] max-w-[190px] md:w-[345px] md:min-w-[345px] md:max-w-[345px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
@@ -441,7 +443,7 @@ const UserPointsDetailModal = ({
                       </td>
                       {/* Score pts */}
                       <td className={[
-                        "static md:sticky left-[190px] md:left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
+                        "static sm:sticky left-[190px] md:left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "whitespace-nowrap px-3 py-2.5 text-center"
@@ -456,7 +458,7 @@ const UserPointsDetailModal = ({
                     </tr>
                     <tr>
                       <td colSpan={2} className={[
-                        "static md:sticky left-0 z-20 w-[190px] min-w-[190px] max-w-[190px] md:w-[345px] md:min-w-[345px] md:max-w-[345px]",
+                        "static sm:sticky left-0 z-20 w-[190px] min-w-[190px] max-w-[190px] md:w-[345px] md:min-w-[345px] md:max-w-[345px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
@@ -465,7 +467,7 @@ const UserPointsDetailModal = ({
                       </td>
                       {/* Score pts */}
                       <td className={[
-                        "static md:sticky left-[190px] md:left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
+                        "static sm:sticky left-[190px] md:left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "whitespace-nowrap px-3 py-2.5 text-center"
@@ -484,7 +486,7 @@ const UserPointsDetailModal = ({
                     <>
                       <tr>
                         <td colSpan={2} className={[
-                          "static md:sticky left-0 z-20 w-[190px] min-w-[190px] max-w-[190px] md:w-[345px] md:min-w-[345px] md:max-w-[345px]",
+                          "static sm:sticky left-0 z-20 w-[190px] min-w-[190px] max-w-[190px] md:w-[345px] md:min-w-[345px] md:max-w-[345px]",
                           "bg-white dark:bg-zinc-950",
                           "border-b border-zinc-200 dark:border-zinc-800",
                           "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
@@ -493,7 +495,7 @@ const UserPointsDetailModal = ({
                         </td>
                         {/* Score pts */}
                         <td className={[
-                          "static md:sticky left-[190px] md:left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
+                          "static sm:sticky left-[190px] md:left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
                           "bg-white dark:bg-zinc-950",
                           "border-b border-zinc-200 dark:border-zinc-800",
                           "whitespace-nowrap px-3 py-2.5 text-center"
@@ -509,7 +511,7 @@ const UserPointsDetailModal = ({
                     </>)}
                   <tr>
                     <td colSpan={2} className={[
-                      "static md:sticky left-0 z-20 w-[190px] min-w-[190px] max-w-[190px] md:w-[345px] md:min-w-[345px] md:max-w-[345px]",
+                      "static sm:sticky left-0 z-20 w-[190px] min-w-[190px] max-w-[190px] md:w-[345px] md:min-w-[345px] md:max-w-[345px]",
                       "bg-white dark:bg-zinc-950",
                       "border-b border-zinc-200 dark:border-zinc-800",
                       "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
@@ -518,7 +520,7 @@ const UserPointsDetailModal = ({
                     </td>
                     {/* Total pts */}
                     <td className={[
-                      "static md:sticky left-[190px] md:left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
+                      "static sm:sticky left-[190px] md:left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
                       "bg-white dark:bg-zinc-950",
                       "border-b border-zinc-200 dark:border-zinc-800",
                       "whitespace-nowrap px-3 py-2.5 text-center"
@@ -583,27 +585,32 @@ const UserPointsDetailModal = ({
 
 
 const LeaderboardRow = ({
+  user,
   row,
   completedMatches,
   onUserClick,
 }: {
+  user: UserResponse | null;
   row: LeaderboardEntryResponse;
   completedMatches: number;
   onUserClick: (userId: number, userName: string) => void;
 }) => {
   return (
-    <tr className="dark:hover:bg-zinc-800/40 transition-colors">
+    <tr className={[
+      "transition-colors",
+      row.user_id === user?.id ? "bg-zinc-200 dark:bg-zinc-600 hover:bg-zinc-200/80 dark:hover:bg-zinc-600/80" : "hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 ",
+    ].join(" ")}>
       <td className={[
-        "static md:sticky left-0 z-20 w-[30px] min-w-[30px] max-w-[30px]",
-        "bg-white dark:bg-zinc-950",
+        "static sm:sticky left-0 z-20 w-[30px] min-w-[30px] max-w-[30px]",
         "border-b border-zinc-200 dark:border-zinc-800",
-        "px-3 py-4 font-semibold text-zinc-950 dark:text-zinc-100 text-center"
+        "px-3 py-4 font-semibold text-zinc-950 dark:text-zinc-100 text-center",
+        row.user_id === user?.id ? "bg-zinc-200 dark:bg-zinc-600 font-bold" : "bg-white dark:bg-zinc-950",
       ].join(" ")}>{row.rank}</td>
       <td className={[
-        "static z-20 left-[30px] w-[80px] min-w-[80px] max-w-[80px] md:sticky md:left-[75px] md:w-[150px] md:min-w-[150px] md:max-w-[150px]",
-        "bg-white dark:bg-zinc-950",
+        "static sm:sticky z-20 left-[30px] w-[80px] min-w-[80px] max-w-[80px] md:left-[75px] md:w-[150px] md:min-w-[150px] md:max-w-[150px]",
         "border-b border-zinc-200 dark:border-zinc-800",
-        "px-3 py-3 font-medium text-zinc-950 dark:text-zinc-50"
+        "px-3 py-3 font-medium text-zinc-950 dark:text-zinc-50",
+        row.user_id === user?.id ? "bg-zinc-200 dark:bg-zinc-600 font-bold" : "bg-white dark:bg-zinc-950",
       ].join(" ")}>
         <div
           onClick={() => onUserClick(row.user_id, row.name)}
@@ -613,10 +620,10 @@ const LeaderboardRow = ({
         </div>
       </td>
       <td className={[
-        "static md:sticky left-[225px] z-20 w-[90px] min-w-[90px] max-w-[90px]",
-        "bg-white dark:bg-zinc-950",
+        "static sm:sticky left-[110px] md:left-[225px] z-20 w-[90px] min-w-[90px] max-w-[90px]",
         "border-b border-zinc-200 dark:border-zinc-800",
-        "px-3 py-3 font-medium text-zinc-950 dark:text-zinc-50 text-right"
+        "px-3 py-3 font-medium text-zinc-950 dark:text-zinc-50 text-right",
+        row.user_id === user?.id ? "bg-zinc-200 dark:bg-zinc-600 font-bold" : "bg-white dark:bg-zinc-950",
       ].join(" ")}>
         {row.total_points}
       </td>
@@ -658,6 +665,8 @@ export const LeaderboardDashboard = () => {
   const [modalUserId, setModalUserId] = useState<number | null>(null);
   const [modalUserName, setModalUserName] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [user, setUser] = useState<UserResponse | null>(null);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
 
   const handleUserClick = (userId: number, userName: string) => {
     setModalUserId(userId);
@@ -692,6 +701,9 @@ export const LeaderboardDashboard = () => {
           return;
         }
 
+        const currentUser = await getCurrentUser();
+        setUser(currentUser);
+
         setAuthRequired(false);
         setLeaderboard(leaderboardResponse);
       } catch (error) {
@@ -723,7 +735,18 @@ export const LeaderboardDashboard = () => {
     };
   }, []);
 
-  const rows = leaderboard?.items ?? [];
+  const rows = useMemo(() => leaderboard?.items ?? [], [leaderboard?.items]);
+  const normalizedUserSearchQuery = userSearchQuery.trim().toLowerCase();
+  const filteredRows = useMemo(() => {
+    if (!normalizedUserSearchQuery) {
+      return rows;
+    }
+
+    return rows.filter((row) =>
+      row.name.toLowerCase().includes(normalizedUserSearchQuery),
+    );
+  }, [normalizedUserSearchQuery, rows]);
+  const isUserSearchActive = normalizedUserSearchQuery.length > 0;
 
   if (isLoading) {
     return (
@@ -769,107 +792,126 @@ export const LeaderboardDashboard = () => {
         </section>
       ) : null}
 
-      {leaderboard ? <RaceChart dataset={leaderboard.race_frames} /> : null}
+      {leaderboard ? <RaceChart dataset={leaderboard.race_frames} userId={user?.id} /> : null}
 
       {rows.length > 0 ? (
         <section className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-          <div className="border-b border-zinc-200 px-5 py-4 dark:border-zinc-700">
-            <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-100">Leaderboard Breakdown</h2>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-              Showing {rows.length} of {leaderboard?.total ?? 0} ranked users
-            </p>
+          <div className="flex flex-col gap-4 border-b border-zinc-200 px-5 py-4 lg:flex-row lg:items-center lg:justify-between dark:border-zinc-700">
+            <div>
+              <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-100">Leaderboard Breakdown</h2>
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                Showing {filteredRows.length} of {rows.length} ranked users
+              </p>
+            </div>
+            <SearchInput
+              value={userSearchQuery}
+              onChange={setUserSearchQuery}
+              placeholder="Search user..."
+              resultCount={filteredRows.length}
+              totalCount={rows.length}
+            />
           </div>
-          <div className="overflow-auto max-h-[40rem]">
-            <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
-              <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800/70 dark:text-zinc-400">
-                <tr>
-                  <th className={[
-                    "static md:sticky left-0 top-0 z-40 w-30px min-w-[30px] max-w-[30px]",
-                    "bg-zinc-100 dark:bg-zinc-900",
-                    "border-b border-zinc-200 dark:border-zinc-700",
-                    "px-3 py-3 dark:text-zinc-400 text-center",
-                    "table-cell md:hidden"
-                  ].join(" ")}>#</th>
-                  <th className={[
-                    "static md:sticky left-0 top-0 z-40 w-16 min-w-[75px] max-w-[64px]",
-                    "bg-zinc-100 dark:bg-zinc-900",
-                    "border-b border-zinc-200 dark:border-zinc-700",
-                    "px-3 py-3 dark:text-zinc-400 text-center",
-                    "hidden md:table-cell"
-                  ].join(" ")}>Rank</th>
-                  <th className={[
-                    "static md:sticky top-0 z-40 left-[30px] w-[80px] min-w-[80px] max-w-[80px] md:sticky md:left-[75px] md:w-[150px] md:min-w-[150px] md:max-w-[150px]",
-                    "bg-zinc-100 dark:bg-zinc-900",
-                    "font-semibold text-sm",
-                    "px-3 py-3 dark:text-zinc-400",
-                    "border-b border-zinc-200 dark:border-zinc-700"
-                  ].join(" ")}>User</th>
-                  <th className={[
-                    "static md:sticky left-[225px] top-0 z-40 w-[90px] min-w-[90px] max-w-[90px]",
-                    "bg-zinc-100 dark:bg-zinc-900",
-                    "font-semibold text-sm text-right",
-                    "border-b border-zinc-200 dark:border-zinc-700",
-                    "px-3 py-3"
-                  ].join(" ")}>Total</th>
-                  <th className={[
-                    "static md:sticky top-0 z-30",
-                    "bg-zinc-100 dark:bg-zinc-700",
-                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right"
-                  ].join(" ")}>Score</th>
-                  <th className={[
-                    "static md:sticky top-0 z-30",
-                    "bg-zinc-100 dark:bg-zinc-700",
-                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[105px]"
-                  ].join(" ")}>Goal Diff</th>
-                  <th className={[
-                    "static md:sticky top-0 z-30",
-                    "bg-zinc-100 dark:bg-zinc-700",
-                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[145px]"
-                  ].join(" ")}>First Score In</th>
-                  <th className={[
-                    "static md:sticky top-0 z-30",
-                    "bg-zinc-100 dark:bg-zinc-700",
-                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[145px]"
-                  ].join(" ")}>First Score By</th>
-                  <th className={[
-                    "static md:sticky top-0 z-30",
-                    "bg-zinc-100 dark:bg-zinc-700",
-                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[120px]"
-                  ].join(" ")}>Yello Card</th>
-                  <th className={[
-                    "static md:sticky top-0 z-30",
-                    "bg-zinc-100 dark:bg-zinc-700",
-                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[100px]"
-                  ].join(" ")}>Red Card</th>
-                  <th className={[
-                    "static md:sticky top-0 z-30",
-                    "bg-zinc-100 dark:bg-zinc-700",
-                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[100px]"
-                  ].join(" ")}>Kick-off</th>
-                  <th className={[
-                    "static md:sticky top-0 z-30",
-                    "bg-zinc-100 dark:bg-zinc-700",
-                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right"
-                  ].join(" ")}>Duration</th>
-                  <th className={[
-                    "static md:sticky top-0 z-30",
-                    "bg-zinc-100 dark:bg-zinc-700",
-                    "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[150px]"
-                  ].join(" ")}>Predicted/Total</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {rows.map((row) => (
-                  <LeaderboardRow
-                    key={row.user_id}
-                    row={row}
-                    completedMatches={leaderboard?.completed_matches || 0}
-                    onUserClick={handleUserClick}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {isUserSearchActive && filteredRows.length === 0 ? (
+            <div className="px-5 py-12 text-center">
+              <h3 className="text-base font-semibold text-zinc-950 dark:text-zinc-100">No users found</h3>
+              <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                No leaderboard users match &quot;{userSearchQuery}&quot;.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-auto max-h-[40rem]">
+              <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
+                <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800/70 dark:text-zinc-400">
+                  <tr>
+                    <th className={[
+                      "static sm:sticky left-0 top-0 z-40 w-30px min-w-[30px] max-w-[30px]",
+                      "bg-zinc-100 dark:bg-zinc-800",
+                      "border-b border-zinc-200 dark:border-zinc-700",
+                      "px-3 py-3 dark:text-zinc-400 text-center",
+                      "table-cell md:hidden"
+                    ].join(" ")}>#</th>
+                    <th className={[
+                      "static md:sticky left-0 top-0 z-40 w-16 min-w-[75px] max-w-[64px]",
+                      "bg-zinc-100 dark:bg-zinc-800",
+                      "border-b border-zinc-200 dark:border-zinc-700",
+                      "px-3 py-3 dark:text-zinc-400 text-center",
+                      "hidden md:table-cell"
+                    ].join(" ")}>Rank</th>
+                    <th className={[
+                      "static sm:sticky top-0 z-40 left-[30px] w-[80px] min-w-[80px] max-w-[80px] md:left-[75px] md:w-[150px] md:min-w-[150px] md:max-w-[150px]",
+                      "bg-zinc-100 dark:bg-zinc-800",
+                      "font-semibold text-sm",
+                      "px-3 py-3 dark:text-zinc-400",
+                      "border-b border-zinc-200 dark:border-zinc-700"
+                    ].join(" ")}>User</th>
+                    <th className={[
+                      "static sm:sticky left-[110px] md:left-[225px] top-0 z-40 w-[90px] min-w-[90px] max-w-[90px]",
+                      "bg-zinc-100 dark:bg-zinc-800",
+                      "font-semibold text-sm text-right",
+                      "border-b border-zinc-200 dark:border-zinc-700",
+                      "px-3 py-3"
+                    ].join(" ")}>Total</th>
+                    <th className={[
+                      "static sm:sticky top-0 z-30",
+                      "bg-zinc-100 dark:bg-zinc-700",
+                      "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right"
+                    ].join(" ")}>Score</th>
+                    <th className={[
+                      "static sm:sticky top-0 z-30",
+                      "bg-zinc-100 dark:bg-zinc-700",
+                      "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[105px]"
+                    ].join(" ")}>Goal Diff</th>
+                    <th className={[
+                      "static sm:sticky top-0 z-30",
+                      "bg-zinc-100 dark:bg-zinc-700",
+                      "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[145px]"
+                    ].join(" ")}>First Score In</th>
+                    <th className={[
+                      "static sm:sticky top-0 z-30",
+                      "bg-zinc-100 dark:bg-zinc-700",
+                      "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[145px]"
+                    ].join(" ")}>First Score By</th>
+                    <th className={[
+                      "static sm:sticky top-0 z-30",
+                      "bg-zinc-100 dark:bg-zinc-700",
+                      "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[120px]"
+                    ].join(" ")}>Yello Card</th>
+                    <th className={[
+                      "static sm:sticky top-0 z-30",
+                      "bg-zinc-100 dark:bg-zinc-700",
+                      "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[100px]"
+                    ].join(" ")}>Red Card</th>
+                    <th className={[
+                      "static sm:sticky top-0 z-30",
+                      "bg-zinc-100 dark:bg-zinc-700",
+                      "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[100px]"
+                    ].join(" ")}>Kick-off</th>
+                    <th className={[
+                      "static sm:sticky top-0 z-30",
+                      "bg-zinc-100 dark:bg-zinc-700",
+                      "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right"
+                    ].join(" ")}>Duration</th>
+                    <th className={[
+                      "static sm:sticky top-0 z-30",
+                      "bg-zinc-100 dark:bg-zinc-700",
+                      "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[150px]"
+                    ].join(" ")}>Predicted/Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                  {filteredRows.map((row) => (
+                    <LeaderboardRow
+                      user={user}
+                      key={row.user_id}
+                      row={row}
+                      completedMatches={leaderboard?.completed_matches || 0}
+                      onUserClick={handleUserClick}
+                    />
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </section>
       ) : (
         <section className="rounded-md border border-zinc-200 bg-white px-5 py-10 text-center shadow-sm dark:border-zinc-700 dark:bg-zinc-900">

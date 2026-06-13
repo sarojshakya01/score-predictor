@@ -6,8 +6,10 @@ import { useEffect, useMemo, useState } from "react";
 import { formatDateTime } from "@/components/ui/match-card";
 import { Modal } from "@/components/ui/modal";
 import { StatusPill } from "@/components/ui/status-pill";
+import { Tooltip } from "@/components/ui/tooltip";
 import { ApiError } from "@/lib/api";
 import {
+  getCurrentUser,
   isAuthenticated,
   MissingAuthTokenError,
   SessionExpiredError,
@@ -24,6 +26,9 @@ import {
   matchStageLabels,
   type MatchResponse,
 } from "@/lib/matches";
+import { UserResponse } from "@/lib/users";
+import { ToastViewport, useToast } from "../ui/toast";
+import { IconHighlight, IconSearch } from "../ui/icons";
 
 type PointsKey =
   | "score_points"
@@ -168,6 +173,10 @@ const formatWinner = (match: MatchResponse): string => {
   return getTeamNameById(match, match.winner_id) ?? "DRAW";
 };
 
+const getHighlightsUrl = (match: MatchResponse): string | null => {
+  return match.highlights_url ?? match.hightlights_url ?? null;
+};
+
 const formatSignedNumber = (value: number): string => {
   return value > 0 ? `+${value}` : String(value);
 };
@@ -199,25 +208,43 @@ const PointsCell = ({ points }: { points: number }) => {
 
 const MatchPointsModal = ({
   details,
+  user,
   error,
   isLoading,
   isOpen,
   match,
   onClose,
+  onUserSearchChange,
+  userSearchQuery,
 }: {
   details: MatchPointsDetailsResponse | null;
+  user: UserResponse | null;
   error: string | null;
   isLoading: boolean;
   isOpen: boolean;
   match: MatchResponse | null;
   onClose: () => void;
+  onUserSearchChange: (value: string) => void;
+  userSearchQuery: string;
 }) => {
   const title = match
-    ? `Points Breakdown - ${match.team1_name} vs ${match.team2_name}`
-    : "Points Breakdown";
+    ? `Match Points Leaderboard - ${match.team1_name} vs ${match.team2_name}`
+    : "Match Points Leaderboard";
+  const normalizedUserSearchQuery = userSearchQuery.trim().toLowerCase();
+  const filteredItems = useMemo(() => {
+    const items = details?.items ?? [];
+    if (!normalizedUserSearchQuery) {
+      return items;
+    }
+
+    return items.filter((row) =>
+      row.user_name.toLowerCase().includes(normalizedUserSearchQuery),
+    );
+  }, [details?.items, normalizedUserSearchQuery]);
+  const isUserSearchActive = normalizedUserSearchQuery.length > 0;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} isLarge>
+    <Modal isOpen={isOpen} onClose={onClose} title={title} isLarge isNoPadding={true}>
       {isLoading ? (
         <div className="grid gap-3">
           <div className="h-16 animate-pulse rounded-md bg-zinc-100 dark:bg-zinc-800" />
@@ -244,40 +271,26 @@ const MatchPointsModal = ({
 
       {!isLoading && details && !error ? (
         <>
-          <div className="mb-4 grid gap-3 grid-cols-2 md:grid-cols-4">
-            <div className="rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800/50">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
-                FT Score
-              </p>
-              <p className="mt-1 text-2xl font-bold text-zinc-950 dark:text-zinc-50">
-                {formatScore(details.team1_score, details.team2_score)}
-              </p>
-            </div>
-            <div className="rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800/50">
+          {/* no importance, hidden for now */}
+          <div className="hidden mb-4 grid gap-3 grid-cols-2 md:grid-cols-3">
+            <div className="flex items-center gap-2 justify-between rounded-md border border-zinc-200 bg-zinc-50 px-4 dark:border-zinc-700 dark:bg-zinc-800/50">
               <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
                 Winner
               </p>
-              <p className="mt-1 text-2xl font-bold text-zinc-950 dark:text-zinc-50 truncate">
+              <p className="text-xl font-bold text-zinc-950 dark:text-zinc-50 truncate">
                 {match ? formatWinner(match) : "—"}
               </p>
             </div>
-            <div className="rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800/50">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
-                Match Day
-              </p>
-              <p className="mt-1 text-2xl font-bold text-zinc-950 dark:text-zinc-50">
-                {details.match_day}
-              </p>
-            </div>
-            <div className="rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800/50">
+            <div className="flex items-center gap-2 justify-between rounded-md border border-zinc-200 bg-zinc-50 px-4 dark:border-zinc-700 dark:bg-zinc-800/50">
               <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
                 Users
               </p>
-              <p className="mt-1 text-2xl font-bold text-zinc-950 dark:text-zinc-50">
+              <p className="text-xl font-bold text-zinc-950 dark:text-zinc-50">
                 {details.total}
               </p>
             </div>
           </div>
+
 
           <div className="overflow-auto max-h-[60vh] rounded-md border border-zinc-200 dark:border-zinc-700">
             <table className="min-w-max w-full border-collapse text-sm">
@@ -286,7 +299,7 @@ const MatchPointsModal = ({
                   <th
                     rowSpan={2}
                     className={[
-                      "static md:sticky left-0 top-0 z-40 w-10 min-w-[50px] max-w-[50px]",
+                      "static sm:sticky left-0 top-0 z-40 w-10 min-w-[50px] max-w-[50px]",
                       "bg-zinc-100 dark:bg-zinc-900",
                       "border-b border-zinc-200 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:border-zinc-700 dark:text-zinc-500",
                     ].join(" ")}
@@ -296,17 +309,29 @@ const MatchPointsModal = ({
                   <th
                     rowSpan={2}
                     className={[
-                      "static md:sticky left-[50px] top-0 z-40 w-[100px] min-w-[100px] max-w-[100px]",
+                      "static sm:sticky left-[50px] top-0 z-40 w-[100px] min-w-[100px] max-w-[100px]",
                       "bg-zinc-100 dark:bg-zinc-900",
                       "border-b border-zinc-200 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:border-zinc-700 dark:text-zinc-500",
                     ].join(" ")}
                   >
-                    User
+                    <div className="relative flex items-center">
+                      <span className="pointer-events-none absolute left-1.5 z-10 flex items-center text-zinc-400 dark:text-zinc-500">
+                        <IconSearch className="h-3.5 w-3.5" />
+                      </span>
+                      <input
+                        type="text"
+                        value={userSearchQuery}
+                        onChange={(e) => onUserSearchChange(e.target.value)}
+                        placeholder="User"
+                        className="h-8 w-full rounded-md border border-zinc-300 bg-white pl-6 pr-2 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500 dark:focus:ring-emerald-900"
+                      />
+                    </div>
+
                   </th>
                   <th
                     rowSpan={2}
                     className={[
-                      "static md:sticky left-[150px] top-0 z-40 w-[80px] min-w-[80px] max-w-[80px]",
+                      "static sm:sticky left-[150px] top-0 z-40 w-[80px] min-w-[80px] max-w-[80px]",
                       "bg-zinc-100 dark:bg-zinc-900",
                       "border-b border-zinc-200 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:border-zinc-700 dark:text-zinc-500",
                     ].join(" ")}
@@ -318,7 +343,7 @@ const MatchPointsModal = ({
                       key={group.label}
                       colSpan={3}
                       className={[
-                        "static md:sticky top-0 z-30",
+                        "static sm:sticky top-0 z-30",
                         "border-r border-zinc-200 bg-zinc-50 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider last:border-r-0 dark:border-zinc-700 dark:bg-zinc-800/70",
                       ].join(" ")}
                     >
@@ -332,7 +357,7 @@ const MatchPointsModal = ({
                       <th
                         key={`${group.label}-${sub}`}
                         className={[
-                          "static md:sticky top-8 z-30",
+                          "static sm:sticky top-8 z-30",
                           "bg-zinc-50 px-3 py-1.5 text-center text-[11px] font-medium tracking-wide text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500",
                           sub === "Pts" ? "border-r border-zinc-200 dark:border-zinc-700" : "",
                         ].join(" ")}
@@ -344,34 +369,37 @@ const MatchPointsModal = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-50 dark:divide-zinc-800">
-                {details.items.map((row, index) => (
+                {filteredItems.map((row, index) => (
                   <tr
                     key={row.user_id}
-                    className="transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40"
+                    className={[
+                      "transition-colors",
+                      row.user_id === user?.id ? "bg-zinc-200 dark:bg-zinc-600 hover:bg-zinc-200/80 dark:hover:bg-zinc-600/80" : "hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40",
+                    ].join(" ")}
                   >
                     <td
                       className={[
-                        "static md:sticky left-0 z-20 w-10 min-w-[50px] max-w-[50px]",
-                        "bg-white dark:bg-zinc-950",
+                        "static sm:sticky left-0 z-20 w-10 min-w-[50px] max-w-[50px]",
                         "border-b border-zinc-200 px-3 py-3 text-center text-zinc-700 dark:border-zinc-800 dark:text-zinc-300",
+                        row.user_id === user?.id ? "bg-zinc-200 dark:bg-zinc-600 font-bold" : "bg-white dark:bg-zinc-950",
                       ].join(" ")}
                     >
                       {index + 1}
                     </td>
                     <td
                       className={[
-                        "static md:sticky left-[50px] z-20 w-[100px] min-w-[100px] max-w-[100px]",
-                        "bg-white dark:bg-zinc-950",
+                        "static sm:sticky left-[50px] z-20 w-[100px] min-w-[100px] max-w-[100px]",
                         "border-b border-zinc-200 px-3 py-3 font-medium text-zinc-950 dark:border-zinc-800 dark:text-zinc-50 truncate",
+                        row.user_id === user?.id ? "bg-zinc-200 dark:bg-zinc-600 font-bold" : "bg-white dark:bg-zinc-950",
                       ].join(" ")}
                     >
                       <span className="block truncate">{row.user_name}</span>
                     </td>
                     <td
                       className={[
-                        "static md:sticky left-[150px] z-20 w-[80px] min-w-[80px] max-w-[80px]",
-                        "bg-white dark:bg-zinc-950",
+                        "static sm:sticky left-[150px] z-20 w-[80px] min-w-[80px] max-w-[80px]",
                         "border-b border-zinc-200 px-3 py-3 text-center dark:border-zinc-800",
+                        row.user_id === user?.id ? "bg-zinc-200 dark:bg-zinc-600 font-bold" : "bg-white dark:bg-zinc-950",
                       ].join(" ")}
                     >
                       <span
@@ -394,8 +422,21 @@ const MatchPointsModal = ({
                   </tr>
                 ))}
               </tbody>
+              {isUserSearchActive && filteredItems.length === 0 && (<tfoot>
+                <tr key="">
+                  <td colSpan={27}>
+                    <div className="px-5 py-10 text-center ">
+                      <h3 className="text-base font-semibold text-zinc-950 dark:text-zinc-100">No users found</h3>
+                      <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+                        No users match &quot;{userSearchQuery}&quot;.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
+              </tfoot>)}
             </table>
           </div>
+
         </>
       ) : null}
     </Modal>
@@ -433,6 +474,9 @@ export const ResultsDashboard = () => {
   const [detailError, setDetailError] = useState<string | null>(null);
   const [isDetailLoading, setIsDetailLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [user, setUser] = useState<UserResponse | null>(null);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const { dismissToast, showToast, toasts } = useToast();
 
   useEffect(() => {
     let isMounted = true;
@@ -475,17 +519,41 @@ export const ResultsDashboard = () => {
   }, [matches]);
 
   const openMatchDetails = async (match: MatchResponse) => {
+    if (!isAuthenticated()) {
+      showToast({
+        action: (
+          <Link
+            href="/login"
+            className="inline-flex h-8 items-center justify-center rounded-md border border-zinc-200 bg-white px-3 text-xs font-semibold text-zinc-800 transition hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 dark:hover:bg-zinc-800"
+          >
+            Login
+          </Link>
+        ),
+        durationMs: 7000,
+        id: "prediction-auth-required",
+        message: "Please login to view the match points.",
+        title: "Login required",
+        tone: "info",
+      });
+      return;
+    }
+
     setSelectedMatch(match);
     setIsModalOpen(true);
     setDetails(null);
     setDetailError(null);
+    setUserSearchQuery("");
 
-    if (!isAuthenticated()) {
+    setIsDetailLoading(true);
+
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
       setDetailError("Please log in to view the points breakdown.");
       return;
     }
 
-    setIsDetailLoading(true);
+    setUser(currentUser);
+
     try {
       const response = await getMatchPointsDetails(match.id);
       setDetails(response);
@@ -528,6 +596,7 @@ export const ResultsDashboard = () => {
 
   return (
     <>
+      <ToastViewport onDismiss={dismissToast} toasts={toasts} />
       <section className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
         <div className="flex justify-between gap-2 border-b border-zinc-200 px-5 py-4 dark:border-zinc-700">
           <div>
@@ -536,7 +605,7 @@ export const ResultsDashboard = () => {
               {/* Showing {rows.length} of {leaderboard?.total ?? 0} ranked users */}
             </p>
           </div>
-          <StatusPill tone="green">{rows.length} played</StatusPill>
+          <StatusPill tone="green">{rows.length} <span className="hidden sm:block text-xs px-1">played</span></StatusPill>
         </div>
 
         {loadError ? (
@@ -566,8 +635,8 @@ export const ResultsDashboard = () => {
                 <tr>
                   <th
                     className={[
-                      "static md:sticky left-0 top-0 z-40 w-8 min-w-[50px] max-w-[50px]",
-                      "bg-zinc-100 dark:bg-zinc-900",
+                      "static sticky left-0 top-0 z-40 w-8 min-w-[50px] max-w-[50px]",
+                      "bg-zinc-100 dark:bg-zinc-800",
                       "border-b border-zinc-200 px-3 py-3 text-center dark:border-zinc-700",
                     ].join(" ")}
                   >
@@ -575,8 +644,8 @@ export const ResultsDashboard = () => {
                   </th>
                   <th
                     className={[
-                      "static md:sticky left-[50px] top-0 z-40 w-[100px] min-w-[100px] max-w-[100px]",
-                      "bg-zinc-100 dark:bg-zinc-900",
+                      "static sticky left-[50px] top-0 z-40 w-[100px] min-w-[100px] max-w-[100px]",
+                      "bg-zinc-100 dark:bg-zinc-800",
                       "border-b border-zinc-200 px-3 py-3 text-center dark:border-zinc-700",
                     ].join(" ")}
                   >
@@ -584,6 +653,7 @@ export const ResultsDashboard = () => {
                   </th>
                   {[
                     "Group",
+                    "Highlights",
                     "Score",
                     "Goal Diff",
                     "1st Goal In",
@@ -598,10 +668,10 @@ export const ResultsDashboard = () => {
                     <th
                       key={header}
                       className={[
-                        "static md:sticky top-0 z-30",
+                        "static sticky top-0 z-30",
                         "bg-zinc-100 px-3 py-3 dark:bg-zinc-700",
                         "border-b border-zinc-200 dark:border-zinc-700",
-                        ["Group", "Score", "Goal Diff", "Y Card", "R Card", "Kick-off", "Duration", "Winner"].includes(header) ? "min-w-[90px]" : "min-w-[120px]",
+                        ["Group", "Highlights", "Score", "Goal Diff", "Y Card", "R Card", "Kick-off", "Duration", "Winner"].includes(header) ? "min-w-[90px]" : "min-w-[120px]",
                       ].join(" ")}
                     >
                       {header}
@@ -610,73 +680,106 @@ export const ResultsDashboard = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {rows.map((match, index) => (
-                  <tr
-                    key={match.id}
-                    role="button"
-                    tabIndex={0}
-                    className="cursor-pointer transition-colors hover:bg-zinc-50/80 focus:bg-zinc-50/80 focus:outline-none dark:hover:bg-zinc-800/50 dark:focus:bg-zinc-800/50"
-                    onClick={() => void openMatchDetails(match)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        void openMatchDetails(match);
-                      }
-                    }}
-                  >
-                    <td
-                      className={[
-                        "static md:sticky left-0 z-20 w-10 min-w-[50px] max-w-[50px]",
-                        "bg-white dark:bg-zinc-950",
-                        "border-b border-zinc-200 px-3 py-4 text-center text-zinc-700 dark:border-zinc-800 dark:text-zinc-300",
-                      ].join(" ")}
+                {rows.map((match, index) => {
+                  const highlightsUrl = getHighlightsUrl(match);
+
+                  return (
+                    <tr
+                      key={match.id}
+                      role="button"
+                      tabIndex={0}
+                      className="transition-colors hover:bg-zinc-50/80 focus:bg-zinc-50/80 focus:outline-none dark:hover:bg-zinc-800/50 dark:focus:bg-zinc-800/50"
                     >
-                      {index + 1}
-                    </td>
-                    <td className={[
-                      "static md:sticky left-[50px] z-20 w-[100px] min-w-[100px] max-w-[100px]",
-                      "bg-white dark:bg-zinc-950",
-                      "border-b border-zinc-200 dark:border-zinc-800",
-                      "pl-2 pr-3 py-4 font-medium text-zinc-950 dark:text-zinc-50",
-                    ].join(" ")}>
-                      {<div className="flex justify-center text-indigo-500 hover:text-indigo-600"><p className="text-sm font-semibold mr-1">{match.team1_name_short}</p>vs
-                        <p className="text-sm font-semibold ml-1">{match.team2_name_short}</p></div>}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
-                      {formatGroup(match)}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 font-semibold text-zinc-950 dark:text-zinc-50">
-                      {formatScore(match.team1_score, match.team2_score)}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
-                      {formatGoalDifference(match.team1_score, match.team2_score)}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
-                      {formatFirstGoalIn(match.first_goal_in)}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
-                      {getTeamNameById(match, match.first_scoring_team_id) ?? "—"}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
-                      {formatNullableNumber(match.yellow_card_count)}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
-                      {formatNullableNumber(match.red_card_count)}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
-                      {getTeamNameById(match, match.kick_off_team_id) ?? "—"}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
-                      {formatMatchDuration(match.match_duration)}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
-                      {formatWinner(match)}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
-                      {formatDateTime(match.match_datetime)}
-                    </td>
-                  </tr>
-                ))}
+                      <td
+                        className={[
+                          "static sticky left-0 z-20 w-10 min-w-[50px] max-w-[50px]",
+                          "bg-white dark:bg-zinc-950",
+                          "border-b border-zinc-200 px-3 py-4 text-center text-zinc-700 dark:border-zinc-800 dark:text-zinc-300",
+                        ].join(" ")}
+                      >
+                        {index + 1}
+                      </td>
+                      <td className={[
+                        "static sticky left-[50px] z-20 w-[100px] min-w-[100px] max-w-[100px] cursor-pointer",
+                        "bg-white dark:bg-zinc-950",
+                        "border-b border-zinc-200 dark:border-zinc-800",
+                        "pl-2 pr-3 py-4 font-medium text-zinc-950 dark:text-zinc-50",
+                      ].join(" ")}
+                        onClick={() => void openMatchDetails(match)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            void openMatchDetails(match);
+                          }
+                        }}>
+                        <Tooltip content="Click to see match points leaderboard">
+                          <div className="flex justify-center text-indigo-500 hover:text-indigo-600">
+                            <p className="text-sm font-semibold mr-1">{match.team1_name_short}</p>vs
+                            <p className="text-sm font-semibold ml-1">{match.team2_name_short}</p>
+                          </div>
+                        </Tooltip>
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
+                        {formatGroup(match)}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-center">
+                        {highlightsUrl ? (
+                          <Tooltip content="Watch match highlights">
+                            <Link
+                              href={highlightsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              aria-label={`Watch highlights for ${match.team1_name} vs ${match.team2_name}`}
+                              onClick={(event) => event.stopPropagation()}
+                              onKeyDown={(event) => event.stopPropagation()}
+                              className={[
+                                "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition",
+                                "bg-gray-200 dark:bg-blue-700",
+                                "ring-1 ring-inset ring-gray-200 dark:ring-gray-500",
+                                "hover:bg-gray-300 dark:hover:bg-blue-600",
+                                "text-blue-600 hover:text-blue-700 dark:text-blue-300 "
+                              ].join(" ")}
+                            >
+                              <IconHighlight className="h-4 w-4" />
+                            </Link>
+                          </Tooltip>
+                        ) : (
+                          <span className="text-zinc-300 dark:text-zinc-600">—</span>
+                        )}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 font-semibold text-zinc-950 dark:text-zinc-50">
+                        {formatScore(match.team1_score, match.team2_score)}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
+                        {formatGoalDifference(match.team1_score, match.team2_score)}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
+                        {formatFirstGoalIn(match.first_goal_in)}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
+                        {getTeamNameById(match, match.first_scoring_team_id) ?? "—"}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
+                        {formatNullableNumber(match.yellow_card_count)}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
+                        {formatNullableNumber(match.red_card_count)}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
+                        {getTeamNameById(match, match.kick_off_team_id) ?? "—"}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
+                        {formatMatchDuration(match.match_duration)}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
+                        {formatWinner(match)}
+                      </td>
+                      <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
+                        {formatDateTime(match.match_datetime)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -685,11 +788,14 @@ export const ResultsDashboard = () => {
 
       <MatchPointsModal
         details={details}
+        user={user}
         error={detailError}
         isLoading={isDetailLoading}
         isOpen={isModalOpen}
         match={selectedMatch}
         onClose={closeModal}
+        onUserSearchChange={setUserSearchQuery}
+        userSearchQuery={userSearchQuery}
       />
     </>
   );

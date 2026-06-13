@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import { MatchResponse } from "@/lib/matches";
+import { Tooltip } from "./tooltip";
 
 const TeamWithFlag = ({ match, size, isHomeTeam }: { match: MatchResponse, size: string, isHomeTeam: boolean }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -10,13 +11,11 @@ const TeamWithFlag = ({ match, size, isHomeTeam }: { match: MatchResponse, size:
   if (isHomeTeam) {
     return (<div className={(size === "sm" ? "w-full" : "w-[47%]") + " flex items-center justify-end gap-2"}>
       <div className="flex group relative">
-        <span className="inline-block w-full text-right pr-1 truncate max-w-[100px]">
-          {isLoading ? "" : match.team1_name}
-        </span>
-        <div className="absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 rounded bg-slate-900 px-2 py-1 text-xs font-medium text-white opacity-0 transition-opacity duration-200 group-hover:visible group-hover:opacity-100">
-          {match.team1_name}
-          <div className="absolute top-full left-1/2 -mt-1 h-2 w-2 -translate-x-1/2 rotate-45 bg-slate-900"></div>
-        </div>
+        <Tooltip content={match.team1_name} side="top">
+          <span className="inline-block w-full text-right pr-1 truncate max-w-[100px]">
+            {isLoading ? "" : match.team1_name}
+          </span>
+        </Tooltip>
       </div>
 
       {isLoading && (
@@ -45,11 +44,9 @@ const TeamWithFlag = ({ match, size, isHomeTeam }: { match: MatchResponse, size:
         className={(size === "sm" ? "min-h-[18px] min-w-[25px]" : "min-h-[25px] max-w-[40px]") + " shrink-0 animate-pulse rounded-md border border-zinc-200 shadow-sm dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-zinc-950"}
       />}
       <div className="flex group relative">
-        <span className="inline-block w-full text-left pl-2 truncate max-w-[100px]">{isLoading ? "" : match.team2_name}</span>
-        <div className="absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 rounded bg-slate-900 px-2 py-1 text-xs font-medium text-white opacity-0 transition-opacity duration-200 group-hover:visible group-hover:opacity-100">
-          {match.team2_name}
-          <div className="absolute top-full left-1/2 -mt-1 h-2 w-2 -translate-x-1/2 rotate-45 bg-slate-900"></div>
-        </div>
+        <Tooltip content={match.team2_name} side="top">
+          <span className="inline-block w-full text-left pl-2 truncate max-w-[100px]">{isLoading ? "" : match.team2_name}</span>
+        </Tooltip>
       </div>
     </div>)
   }

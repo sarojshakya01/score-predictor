@@ -6,9 +6,10 @@ type ModalProps = {
   onClose: () => void;
   title: string;
   isLarge?: boolean;
+  isNoPadding?: boolean;
 };
 
-export const Modal = ({ children, isOpen, onClose, title, isLarge = false }: ModalProps) => {
+export const Modal = ({ children, isOpen, onClose, title, isLarge = false, isNoPadding = false }: ModalProps) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -80,7 +81,7 @@ export const Modal = ({ children, isOpen, onClose, title, isLarge = false }: Mod
             </svg>
           </button>
         </div>
-        <div className="overflow-y-auto p-5">
+        <div className={"overflow-y-auto" + (isNoPadding ? "" : " p-5")}>
           {children}
         </div>
       </div>

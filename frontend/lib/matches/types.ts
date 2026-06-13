@@ -34,6 +34,8 @@ export type MatchResponse = {
   updated_at: string;
   venue_name: string | null;
   yellow_card_count: number | null;
+  highlights_url?: string | null;
+  hightlights_url?: string | null;
 };
 
 export type MatchFields = {

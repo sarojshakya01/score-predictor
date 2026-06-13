@@ -1,9 +1,6 @@
 type PageShellProps = {
   actions?: React.ReactNode;
   children: React.ReactNode;
-  eyebrow?: string;
-  subtitle?: string;
-  title: string;
 };
 
 export const PageShell = ({

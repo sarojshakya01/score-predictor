@@ -1,7 +1,14 @@
 import Image from "next/image";
+import Link from "next/link";
 
+import { IconHighlight } from "@/components/ui/icons";
 import { formatDateTime } from "@/components/ui/match-card";
+import { Tooltip } from "@/components/ui/tooltip";
 import type { MatchResponse } from "@/lib/matches";
+
+const getHighlightsUrl = (match: MatchResponse): string | null => {
+  return match.highlights_url ?? match.hightlights_url ?? null;
+};
 
 const TeamScoreRow = ({
   flagUrl,
@@ -74,6 +81,7 @@ export const MatchResultsList = ({ matches }: { matches: MatchResponse[] }) => {
         {matches.map((match) => {
           const team1Won = match.winner_id === match.team1_id;
           const team2Won = match.winner_id === match.team2_id;
+          const highlightsUrl = getHighlightsUrl(match);
 
           return (
             <div
@@ -106,9 +114,30 @@ export const MatchResultsList = ({ matches }: { matches: MatchResponse[] }) => {
                 />
               </div>
 
-              <p className="mt-4 truncate text-xs text-center text-zinc-500 dark:text-zinc-400">
-                {match.venue_name || "Venue TBA"}
-              </p>
+              <div className="mt-4 flex items-center justify-between gap-3">
+                <p className="min-w-0 truncate text-xs text-zinc-500 dark:text-zinc-400">
+                  {match.venue_name || "Venue TBA"}
+                </p>
+                {highlightsUrl ? (
+                  <Tooltip content="Watch match highlights">
+                    <Link
+                      href={highlightsUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Watch highlights for ${match.team1_name} vs ${match.team2_name}`}
+                      className={[
+                        "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition",
+                        "bg-gray-200 dark:bg-blue-700",
+                        "ring-1 ring-inset ring-gray-200 dark:ring-gray-500",
+                        "hover:bg-gray-300 dark:hover:bg-blue-600",
+                        "text-blue-600 hover:text-blue-700 dark:text-blue-300 "
+                      ].join(" ")}
+                    >
+                      <IconHighlight className="h-4 w-4" />
+                    </Link>
+                  </Tooltip>
+                ) : null}
+              </div>
             </div>
           );
         })}

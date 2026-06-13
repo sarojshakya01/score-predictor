@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Modal } from "@/components/ui/modal";
 import { StatusPill } from "@/components/ui/status-pill";
 import { ToastViewport, useToast } from "@/components/ui/toast";
+import { Tooltip } from "@/components/ui/tooltip";
 import { getErrorMessage } from "@/lib/forms/error-message";
 import {
   createMatch,
@@ -441,65 +442,65 @@ const AdminMatchesPage = () => {
               <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
                 <tr>
                   <th className={[
-                    "static md:sticky left-0 top-0 z-40 w-[50px] min-w-[50px] max-w-[50px] md:w-[64px] md:min-w-[64px] md:max-w-[64px]",
-                    "bg-zinc-100 dark:bg-zinc-900",
+                    "static sm:sticky left-0 top-0 z-40 w-[50px] min-w-[50px] max-w-[50px] md:w-[64px] md:min-w-[64px] md:max-w-[64px]",
+                    "bg-zinc-100 dark:bg-zinc-800",
                     "border-b border-zinc-200 dark:border-zinc-700",
                     "pl-5 pr-3 py-3"
                   ].join(" ")}>S.N.</th>
                   <th className={[
-                    "static left-[50px] top-0 z-40 w-[150px] min-w-[150px] max-w-[150px] md:left-[64px] md:sticky md:w-[320px] md:min-w-[320px] md:max-w-[320px]",
-                    "bg-zinc-100 dark:bg-zinc-900",
+                    "static sm:sticky left-[50px] top-0 z-40 w-[150px] min-w-[150px] max-w-[150px] md:left-[64px] md:w-[320px] md:min-w-[320px] md:max-w-[320px]",
+                    "bg-zinc-100 dark:bg-zinc-800",
                     "text-center font-semibold text-sm",
                     "border-b border-zinc-200 dark:border-zinc-700",
                     "px-3 py-3"
                   ].join(" ")} colSpan={3}>Match</th>
                   <th className={[
-                    "static md:sticky top-0 z-30",
+                    "static sm:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700"
                   ].join(" ")}>Day</th>
                   <th className={[
-                    "static md:sticky top-0 z-30",
+                    "static sm:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[140px]"
                   ].join(" ")}>Time</th>
                   <th className={[
-                    "static md:sticky top-0 z-30",
+                    "static sm:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700"
                   ].join(" ")}>Score</th>
                   <th className={[
-                    "static md:sticky top-0 z-30",
+                    "static sm:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700"
                   ].join(" ")}>Winner</th>
                   <th className={[
-                    "static md:sticky top-0 z-30",
+                    "static sm:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[150px]"
                   ].join(" ")}>Kickoff Team</th>
                   <th className={[
-                    "static md:sticky top-0 z-30",
+                    "static sm:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[140px]"
                   ].join(" ")}>First Goal in</th>
                   <th className={[
-                    "static md:sticky top-0 z-30",
+                    "static sm:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[145px]"
                   ].join(" ")}>First Score by</th>
                   <th className={[
-                    "static md:sticky top-0 z-30",
+                    "static sm:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[100px]"
                   ].join(" ")}>Duration</th>
                   <th className={[
-                    "static md:sticky top-0 z-30",
+                    "static sm:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700"
                   ].join(" ")}>Status</th>
                   <th className={[
-                    "static md:sticky top-0 z-30",
+                    "static sm:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 text-right"
                   ].join(" ")}>Actions</th>
@@ -514,7 +515,7 @@ const AdminMatchesPage = () => {
                   pagedMatches.map((match, idx) => (
                     <tr key={match.id} className="transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40">
                       <td className={[
-                        "static md:sticky left-0 z-20 w-[50px] min-w-[50px] max-w-[50px] md:w-[64px] md:min-w-[64px] md:max-w-[64px]",
+                        "static sm:sticky left-0 z-20 w-[50px] min-w-[50px] max-w-[50px] md:w-[64px] md:min-w-[64px] md:max-w-[64px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "pl-5 pr-3 py-3 text-left text-zinc-700 dark:text-zinc-300"
@@ -527,27 +528,27 @@ const AdminMatchesPage = () => {
                         "hidden md:table-cell"
                       ].join(" ")}>{getTeam1WithFlag(match, "sm")}</td>
                       <td className={[
-                        "static md:sticky left-[50px] z-20 w-[50px] min-w-[50px] max-w-[50px]",
+                        "static sm:sticky left-[50px] z-20 w-[75px] min-w-[75px] max-w-[75px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "px-1 py-3 font-medium text-zinc-950 dark:text-zinc-50 text-center",
                         "table-cell md:hidden"
                       ].join(" ")}><p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{match.team1_name_short}</p></td>
                       <td className={[
-                        "static md:sticky left-[100px] md:left-[192px] z-20 w-[25px] min-w-[25px] max-w-[25px] md:w-[64px] md:min-w-[64px] md:max-w-[64px]",
+                        "static sm:sticky left-[125px] md:left-[192px] z-20 w-[25px] min-w-[25px] max-w-[25px] md:w-[64px] md:min-w-[64px] md:max-w-[64px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "px-0 md:px-3 py-3 text-center font-medium text-zinc-950 dark:text-zinc-50"
                       ].join(" ")}>{getVs("sm")}</td>
                       <td className={[
-                        "static md:sticky left-[256px] z-20 w-32 min-w-[128px] max-w-[128px]",
+                        "static md:sticky md:left-[256px] z-20 w-32 min-w-[128px] max-w-[128px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "pl-0 pr-3 py-3 font-medium text-zinc-950 dark:text-zinc-50",
                         "hidden md:table-cell"
                       ].join(" ")}>{getTeam2WithFlag(match, "sm")}</td>
                       <td className={[
-                        "static md:sticky left-[150px] z-[50px] w-32 min-w-[50px] max-w-[50px]",
+                        "static sm:sticky left-[150px] z-[50px] w-[75px] min-w-[75px] max-w-[75px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "px-1 py-3 font-medium text-zinc-950 dark:text-zinc-50 text-center",
@@ -566,14 +567,18 @@ const AdminMatchesPage = () => {
                       </td>
                       <td className="px-3 py-3 text-right">
                         <div className="flex justify-end gap-1">
-                          <button title="Edit" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-50 cursor-pointer transition disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-400 dark:hover:bg-emerald-950" disabled={openingEditMatchId !== null} type="button" onClick={() => void startEditingMatch(match)}>
-                            <IconPencil className="h-4 w-4" />
-                            <span className="sr-only">Edit</span>
-                          </button>
-                          <button title="Delete" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-700 hover:bg-rose-50 cursor-pointer transition disabled:opacity-40 dark:text-rose-400 dark:hover:bg-rose-950" disabled={isDeletingId === match.id} type="button" onClick={() => handleDeleteClick(match)}>
-                            <IconTrash className="h-4 w-4" />
-                            <span className="sr-only">Delete</span>
-                          </button>
+                          <Tooltip content="Edit">
+                            <button aria-label="Edit" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-50 cursor-pointer transition disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-400 dark:hover:bg-emerald-950" disabled={openingEditMatchId !== null} type="button" onClick={() => void startEditingMatch(match)}>
+                              <IconPencil className="h-4 w-4" />
+                              <span className="sr-only">Edit</span>
+                            </button>
+                          </Tooltip>
+                          <Tooltip content="Delete">
+                            <button aria-label="Delete" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-700 hover:bg-rose-50 cursor-pointer transition disabled:opacity-40 dark:text-rose-400 dark:hover:bg-rose-950" disabled={isDeletingId === match.id} type="button" onClick={() => handleDeleteClick(match)}>
+                              <IconTrash className="h-4 w-4" />
+                              <span className="sr-only">Delete</span>
+                            </button>
+                          </Tooltip>
                         </div>
                       </td>
                     </tr>

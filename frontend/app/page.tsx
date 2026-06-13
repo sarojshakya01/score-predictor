@@ -175,9 +175,6 @@ const Home = async () => {
           </Link>
         </div>
       }
-      eyebrow="Match center"
-      subtitle="Upcoming fixtures, prediction windows, standings signals, and quick access to tournament areas."
-      title="Football Match Tournament Predictor"
     >
       {errors.length > 0 ? (
         <section
