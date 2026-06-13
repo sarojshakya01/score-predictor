@@ -69,11 +69,11 @@ export const StatusPill = ({ children, tone = "zinc", urgency = "none" }: Status
     <>
       {urgency !== "none" && typeof window !== "undefined" && ensureKeyframes()}
       <span
-        className={`${urgencyBorderClass(urgency)} inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium ${toneClasses[tone]} truncate`}
+        className={`${urgencyBorderClass(urgency)} inline-flex items-center rounded-full border px-1 sm:px-2.5 py-1 text-xs font-medium ${toneClasses[tone]} truncate`}
         style={urgencyBorderStyle(urgency)}
       >
-        <span className="hidden sm:block">{children}</span>
-        <span className="sm:hidden">{typeof children === 'string' ? children.charAt(0) : children}</span>
+        <span className="hidden sm:inline-flex">{children}</span>
+        <span className="sm:hidden inline-flex">{typeof children === 'string' ? children.substring(0, 4) : children}</span>
       </span>
     </>
   );
