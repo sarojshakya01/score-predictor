@@ -791,6 +791,10 @@ class LeaderboardService:
             return 0
         if predicted_diff > 0 and actual_diff < 0:
             return 0
+        if actual_diff != 0 and predicted_diff == 0:
+            return 0
+        if actual_diff == 0 and predicted_diff != 0:
+            return 0
 
         delta = abs(predicted_diff - actual_diff)
 
