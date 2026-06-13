@@ -84,7 +84,7 @@ const PredCell = ({ children }: { children: React.ReactNode }) => (
   </td>
 );
 
-const PtsCell = ({ points }: { points: number }) => {
+const PtsCell = ({ points, isLastRow = false }: { points: number, isLastRow?: boolean }) => {
   const color =
     points > 0
       ? "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950 dark:text-emerald-400 dark:ring-emerald-800"
@@ -92,9 +92,9 @@ const PtsCell = ({ points }: { points: number }) => {
         ? "bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-950 dark:text-rose-400 dark:ring-rose-800"
         : "bg-zinc-100 text-zinc-500 ring-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:ring-zinc-600";
   return (
-    <td className="whitespace-nowrap px-3 py-2.5 text-center border-r border-zinc-200 dark:border-zinc-700">
+    <td className={`whitespace-nowrap px-3 py-2.5 text-center dark:border-zinc-700 ${isLastRow ? "" : "border-r border-zinc-200"}`}>
       <span
-        className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${color}`}
+        className={`inline-flex items-center justify-center rounded-full px-2.5 py-0.5 ${isLastRow ? "text-md" : "text-xs"} font-semibold ring-1 ring-inset ${color}`}
       >
         {formatSignedNumber(points)}
       </span>
@@ -125,32 +125,32 @@ const ScoreRow = ({
     <tr className="group border-b border-zinc-100 dark:border-zinc-800 transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/50">
       {/* S.N. */}
       <td className={[
-        "static sm:sticky left-0 z-20 w-[70px] min-w-[70px] max-w-[70px]",
+        "static sm:sticky left-0 z-20 w-[30px] min-w-[30px] max-w-[30px]",
         "bg-white dark:bg-zinc-950",
         "border-b border-zinc-200 dark:border-zinc-800",
-        "whitespace-nowrap pl-5 pr-3 py-2.5 text-center text-xs font-medium text-zinc-400 dark:text-zinc-500"
+        "whitespace-nowrap px-3 md:px-5 py-2.5 text-left text-xs font-medium text-zinc-400 dark:text-zinc-500"
       ].join(" ")}>
         {index + 1}
       </td>
 
       {/* Match */}
       <td className={[
-        "static sm:sticky left-[70px] z-20 w-[120px] min-w-[120px] max-w-[120px] md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
+        "static sm:sticky left-[30px] z-20 w-[110px] min-w-[110px] max-w-[110px] md:left-[40px] md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
         "bg-white dark:bg-zinc-950",
         "border-b border-zinc-200 dark:border-zinc-800",
-        "px-3 py-2.5 text-center"
+        "px-0 px-3 py-2.5 text-center"
       ].join(" ")}>
-        <p className={"md:hidden text-sm font-semibold text-zinc-900 dark:text-zinc-100"}>
+        <span className={"md:hidden text-sm font-semibold text-zinc-900 dark:text-zinc-100"}>
           {item.team1_name_short} <span className="text-zinc-400 dark:text-zinc-500">vs</span> {item.team2_name_short}
-        </p>
-        <p className={"hidden md:block text-sm font-semibold text-zinc-900 dark:text-zinc-100"}>
+        </span>
+        <span className={"hidden md:block text-sm font-semibold text-zinc-900 dark:text-zinc-100"}>
           {item.team1_name} <span className="text-zinc-400 dark:text-zinc-500">vs</span> {item.team2_name}
-        </p>
+        </span>
       </td>
 
       {/* Total */}
       <td className={[
-        "static sm:sticky left-[190px] md:left-[356px] z-20 w-[80px] min-w-[80px] max-w-[80px]",
+        "static sm:sticky left-[140px] md:left-[325px] z-20 w-[80px] min-w-[80px] max-w-[80px]",
         "bg-white dark:bg-zinc-950",
         "border-b border-zinc-200 dark:border-zinc-800",
         "whitespace-nowrap px-3 py-2.5 text-center"
@@ -358,18 +358,18 @@ const UserPointsDetailModal = ({
                     <th
                       rowSpan={2}
                       className={[
-                        "static sm:sticky left-0 top-0 z-40 w-[70px] min-w-[70px] max-w-[70px]",
+                        "static sm:sticky left-0 top-0 z-40 w-[30px] min-w-[30px] max-w-[30px]",
                         "bg-zinc-100 dark:bg-zinc-900",
                         "border-b border-zinc-200 dark:border-zinc-700",
-                        "whitespace-nowrap pl-5 pr-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500"
+                        "whitespace-nowrap px-3 md:px-5 py-2.5 text-left semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500"
                       ].join(" ")}
                     >
-                      S.N.
+                      #
                     </th>
                     <th
                       rowSpan={2}
                       className={[
-                        "static sm:sticky left-[70px] top-0 z-40 w-[120px] min-w-[120px] max-w-[120px] md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
+                        "static sm:sticky left-[30px] top-0 z-40 w-[110px] min-w-[110px] max-w-[110px] md:left-[40px] md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
                         "bg-zinc-100 dark:bg-zinc-900",
                         "border-b border-zinc-200 dark:border-zinc-700",
                         "whitespace-nowrap px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500"
@@ -380,7 +380,7 @@ const UserPointsDetailModal = ({
                     <th
                       rowSpan={2}
                       className={[
-                        "static sm:sticky left-[190px] md:left-[356px] top-0 z-40 w-[80px] min-w-[80px] max-w-[80px]",
+                        "static sm:sticky left-[140px] md:left-[325px] top-0 z-40 w-[80px] min-w-[80px] max-w-[80px]",
                         "bg-zinc-100 dark:bg-zinc-900",
                         "border-b border-zinc-200 dark:border-zinc-700",
                         "whitespace-nowrap px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500"
@@ -431,19 +431,26 @@ const UserPointsDetailModal = ({
                 </tbody>
                 {/* Totals footer */}
                 <tfoot className="border-t-2 border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/70 mb-2">
-                  {data.items.some((item) => item.match_stage === "F") && (<>
+                  {data.items.some((item) => item.match_stage !== "F") && (<>
                     <tr>
-                      <td colSpan={2} className={[
-                        "static sm:sticky left-0 z-20 w-[190px] min-w-[190px] max-w-[190px] md:w-[345px] md:min-w-[345px] md:max-w-[345px]",
+                      <td className={[
+                        "static sm:sticky left-0 z-20 w-[30px] min-w-[30px] max-w-[30px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
-                        "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+                        "whitespace-nowrap px-3 md:px-5 py-2.5 text-left text-xs font-medium text-zinc-400 dark:text-zinc-500"
+                      ].join(" ")}></td>
+                      <td className={[
+                        "static sm:sticky left-[30px] z-20 w-[110px] min-w-[110px] max-w-[110px] md:left-[40px] md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
+                        "bg-white dark:bg-zinc-950",
+                        "border-b border-zinc-200 dark:border-zinc-800",
+                        "px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
                       ].join(" ")}>
-                        Winner Prediction Points
+                        <span className="hidden md:block">Winner Prediction Points</span>
+                        <span className="md:hidden">Winner Pts</span>
                       </td>
                       {/* Score pts */}
                       <td className={[
-                        "static sm:sticky left-[190px] md:left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
+                        "static sm:sticky left-[140px] md:left-[325px] z-20 w-16 min-w-[80px] max-w-[80px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "whitespace-nowrap px-3 py-2.5 text-center"
@@ -457,17 +464,25 @@ const UserPointsDetailModal = ({
                       <td colSpan={24} />
                     </tr>
                     <tr>
-                      <td colSpan={2} className={[
-                        "static sm:sticky left-0 z-20 w-[190px] min-w-[190px] max-w-[190px] md:w-[345px] md:min-w-[345px] md:max-w-[345px]",
+                      <td className={[
+                        "static sm:sticky left-0 z-20 w-[30px] min-w-[30px] max-w-[30px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
-                        "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+                        "whitespace-nowrap px-3 md:px-5 py-2.5 text-left text-xs font-medium text-zinc-400 dark:text-zinc-500"
+                      ].join(" ")}></td>
+                      <td className={[
+                        "static sm:sticky left-[30px] z-20 w-[110px] min-w-[110px] max-w-[110px] md:left-[40px] md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
+                        "bg-white dark:bg-zinc-950",
+                        "border-b border-zinc-200 dark:border-zinc-800",
+                        "px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
                       ].join(" ")}>
-                        Runner up Prediction Points
+                        <span className="hidden md:block">Runner up Prediction Points</span>
+                        <span className="md:hidden">Runner-up Pts</span>
+
                       </td>
                       {/* Score pts */}
                       <td className={[
-                        "static sm:sticky left-[190px] md:left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
+                        "static sm:sticky left-[140px] md:left-[325px] z-20 w-16 min-w-[80px] max-w-[80px]",
                         "bg-white dark:bg-zinc-950",
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "whitespace-nowrap px-3 py-2.5 text-center"
@@ -482,20 +497,27 @@ const UserPointsDetailModal = ({
                     </tr>
                   </>)}
 
-                  {data.items.some((item) => item.match_stage === "3P") && (
+                  {data.items.some((item) => item.match_stage !== "3P") && (
                     <>
                       <tr>
-                        <td colSpan={2} className={[
-                          "static sm:sticky left-0 z-20 w-[190px] min-w-[190px] max-w-[190px] md:w-[345px] md:min-w-[345px] md:max-w-[345px]",
+                        <td className={[
+                          "static sm:sticky left-0 z-20 w-[30px] min-w-[30px] max-w-[30px]",
                           "bg-white dark:bg-zinc-950",
                           "border-b border-zinc-200 dark:border-zinc-800",
-                          "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+                          "whitespace-nowrap px-3 md:px-5 py-2.5 text-left text-xs font-medium text-zinc-400 dark:text-zinc-500"
+                        ].join(" ")}></td>
+                        <td className={[
+                          "static sm:sticky left-[30px] z-20 w-[110px] min-w-[110px] max-w-[110px] md:left-[40px] md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
+                          "bg-white dark:bg-zinc-950",
+                          "border-b border-zinc-200 dark:border-zinc-800",
+                          "px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
                         ].join(" ")}>
-                          Third Place Prediction Points
+                          <span className="hidden md:block">Third Place Prediction Points</span>
+                          <span className="md:hidden">3rd Place Pts</span>
                         </td>
                         {/* Score pts */}
                         <td className={[
-                          "static sm:sticky left-[190px] md:left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
+                          "static sm:sticky left-[140px] md:left-[325px] z-20 w-16 min-w-[80px] max-w-[80px]",
                           "bg-white dark:bg-zinc-950",
                           "border-b border-zinc-200 dark:border-zinc-800",
                           "whitespace-nowrap px-3 py-2.5 text-center"
@@ -510,17 +532,24 @@ const UserPointsDetailModal = ({
                       </tr>
                     </>)}
                   <tr>
-                    <td colSpan={2} className={[
-                      "static sm:sticky left-0 z-20 w-[190px] min-w-[190px] max-w-[190px] md:w-[345px] md:min-w-[345px] md:max-w-[345px]",
+                    <td className={[
+                      "static sm:sticky left-0 z-20 w-[30px] min-w-[30px] max-w-[30px]",
                       "bg-white dark:bg-zinc-950",
                       "border-b border-zinc-200 dark:border-zinc-800",
-                      "px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+                      "whitespace-nowrap px-3 md:px-5 py-2.5 text-left text-xs font-medium text-zinc-400 dark:text-zinc-500"
+                    ].join(" ")}></td>
+                    <td className={[
+                      "static sm:sticky left-[30px] z-20 w-[110px] min-w-[110px] max-w-[110px] md:left-[40px] md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
+                      "bg-white dark:bg-zinc-950",
+                      "border-b border-zinc-200 dark:border-zinc-800",
+                      "px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
                     ].join(" ")}>
-                      Totals
+                      <span className="hidden md:block">Total Points</span>
+                      <span className="md:hidden">Total Pts</span>
                     </td>
                     {/* Total pts */}
                     <td className={[
-                      "static sm:sticky left-[190px] md:left-[356px] z-20 w-16 min-w-[80px] max-w-[80px]",
+                      "static sm:sticky left-[140px] md:left-[325px] z-20 w-16 min-w-[80px] max-w-[80px]",
                       "bg-white dark:bg-zinc-950",
                       "border-b border-zinc-200 dark:border-zinc-800",
                       "whitespace-nowrap px-3 py-2.5 text-center"
@@ -535,41 +564,49 @@ const UserPointsDetailModal = ({
                     <td colSpan={2} />
                     <PtsCell
                       points={data.items.reduce((s, i) => s + i.score_points, 0) + data.winner_points + data.runner_up_points + data.third_place_points}
+                      isLastRow={true}
                     />
                     {/* Goal diff pts */}
                     <td colSpan={2} />
                     <PtsCell
                       points={data.items.reduce((s, i) => s + i.goal_difference_points, 0)}
+                      isLastRow={true}
                     />
                     {/* First Goal In pts */}
                     <td colSpan={2} />
                     <PtsCell
                       points={data.items.reduce((s, i) => s + i.first_goal_in_points, 0)}
+                      isLastRow={true}
                     />
                     {/* First Score By pts */}
                     <td colSpan={2} />
                     <PtsCell
                       points={data.items.reduce((s, i) => s + i.first_scoring_team_points, 0)}
+                      isLastRow={true}
                     />
                     {/* Yellow card pts */}
                     <td colSpan={2} />
                     <PtsCell
                       points={data.items.reduce((s, i) => s + i.yellow_card_points, 0)}
+                      isLastRow={true}
                     />
                     {/* Red card pts */}
                     <td colSpan={2} />
                     <PtsCell
                       points={data.items.reduce((s, i) => s + i.red_card_points, 0)}
+                      isLastRow={true}
                     />
                     {/* Kick-off pts */}
                     <td colSpan={2} />
                     <PtsCell
                       points={data.items.reduce((s, i) => s + i.kick_off_team_points, 0)}
+                      isLastRow={true}
                     />
                     {/* Duration pts */}
                     <td colSpan={2} />
                     <PtsCell
                       points={data.items.reduce((s, i) => s + i.match_duration_points, 0)}
+                      isLastRow={true}
                     />
                   </tr>
                 </tfoot>
@@ -789,7 +826,7 @@ export const LeaderboardDashboard = () => {
 
       {rows.length > 0 ? (
         <section className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-          <div className="flex flex-col gap-4 border-b border-zinc-200 px-5 py-4 lg:flex-row lg:items-center lg:justify-between dark:border-zinc-700">
+          <div className="flex flex-col gap-4 border-b border-zinc-200 px-3 py-2 md:px-5 md:py-4 lg:flex-row lg:items-center lg:justify-between dark:border-zinc-700">
             <div>
               <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-100">Leaderboard Breakdown</h2>
               <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">

@@ -307,7 +307,7 @@ const MatchPointsModal = ({
                       "border-b border-zinc-200 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:border-zinc-700 dark:text-zinc-500",
                     ].join(" ")}
                   >
-                    S.N.
+                    <>S.N</>
                   </th>
                   <th
                     rowSpan={2}
@@ -607,7 +607,7 @@ export const ResultsDashboard = () => {
     <>
       <ToastViewport onDismiss={dismissToast} toasts={toasts} />
       <section className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-        <div className="flex justify-between gap-2 border-b border-zinc-200 px-5 py-4 dark:border-zinc-700">
+        <div className="flex justify-between gap-2 border-b border-zinc-200 px-3 py-2 md:py-4 dark:border-zinc-700">
           <div>
             <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-100">Completed Matches</h2>
             <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">

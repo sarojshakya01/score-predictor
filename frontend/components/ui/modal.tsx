@@ -58,7 +58,7 @@ export const Modal = ({ children, isOpen, onClose, title, isLarge = false, isNoP
       onKeyDown={handleKeyDown}
     >
       <div className="flex flex-col max-h-[90vh]">
-        <div className="flex items-center justify-between border-b border-zinc-200 px-5 py-4 dark:border-zinc-700">
+        <div className="flex items-center justify-between border-b border-zinc-200 px-3 py-2 md:px-5 md:py-4 dark:border-zinc-700">
           <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">{title}</h2>
           <button
             type="button"
@@ -81,7 +81,7 @@ export const Modal = ({ children, isOpen, onClose, title, isLarge = false, isNoP
             </svg>
           </button>
         </div>
-        <div className={"overflow-y-auto" + (isNoPadding ? "" : " p-5")}>
+        <div className={"overflow-y-auto" + (isNoPadding ? "" : " p-3 md:p-5")}>
           {children}
         </div>
       </div>
