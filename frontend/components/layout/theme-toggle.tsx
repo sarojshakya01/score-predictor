@@ -12,6 +12,20 @@ export const ThemeToggle = () => {
     setMounted(true) // eslint-disable-line react-hooks/set-state-in-effect
   }, []);
 
+  const handleThemeSwitch = (isDark: boolean) => {
+    const root = document.documentElement; // or document.body
+
+    if (isDark) {
+      root.classList.add('highcharts-light');
+      root.classList.remove('highcharts-dark');
+    } else {
+      root.classList.add('highcharts-dark');
+      root.classList.remove('highcharts-light');
+    }
+
+    setTheme(isDark ? "light" : "dark")
+  }
+
   if (!mounted) {
     return (
       <button
@@ -30,7 +44,7 @@ export const ThemeToggle = () => {
     <button
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={() => handleThemeSwitch(isDark)}
       className="grid h-9 w-9 place-items-center rounded-md border border-zinc-200 bg-transparent text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-950 dark:border-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-50"
     >
       {isDark ? (

@@ -159,7 +159,7 @@ export default function RaceChart({
           formatter: function () {
             const point = this as any; // eslint-disable-line
             if (point.id === `user_${userId}`) {
-              return `<span class="font-bold text-white text-lg">${point.y} (You)</span>`
+              return `<span class="font-bold text-zinc-950 dark:text-white text-lg">${point.y} (You)</span>`
             }
             return `${point.y}`;
           }
@@ -232,9 +232,7 @@ export default function RaceChart({
           />
         </div>
       </div>
-      <div className="p-4">
-        <HighchartsReact highcharts={Highcharts} options={options} ref={chartRef} />
-      </div>
+      <HighchartsReact highcharts={Highcharts} options={options} ref={chartRef} />
     </section>
   );
 }

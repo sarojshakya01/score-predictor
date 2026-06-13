@@ -108,7 +108,7 @@ textarea {
   background: linear-gradient(135deg, rgb(239, 235, 235), var(--color-tournament-primary));
 }
 
-.dark .bg-grad-tournament-light {
+.dark\:bg-grad-tournament-light {
   background: linear-gradient(135deg, var(--color-tournament-primary), rgb(239, 235, 235));
 }
 
