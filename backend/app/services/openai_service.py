@@ -131,7 +131,6 @@ class OpenAIService:
                     },
                 },
             )
-            print(11, response.output_text)
             return json.loads(response.output_text)
         except Exception as error:
             logger.exception("Error during OpenAI prediction: %s", error)

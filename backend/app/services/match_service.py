@@ -166,7 +166,6 @@ class MatchService:
                 latest_first=True,
             )
 
-            
             async with httpx.AsyncClient(timeout=15) as client:
                 try:
                     match_detail_resp = await client.get(MATCH_DETAIL_ENDPOINT, headers=HEADERS)
@@ -181,23 +180,19 @@ class MatchService:
             # schema based on response of MATCH_DETAIL_ENDPOINT
             match_detail_list = [result for result in match_highlight_json["Results"] if result.get("CompetitionName", [{}])[0].get("Description") == COMPETITIONS_NAME and result.get("SeasonName", [{}])[0].get("Description") == SEASON_NAME]
 
-
-            # filtered_highlights = [item["pageUrl"] for item in match_highlight_src["specialHeaders"] if "/watch/" in item["pageUrl"] and "FIFA World Cup" in item["identifier"]]
-            # print("filtered_highlights", filtered_highlights)
-
             for match in matches:
-                match_id, stage_id = None, None
+                id_match, id_stage = None, None
                 for match_detail in match_detail_list:
                     home_country_code = match_detail.get('Home', {}).get('IdCountry', None).upper()
                     away_country_code = match_detail.get('Away', {}).get('IdCountry', None).upper()
                     if (home_country_code == match.team1.fifa_code.upper() and away_country_code == match.team2.fifa_code.upper()) or (
                         home_country_code == match.team2.fifa_code.upper() and away_country_code == match.team1.fifa_code.upper()
                     ):
-                        match_id = match_detail.get("IdMatch")
-                        stage_id = match_detail.get("IdStage")
+                        id_match = match_detail.get("IdMatch")
+                        id_stage = match_detail.get("IdStage")
                         break
 
-                match_highlight_detail_url = MATCH_HIGHTLIGHT_ENDPOINT + f"&stageId={stage_id}&matchId={match_id}" if match_id and stage_id else ""
+                match_highlight_detail_url = MATCH_HIGHTLIGHT_ENDPOINT + f"&stageId={id_stage}&matchId={id_match}" if id_match and id_stage else ""
 
                 async with httpx.AsyncClient(timeout=15) as client:
                     try:
