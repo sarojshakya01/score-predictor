@@ -411,7 +411,7 @@ export const PredictionsDashboard = () => {
       red_card_count: formState.redCardCount !== '' ? parseNonNegativeInteger(
         formState.redCardCount,
         "Red cards",
-      ) : null,
+      ) : 0,
       team1_score: team1Score,
       team2_score: team2Score,
       yellow_card_count: formState.yellowCardCount !== '' ? parseNonNegativeInteger(
