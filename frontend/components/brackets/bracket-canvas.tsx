@@ -427,9 +427,14 @@ export const BracketCanvas = () => {
       ) : null}
 
       {isLoading && (
-        <div className="rounded-md border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800 dark:border-blue-700 dark:bg-blue-950 dark:text-blue-300">
-          Loading bracket matches...
-        </div>
+        <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+          {[...Array(2).keys()].map((item) => (
+            <div
+              key={item}
+              className="h-[1080px] animate-pulse rounded-md px-5 py-4 border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-800"
+            />
+          ))}
+        </section>
       )}
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">

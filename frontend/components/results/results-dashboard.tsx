@@ -592,7 +592,7 @@ export const ResultsDashboard = () => {
       <section className="rounded-md border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
         <div className="mb-4 h-10 w-48 animate-pulse rounded-md bg-zinc-100 dark:bg-zinc-800" />
         <div className="grid gap-3">
-          {[1, 2, 3, 4].map((item) => (
+          {[...Array(10).keys()].map((item) => (
             <div
               key={item}
               className="h-14 animate-pulse rounded-md bg-zinc-100 dark:bg-zinc-800"

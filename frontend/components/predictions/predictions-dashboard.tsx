@@ -766,7 +766,7 @@ export const PredictionsDashboard = () => {
           "bg-white dark:bg-zinc-900"
         ].join(" ")}>
           {isLoading ? (
-            Array.from({ length: 3 }, (_, index) => (
+            Array.from({ length: 4 }, (_, index) => (
               <div
                 key={index}
                 className="h-55 w-[280px] shrink-0 animate-pulse rounded-md border border-zinc-200 shadow-sm dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-zinc-950 sm:w-80 lg:w-[360px]"

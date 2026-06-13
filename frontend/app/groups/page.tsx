@@ -48,10 +48,14 @@ const GroupsPage = () => {
   return (
     <PageShell>
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-20">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-zinc-200 border-t-emerald-700 dark:border-zinc-700 dark:border-t-emerald-400" />
-          <p className="mt-4 text-sm font-medium text-zinc-500 dark:text-zinc-400">Loading standings...</p>
-        </div>
+        <section className="grid gap-6 xl:grid-cols-2">
+          {[...Array(6).keys()].map((item) => (
+            <div
+              key={item}
+              className="h-[367px] animate-pulse rounded-md px-5 py-4 border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-800"
+            />
+          ))}
+        </section>
       ) : loadError ? (
         <section className="rounded-md border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700 dark:border-red-700 dark:bg-red-950 dark:text-red-300" role="alert">
           {loadError}

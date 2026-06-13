@@ -41,7 +41,33 @@ const RulesPage = () => {
       )}
 
       {isLoading ? (
-        <div className="text-sm text-zinc-500 dark:text-zinc-400">Loading rules…</div>
+        <>
+          <section className="grid gap-4 sm:grid-cols-1 lg:grid-cols-1">
+            {[...Array(1).keys()].map((item) => (
+              <div
+                key={item}
+                className="h-[285px] animate-pulse rounded-md px-5 py-4 border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-800"
+              />
+            ))}
+          </section>
+          <hr className="border-gray-300 dark:border-gray-700 my-2" />
+          <section className="grid gap-4 sm:grid-cols-1 lg:grid-cols-1">
+            {[...Array(1).keys()].map((item) => (
+              <div
+                key={item}
+                className="h-[54px] animate-pulse rounded-md px-5 py-4 border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-800"
+              />
+            ))}
+          </section>
+          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2">
+            {[...Array(4).keys()].map((item) => (
+              <div
+                key={item}
+                className="h-[280px] animate-pulse rounded-md px-5 py-4 border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-800"
+              />
+            ))}
+          </section>
+        </>
       ) : groups.length === 0 && !error ? (
         <div className="text-sm text-zinc-500 dark:text-zinc-400">No rules configured yet.</div>
       ) : (

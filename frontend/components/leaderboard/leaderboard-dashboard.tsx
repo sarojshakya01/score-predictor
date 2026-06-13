@@ -751,15 +751,8 @@ export const LeaderboardDashboard = () => {
   if (isLoading) {
     return (
       <>
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {[1, 2, 3, 4].map((item) => (
-            <div
-              key={item}
-              className="h-28 animate-pulse rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-800"
-            />
-          ))}
-        </section>
-        <section className="h-96 animate-pulse rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-800" />
+        <section className="h-[687px] animate-pulse rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-800" />
+        <section className="h-[727px] animate-pulse rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-800" />
       </>
     );
   }

@@ -45,7 +45,7 @@ export const RouteGuard = ({ children, allowedRoles }: RouteGuardProps) => {
     return (
       <div className="flex flex-1 flex-col items-center justify-center py-20">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-zinc-200 border-t-emerald-700" />
-        <p className="mt-4 text-sm font-medium text-zinc-500">Checking credentials...</p>
+        <p className="mt-4 text-sm font-medium text-zinc-500">Authenticating...</p>
       </div>
     );
   }
