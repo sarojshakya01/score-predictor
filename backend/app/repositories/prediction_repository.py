@@ -123,7 +123,7 @@ class PredictionRepository:
                 selectinload(Prediction.user),
             )
             .where(Prediction.user_id == user_id)
-            .where(Match.match_day <= current_match_day + 1)
+            .where(Match.match_day <= current_match_day)
             .order_by(Prediction.match_id.asc())
         )
 
