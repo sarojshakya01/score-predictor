@@ -73,7 +73,7 @@ export const StatusPill = ({ children, tone = "zinc", urgency = "none" }: Status
         style={urgencyBorderStyle(urgency)}
       >
         <span className="hidden sm:inline-flex">{children}</span>
-        <span className="sm:hidden inline-flex">{typeof children === 'string' ? children.substring(0, 4) : children}</span>
+        <span className="sm:hidden inline-flex">{typeof children === 'string' ? children.substring(0, 10) : children}</span>
       </span>
     </>
   );
