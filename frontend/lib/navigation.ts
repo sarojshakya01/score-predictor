@@ -1,4 +1,4 @@
-import { IconBracket, IconDashboard, IconGroups, IconHome, IconLeaderboard, IconMatches, IconPredictions, IconRules, IconSettings, IconTeams, IconUsers } from "@/components/ui/icons";
+import { IconBracket, IconDashboard, IconGroups, IconHome, IconLeaderboard, IconMatches, IconMatchResults, IconPredictions, IconRules, IconSettings, IconTeams, IconUsers } from "@/components/ui/icons";
 
 type NavigationItem = {
   href: string;
@@ -10,7 +10,7 @@ export const primaryNavigations: NavigationItem[] = [
   { href: "/", label: "Home", icon: IconHome },
   { href: "/predictions", label: "Predictions", icon: IconPredictions },
   { href: "/leaderboard", label: "Leaderboard", icon: IconLeaderboard },
-  { href: "/results", label: "Results", icon: IconMatches },
+  { href: "/results", label: "Results", icon: IconMatchResults },
   { href: "/groups", label: "Groups", icon: IconGroups },
   { href: "/brackets", label: "Brackets", icon: IconBracket },
   { href: "/rules", label: "Rules", icon: IconRules },

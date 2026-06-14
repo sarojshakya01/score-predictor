@@ -798,3 +798,27 @@ export const IconLiveDot = ({ className = "h-4 w-4" }: IconProps) => (
     />
   </svg>
 );
+
+export const IconMatchResults = ({ className = "h-4 w-4" }: IconProps) => (
+  <svg
+    xmlns="http://w3.org"
+    className={className}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    {/* Goal Post Frame */}
+    <path d="M3 21V9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12" />
+
+    {/* Football (Soccer Ball) in Foreground */}
+    <circle cx="12" cy="17" r="3" />
+    <path d="m12 14-.5 1h1z" />
+    <path d="M11.5 15 10 16" />
+    <path d="M12.5 15 14 16" />
+    <path d="M12 17v2" />
+  </svg>
+);
