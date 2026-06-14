@@ -67,7 +67,7 @@ export const UpcomingMatchesSection = ({ matches }: UpcomingMatchesSectionProps)
                 match={match}
                 isSaved={isSaved}
                 isPredictionAvailable={hasPredictions}
-                className="w-[280px] h-60 shrink-0 sm:w-80 lg:w-[360px]"
+                className="h-60 shrink-0 w-[360px]"
               />
             );
           })}

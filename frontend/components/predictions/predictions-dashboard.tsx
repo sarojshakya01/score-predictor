@@ -787,7 +787,7 @@ export const PredictionsDashboard = () => {
                   isPredictionAvailable={predictions.length > 0}
                   isSelected={isSelected}
                   handleCardClick={handleCardClick}
-                  className="h-55 w-[280px] shrink-0 sm:w-80 lg:w-[360px]"
+                  className="h-55 shrink-0 w-[360px]"
                 />
               );
             })
