@@ -1,4 +1,5 @@
 """Leaderboard scoring business logic."""
+from app.models.match import FirstGoalIn
 from app.schemas.leaderboard import LeaderboardFrame, AccumulatedPoints
 from app.api.deps import CurrentUser
 import logging
@@ -48,6 +49,14 @@ class BandedRules:
 
 
 @dataclass(frozen=True)
+class FirstGoalTimingRules:
+    """Points for the first goal in category."""
+    first_half: int = 3
+    second_half: int = 5
+    extra_time: int = 10
+
+
+@dataclass(frozen=True)
 class RedCardRules:
     """Points for the red card category."""
     exact: int = 10
@@ -74,7 +83,7 @@ class ScoringRules:
     yellow_card: BandedRules = field(default_factory=BandedRules)
     red_card: RedCardRules = field(default_factory=RedCardRules)
     first_score_by: int = 3    # single point value (order 1)
-    first_goal_in: int = 3     # single point value (order 1)
+    first_goal_in: FirstGoalTimingRules = field(default_factory=FirstGoalTimingRules)
     kick_off_team: int = 3     # not in settings — kept here as fallback
     duration: DurationRules = field(default_factory=DurationRules)
 
@@ -129,6 +138,17 @@ def _parse_scoring_rules(raw_groups: list[dict]) -> ScoringRules:
         logger.warning("Falling back to defaults for score rules")
         score = ScoreRules()
 
+    first_goal_in_rules_list = by_name.get("first_goal_in", [])
+    try:
+        first_goal_in = FirstGoalTimingRules(
+            first_half=_pick(first_goal_in_rules_list, 1),
+            second_half=_pick(first_goal_in_rules_list, 2),
+            extra_time=_pick(first_goal_in_rules_list, 3),
+        )
+    except (KeyError, ValueError):
+        logger.warning("Falling back to defaults for match_duration rules")
+        duration = DurationRules()
+
     red_rules_list = by_name.get("red_card", [])
     try:
         red_card = RedCardRules(
@@ -156,8 +176,8 @@ def _parse_scoring_rules(raw_groups: list[dict]) -> ScoringRules:
         goal_difference=banded("goal_difference"),
         yellow_card=banded("yellow_card"),
         red_card=red_card,
-        first_score_by=single("first_score_by", order=1, default=5),
-        first_goal_in=single("first_goal_in", order=1, default=5),
+        first_score_by=single("first_score_by", order=1, default=3),
+        first_goal_in=first_goal_in,
         duration=duration,
     )
 
@@ -713,10 +733,8 @@ class LeaderboardService:
             (prediction.team1_score or 0) + (prediction.team2_score or 0) > 0
         )
 
-        first_goal_in_points = (
-            rules.first_goal_in
-            if has_predicted_goals and prediction.first_goal_in == match.first_goal_in
-            else 0
+        first_goal_in_points = LeaderboardService._score_first_goal_in(
+            prediction, match, rules.first_goal_in,
         )
 
         first_scoring_team_points = (
@@ -764,6 +782,27 @@ class LeaderboardService:
             return 1
         if team1_score < team2_score:
             return -1
+        return 0
+
+    @staticmethod
+    def _score_first_goal_in(
+        prediction: Prediction,
+        match: Match,
+        rules: FirstGoalTimingRules,
+    ) -> int:
+        """Score first goal in prediction against the actual first goal in."""
+        if (
+            match.first_goal_in is None
+            or prediction.first_goal_in != match.first_goal_in
+        ):
+            return 0
+
+        if match.first_goal_in == FirstGoalIn.FIRST_HALF:
+            return rules.first_half
+        if match.first_goal_in == FirstGoalIn.SECOND_HALF:
+            return rules.second_half
+        if match.first_goal_in == FirstGoalIn.EXTRA_TIME:
+            return rules.extra_time
         return 0
 
     @staticmethod
