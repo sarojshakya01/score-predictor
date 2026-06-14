@@ -150,18 +150,18 @@ const formatGroupLabel = (group: string | null | undefined): string => {
   return `Group ${normalizedGroup}`;
 };
 
-const formatGroup = (match: MatchResponse): string => {
-  if (match.match_stage !== "GROUP") {
-    return matchStageLabels[match.match_stage];
-  }
+// const formatGroup = (match: MatchResponse): string => {
+//   if (match.match_stage !== "GROUP") {
+//     return matchStageLabels[match.match_stage];
+//   }
 
-  const team1Group = formatGroupLabel(match.team1_group);
-  const team2Group = formatGroupLabel(match.team2_group);
+//   const team1Group = formatGroupLabel(match.team1_group);
+//   const team2Group = formatGroupLabel(match.team2_group);
 
-  if (!team1Group && !team2Group) return "—";
-  if (team1Group === team2Group) return team1Group || "—";
-  return [team1Group, team2Group].filter(Boolean).join(" / ");
-};
+//   if (!team1Group && !team2Group) return "—";
+//   if (team1Group === team2Group) return team1Group || "—";
+//   return [team1Group, team2Group].filter(Boolean).join(" / ");
+// };
 
 const getTeamNameById = (match: MatchResponse, teamId: number | null): string | null => {
   if (teamId === match.team1_id) return match.team1_name;
@@ -661,7 +661,7 @@ export const ResultsDashboard = () => {
                     Match
                   </th>
                   {[
-                    "Group",
+                    // "Group",
                     "Highlights",
                     "Score",
                     "Goal Diff",
@@ -728,9 +728,9 @@ export const ResultsDashboard = () => {
                           </div>
                         </Tooltip>
                       </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
+                      {/* <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
                         {formatGroup(match)}
-                      </td>
+                      </td> */}
                       <td className="whitespace-nowrap px-3 py-4 text-center">
                         {highlightsUrl ? (
                           <Tooltip content="Watch match highlights">
