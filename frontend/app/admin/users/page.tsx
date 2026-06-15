@@ -239,35 +239,40 @@ const AdminUsersPage = () => {
           </button>
         </section>
 
-        <div className="relative">
-          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-zinc-400 dark:text-zinc-500">
-            <IconSearch className="h-4 w-4" />
-          </span>
-          <input
-            type="search"
-            value={searchQuery}
-            onChange={(e) => handleSearch(e.target.value)}
-            placeholder="Search by name, email, role, or mobile..."
-            className="h-10 w-full rounded-md border border-zinc-200 bg-white pl-9 pr-9 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:ring-emerald-900"
-          />
-          {isSearchActive && (
-            <button
-              type="button"
-              aria-label="Clear search"
-              onClick={() => handleSearch("")}
-              className="absolute inset-y-0 right-3 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-            >
-              <IconX className="h-4 w-4" />
-            </button>
-          )}
-        </div>
+        <section className="grid grid-cols-1 md:grid-cols-2 items-center justify-between">
+          <div className="relative">
+            <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-zinc-400 dark:text-zinc-500">
+              <IconSearch className="h-4 w-4" />
+            </span>
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(e) => handleSearch(e.target.value)}
+              placeholder="Search by name, email, role, or mobile..."
+              className="h-10 w-full rounded-md border border-zinc-200 bg-white pl-9 pr-9 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:ring-emerald-900"
+            />
+            {isSearchActive && (
+              <button
+                type="button"
+                aria-label="Clear search"
+                onClick={() => handleSearch("")}
+                className="absolute inset-y-0 right-3 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+              >
+                <IconX className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+          <div className="pl-10">
+            <Pagination
+              page={page}
+              pageSize={PAGE_SIZE}
+              total={filteredUsers.length}
+              onChange={setPage}
+            />
+          </div>
+        </section>
 
-        <Pagination
-          page={page}
-          pageSize={PAGE_SIZE}
-          total={filteredUsers.length}
-          onChange={setPage}
-        />
+
 
         <section className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
           {isSearchActive && (
