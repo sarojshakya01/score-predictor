@@ -757,7 +757,7 @@ class LeaderboardService:
         )
 
         has_predicted_goals = (
-            (prediction.team1_score or 0) + (prediction.team2_score or 0) > 0
+            (prediction.team1_score is not None and prediction.team1_score > -1) and (prediction.team2_score is not None and prediction.team2_score > -1)
         )
 
         first_goal_in_points = LeaderboardService._score_first_goal_in(
