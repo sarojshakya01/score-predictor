@@ -36,7 +36,7 @@ from app.services.team_service import TeamService
 logger = logging.getLogger(__name__)
 
 class MatchService:
-    MATCH_HIGHLIGHTS_CACHE_FILE = Path(f"{settings.APP_ROOT_PATH}cache/match_highlights.json")
+    MATCH_HIGHLIGHTS_CACHE_FILE = Path(f"{settings.APP_ROOT_PATH}/cache/match_highlights.json")
     MATCH_HIGHLIGHTS_CACHE_FILE.parent.mkdir(exist_ok=True)
     MATCH_DETAIL_CACHE_FILE = Path("cache/match_details.json")
     MATCH_DETAIL_CACHE_FILE.parent.mkdir(exist_ok=True)
