@@ -822,7 +822,6 @@ class LeaderboardService:
         if (
             match.first_goal_in is None
             or prediction.first_goal_in != match.first_goal_in
-            or (prediction.team1_score is not None and prediction.team2_score is not None)
         ):
             return 0
 

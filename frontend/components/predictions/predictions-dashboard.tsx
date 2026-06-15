@@ -590,10 +590,10 @@ export const PredictionsDashboard = () => {
       const isKnockout = selectedMatch.match_stage !== "GROUP";
 
       // Random yellow cards: 1–6
-      const randomYellowCards = Math.floor(Math.random() * 6) + 1;
+      const randomYellowCards = Math.floor(Math.random() * 5) + 1;
 
       // Random red cards: 0 or 1, weighted heavily toward 0 (25% chance of 1)
-      const randomRedCards = Math.random() < 0.25 ? 1 : 0;
+      const randomRedCards = Math.random() < 0.1 ? 1 : 0;
 
       // Random first scoring team (only if goals > 0)
       let randomFirstScoringTeamId = "";
