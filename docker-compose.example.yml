@@ -27,6 +27,8 @@ services:
     env_file: .env
     environment:
       TZ: ${TIMEZONE}
+    volumes:
+      - ./data:/cache
     extra_hosts:
       # Allows containers to reach the host's MySQL on all platforms
       - "host.docker.internal:host-gateway"
