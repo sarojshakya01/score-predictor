@@ -938,10 +938,10 @@ def _create_scheduler() -> AsyncIOScheduler:
         misfire_grace_time=120,
     )
 
-    # Job 4 – Update current match day: every settings.MATCH_DAY_UPDATE_INTERVAL_HR hours
+    # Job 4 – Update current match day: every settings.MATCH_DAY_UPDATE_TIME_HR hours
     scheduler.add_job(
         update_current_match_day,
-        trigger=IntervalTrigger(hours=settings.MATCH_DAY_UPDATE_INTERVAL_HR),
+        trigger=IntervalTrigger(hours=settings.MATCH_DAY_UPDATE_TIME_HR, minutes=1),
         id="update_current_match_day",
         name="Update current match day",
         replace_existing=True,
