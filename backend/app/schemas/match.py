@@ -127,10 +127,12 @@ class MatchResponse(MatchBase):
     team1_name_short: str
     team1_group: str
     team1_flag_url: str
+    team1_fifa_rank: int
     team2_name: str
     team2_name_short: str
     team2_group: str
     team2_flag_url: str
+    team2_fifa_rank: int
     highlights_url: str | None = None
 
     model_config = ConfigDict(from_attributes=True)

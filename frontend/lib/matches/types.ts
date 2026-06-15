@@ -25,17 +25,18 @@ export type MatchResponse = {
   team1_name_short: string;
   team1_score: number | null;
   team1_flag_url: string;
+  team1_fifa_rank: number | null;
   team2_id: number;
   team2_group: string;
   team2_name: string;
   team2_name_short: string;
   team2_score: number | null;
   team2_flag_url: string;
+  team2_fifa_rank: number | null;
   updated_at: string;
   venue_name: string | null;
   yellow_card_count: number | null;
   highlights_url?: string | null;
-  hightlights_url?: string | null;
 };
 
 export type MatchFields = {

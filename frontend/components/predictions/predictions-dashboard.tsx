@@ -124,8 +124,13 @@ const parsePositiveInteger = (value: string, label: string): number => {
 const hasAnyGoalPrediction = (
   state: Pick<PredictionFormState, "team1Score" | "team2Score">,
 ): boolean => {
-  const team1Score = Number(state.team1Score);
-  const team2Score = Number(state.team2Score);
+  if (!state.team1Score || !state.team2Score) {
+    return false;
+  }
+
+  // if any goal is predicted, set other 0 by default
+  const team1Score = Number(state.team1Score || '0');
+  const team2Score = Number(state.team2Score || '0');
 
   return (
     (Number.isFinite(team1Score) && team1Score > 0) ||
@@ -141,7 +146,10 @@ const isFirstGoalIn = (value: string): value is FirstGoalIn => {
   return firstGoalIns.includes(value as FirstGoalIn);
 };
 
-const getWinnerTeamId = (team1Score: number, team2Score: number, selectedMatch: MatchResponse | null) => {
+const getWinnerTeamId = (team1Score: number | null, team2Score: number | null, selectedMatch: MatchResponse | null) => {
+  if (!team1Score || !team2Score) {
+    return null;
+  }
   if (team1Score > team2Score) {
     return selectedMatch?.team1_id || null;
   }
@@ -360,11 +368,6 @@ export const PredictionsDashboard = () => {
   }, [applyMatchSelection, paramMatchDay, paramMatchId]);
 
   const updateField = (field: keyof PredictionFormState, value: string) => {
-
-    if (['team1Score', 'team2Score', 'redCardCount', 'yellowCardCount'].includes(field)) {
-      value = Number(value).toString();
-    }
-
     setFormState((current) => {
       const nextState = {
         ...current,
@@ -387,14 +390,15 @@ export const PredictionsDashboard = () => {
   };
 
   const buildPredictionFields = (): PredictionFields => {
-    const team1Score = parseNonNegativeInteger(
+    const team1Score = formState.team1Score ? parseNonNegativeInteger(
       formState.team1Score,
       "Team 1",
-    );
-    const team2Score = parseNonNegativeInteger(
+    ) : null;
+
+    const team2Score = formState.team2Score ? parseNonNegativeInteger(
       formState.team2Score,
       "Team 2",
-    );
+    ) : null;
 
     return {
       first_goal_in: formState.firstGoalIn && isFirstGoalIn(formState.firstGoalIn)
@@ -869,11 +873,14 @@ export const PredictionsDashboard = () => {
                       {selectedMatch.team1_flag_url && (
                         <Image width={32} height={32} className="min-h-[30px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team1_flag_url} alt={selectedMatch.team1_name} />
                       )}
-                      <span>{selectedMatch.team1_name}</span>
+                      <span>{selectedMatch.team1_name} {selectedMatch.team1_fifa_rank ? `(Rank: ${selectedMatch.team1_fifa_rank})` : ""}</span>
                     </>
                   ) : "Team 1 Score"}
                 </span>
-                <input min="0" max="100" name="team1_score" type="number" value={formState.team1Score || 0} onChange={(e) => updateField("team1Score", e.target.value)} className={inputCls} />
+                <input min="0" max="100" name="team1_score" type="number" value={formState.team1Score} onChange={(e) => {
+                  updateField("team1Score", e.target.value);
+                  if (e.target.value && formState.team2Score === '') updateField("team2Score", '0');
+                }} className={inputCls} />
               </label>
 
               {/* Score row – Team 2 */}
@@ -884,11 +891,14 @@ export const PredictionsDashboard = () => {
                       {selectedMatch.team2_flag_url && (
                         <Image width={32} height={32} className="min-h-[30px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team2_flag_url} alt={selectedMatch.team2_name} />
                       )}
-                      <span>{selectedMatch.team2_name}</span>
+                      <span>{selectedMatch.team2_name} {selectedMatch.team2_fifa_rank ? `(Rank: ${selectedMatch.team2_fifa_rank})` : ""}</span>
                     </>
                   ) : "Team 2 Score"}
                 </span>
-                <input min="0" max="100" name="team2_score" type="number" value={formState.team2Score || 0} onChange={(e) => updateField("team2Score", e.target.value)} className={inputCls} />
+                <input min="0" max="100" name="team2_score" type="number" value={formState.team2Score} onChange={(e) => {
+                  updateField("team2Score", e.target.value);
+                  if (e.target.value && formState.team1Score === '') updateField("team1Score", '0');
+                }} className={inputCls} />
               </label>
 
               {/* First Goal in */}
@@ -1163,12 +1173,12 @@ export const PredictionsDashboard = () => {
               </div>
               <dl className="grid grid-cols-2 gap-px bg-zinc-200 dark:bg-zinc-700">
                 {([
-                  [`${selectedMatch.team1_name} Score`, pendingPredictionFields.team1_score],
-                  [`${selectedMatch.team2_name} Score`, pendingPredictionFields.team2_score],
-                  ["First Goal In", pendingPredictionFields.first_goal_in ? firstGoalInLabels[pendingPredictionFields.first_goal_in] : "Not Predicted"],
+                  [`${selectedMatch.team1_name} Score`, pendingPredictionFields.team1_score !== null && pendingPredictionFields.team1_score >= 0 ? pendingPredictionFields.team1_score : "Not Predicted"],
+                  [`${selectedMatch.team2_name} Score`, pendingPredictionFields.team2_score !== null && pendingPredictionFields.team2_score >= 0 ? pendingPredictionFields.team2_score : "Not Predicted"],
+                  ["First Goal In", pendingPredictionFields.first_goal_in ? firstGoalInLabels[pendingPredictionFields.first_goal_in] : ((pendingPredictionFields.team1_score && pendingPredictionFields.team1_score > 0) || (pendingPredictionFields.team2_score && pendingPredictionFields.team2_score > 0)) ? "Not Predicted" : "N/A"],
                   ["First Score By", pendingPredictionFields.first_scoring_team_id
                     ? getTeamNameById(selectedMatch, pendingPredictionFields.first_scoring_team_id)
-                    : "Not Predicted"],
+                    : ((pendingPredictionFields.team1_score && pendingPredictionFields.team1_score > 0) || (pendingPredictionFields.team2_score && pendingPredictionFields.team2_score > 0)) ? "Not Predicted" : "N/A"],
                   ["Total Yellow Cards", pendingPredictionFields.yellow_card_count !== null ? String(pendingPredictionFields.yellow_card_count) : "Not Predicted"],
                   ["Total Red Cards", pendingPredictionFields.red_card_count !== null ? String(pendingPredictionFields.red_card_count) : "Not Predicted"],
                   ["Kick-off Team", pendingPredictionFields.kick_off_team_id ? getTeamNameById(selectedMatch, pendingPredictionFields.kick_off_team_id) : "Not Predicted"],

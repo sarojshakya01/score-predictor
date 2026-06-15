@@ -52,6 +52,7 @@ class MatchUserPointsDetailsResponse(BaseModel):
     user_name: str
     predicted_team1_score: int | None
     predicted_team2_score: int | None
+    extra_points: int
     score_points: int
     goal_difference_points: int
     predicted_yellow_card_count: int | None

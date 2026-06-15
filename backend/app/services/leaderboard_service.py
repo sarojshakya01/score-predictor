@@ -1,4 +1,5 @@
 """Leaderboard scoring business logic."""
+from app.models.match import MatchStage
 from app.models.match import FirstGoalIn
 from app.schemas.leaderboard import LeaderboardFrame, AccumulatedPoints
 from app.api.deps import CurrentUser
@@ -191,6 +192,9 @@ class UserLeaderboardTotals:
     user_id: int
     name: str
     predicted_matches: int = 0
+    winner_points: int = 0
+    runner_up_points: int = 0
+    third_place_points: int = 0
     score_points: int = 0
     goal_difference_points: int = 0
     yellow_card_points: int = 0
@@ -279,12 +283,14 @@ class LeaderboardService:
             users = await self._user_repository.list_active_normal_users()
             completed_matches = await self._match_repository.list_completed_matches()
             predictions, prediction_counts = await self._get_prediction_data()
+            final_matches = await self._match_repository.list_finals(include_locked=True)
 
             totals = self._initialize_user_totals(
                 users=users,
                 prediction_counts=prediction_counts,
             )
-            self._apply_prediction_scores(totals=totals, predictions=predictions, rules=rules)
+
+            self._apply_prediction_scores(totals=totals, predictions=predictions, final_matches=final_matches, users=users, rules=rules)
             race_frames = self._build_race_frames(
                 users=users,
                 completed_matches=completed_matches,
@@ -456,6 +462,15 @@ class LeaderboardService:
                         match,
                     )
 
+                extra_points = 0
+
+                if match.match_stage == MatchStage.FINAL and (match.team1_id == user.winner_team_id or match.team2_id == user.winner_team_id):
+                    extra_points = rules.winner
+                elif match.match_stage == MatchStage.FINAL and (match.team1_id == user.runner_up_team_id or match.team2_id == user.runner_up_team_id):
+                    extra_points = rules.runner_up
+                elif match.match_stage == MatchStage.THIRD_PLACE and (match.team1_id == user.third_place_team_id or match.team2_id == user.third_place_team_id):
+                    extra_points = rules.third_place
+
                 score = self._score_prediction(prediction, rules)
                 items.append(
                     MatchUserPointsDetailsResponse(
@@ -463,6 +478,7 @@ class LeaderboardService:
                         user_name=self._format_user_name(user),
                         predicted_team1_score=prediction.team1_score,
                         predicted_team2_score=prediction.team2_score,
+                        extra_points=extra_points,
                         score_points=score.score_points,
                         goal_difference_points=score.goal_difference_points,
                         predicted_yellow_card_count=prediction.yellow_card_count,
@@ -477,7 +493,7 @@ class LeaderboardService:
                         first_goal_in_points=score.first_goal_in_points,
                         predicted_match_duration=prediction.match_duration.value if prediction.match_duration else None,
                         match_duration_points=score.match_duration_points,
-                        total_points=score.total_points,
+                        total_points=score.total_points + extra_points,
                     )
                 )
 
@@ -566,6 +582,8 @@ class LeaderboardService:
         *,
         totals: dict[int, UserLeaderboardTotals],
         predictions: list[Prediction],
+        final_matches: list[Match],
+        users: list[User],
         rules: ScoringRules,
     ) -> None:
         """Apply scored prediction totals to users."""
@@ -585,6 +603,15 @@ class LeaderboardService:
             user_totals.first_goal_in_points += score.first_goal_in_points
             user_totals.match_duration_points += score.match_duration_points
             user_totals.total_points += score.total_points
+        
+        for user in users:
+            user_totals = totals.get(user.id)
+            winner_points, runner_up_points, third_place_points = LeaderboardService._calculate_finalist_points(final_matches, user, rules)
+
+            user_totals.winner_points = winner_points
+            user_totals.runner_up_points = runner_up_points
+            user_totals.third_place_points = third_place_points
+            user_totals.total_points += winner_points + runner_up_points + third_place_points
 
     @staticmethod
     def _build_race_frames(
@@ -740,6 +767,7 @@ class LeaderboardService:
         first_scoring_team_points = (
             rules.first_score_by
             if has_predicted_goals and prediction.first_scoring_team_id == match.first_scoring_team_id
+            else min(rules.first_score_by.first_half, rules.first_score_by.second_half, rules.first_score_by.extra_time) if match.team1_score == 0 and match.team2_score == 0
             else 0
         )
 
@@ -794,6 +822,7 @@ class LeaderboardService:
         if (
             match.first_goal_in is None
             or prediction.first_goal_in != match.first_goal_in
+            or (prediction.team1_score is not None and prediction.team2_score is not None)
         ):
             return 0
 
@@ -803,6 +832,8 @@ class LeaderboardService:
             return rules.second_half
         if match.first_goal_in == FirstGoalIn.EXTRA_TIME:
             return rules.extra_time
+        if prediction.team1_score == 0 and match.team2_score == 0:
+            return min(rules.first_half, rules.second_half, rules.extra_time)
         return 0
 
     @staticmethod
@@ -937,17 +968,25 @@ class LeaderboardService:
         """Sort users by score and high-signal tie breakers."""
         return (
             -totals.total_points,
+            -totals.winner_points,
+            -totals.runner_up_points,
+            -totals.third_place_points,
             -totals.score_points,
             -totals.goal_difference_points,
+            -totals.first_goal_in_points,
+            -totals.first_scoring_team_points,
             -totals.yellow_card_points,
+            -totals.red_card_points,
+            -totals.kick_off_team_points,
+            -totals.match_duration_points,
             totals.name,
         )
 
     @staticmethod
     def _calculate_finalist_points(final_matches: list[Match], user: User, rules: ScoringRules) -> tuple[int, int, int]:
         """Get points from finalist predictions."""
-        third_place_match = next((m for m in final_matches if m.match_stage == '3P'), None)
-        final_match = next((m for m in final_matches if m.match_stage == 'F'), None)
+        third_place_match = next((m for m in final_matches if m.match_stage == MatchStage.THIRD_PLACE), None)
+        final_match = next((m for m in final_matches if m.match_stage == MatchStage.FINAL), None)
 
         runner_up_team = (
             final_match.team2_id

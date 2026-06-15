@@ -47,8 +47,8 @@ class MatchStage(str, enum.Enum):
 
 MACTH_SOURCE_BASE_URL = "https://fifa.com"
 TOURNAMENT_SEASON_ID = 285023
-MATCH_DETAIL_ENDPOINT = f"https://api.fifa.com/api/v3/calendar/matches?language=en&count=500&idSeason={TOURNAMENT_SEASON_ID}"
-MATCH_HIGHTLIGHT_ENDPOINT = f"https://cxm-api.fifa.com/fifaplusweb/api/sections/matchdetails/videos?locale=en&competitionId=17&seasonId={TOURNAMENT_SEASON_ID}"
+MATCH_DETAILS_ENDPOINT = f"https://api.fifa.com/api/v3/calendar/matches?language=en&count=500&idSeason={TOURNAMENT_SEASON_ID}"
+MATCH_HIGHTLIGHTS_ENDPOINT = f"https://cxm-api.fifa.com/fifaplusweb/api/sections/matchdetails/videos?locale=en&competitionId=17&seasonId={TOURNAMENT_SEASON_ID}"
 
 def match_duration_values(enum_type: type[MatchDuration]) -> list[str]:
     """Persist the public enum values instead of Python enum member names."""

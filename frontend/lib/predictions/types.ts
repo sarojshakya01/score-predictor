@@ -7,8 +7,8 @@ export type PredictionFields = {
   kick_off_team_id: number | null;
   match_duration: MatchDuration | null;
   red_card_count: number | null;
-  team1_score: number;
-  team2_score: number;
+  team1_score: number | null;
+  team2_score: number | null;
   yellow_card_count: number | null;
   winner_team_id: number | null;
 };

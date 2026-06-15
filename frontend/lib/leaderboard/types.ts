@@ -124,6 +124,7 @@ export type MatchUserPointsDetailsResponse = {
   first_goal_in_points: number;
   predicted_match_duration: string | null;
   match_duration_points: number;
+  extra_points: number;
   total_points: number;
 };
 

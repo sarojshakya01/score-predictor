@@ -1,19 +1,20 @@
 """Match business logic."""
+from fastapi import HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from pathlib import Path
+import json
 
 from app.models.match import MACTH_SOURCE_BASE_URL
-from app.models.match import MATCH_HIGHTLIGHT_ENDPOINT
+from app.models.match import MATCH_HIGHTLIGHTS_ENDPOINT
 from app.workers.scheduler import SEASON_NAME
 from app.workers.scheduler import COMPETITIONS_NAME
 from app.workers.scheduler import HEADERS
 import httpx
-from app.models.match import MATCH_DETAIL_ENDPOINT
+from app.models.match import MATCH_DETAILS_ENDPOINT
 import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
-
-from fastapi import HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.openai_service import OpenAIService
 from app.models.match import Match
@@ -34,6 +35,10 @@ from app.services.team_service import TeamService
 logger = logging.getLogger(__name__)
 
 class MatchService:
+    MATCH_HIGHLIGHTS_CACHE_FILE = Path("cache/match_highlights.json")
+    MATCH_HIGHLIGHTS_CACHE_FILE.parent.mkdir(exist_ok=True)
+    MATCH_DETAIL_CACHE_FILE = Path("cache/match_details.json")
+    MATCH_DETAIL_CACHE_FILE.parent.mkdir(exist_ok=True)
     """Handles match validation and orchestration."""
 
     def __init__(self, db: AsyncSession) -> None:
@@ -74,7 +79,7 @@ class MatchService:
                 match_stage=match_stage,
                 match_locked=match_locked,
             )
-            return self._build_list_response(
+            return await self._build_list_response(
                 matches=matches,
                 total=total,
                 limit=limit,
@@ -108,7 +113,7 @@ class MatchService:
                 include_locked=include_locked,
             )
             total = len(matches)
-            return self._build_list_response(
+            return await self._build_list_response(
                 matches=matches,
                 total=total,
                 limit=limit,
@@ -136,7 +141,7 @@ class MatchService:
             )
             total = len(matches)
 
-            return self._build_list_response(
+            return await self._build_list_response(
                 matches=matches,
                 total=total,
                 limit=total,
@@ -166,53 +171,12 @@ class MatchService:
                 latest_first=True,
             )
 
-            async with httpx.AsyncClient(timeout=15) as client:
-                try:
-                    match_detail_resp = await client.get(MATCH_DETAIL_ENDPOINT, headers=HEADERS)
-                    match_detail_resp.raise_for_status()
-                except Exception:
-                    logger.warning("Failed to fetch hightlight data")
-
-            match_highlight_json = {}
-            if match_detail_resp.status_code == status.HTTP_200_OK:
-                match_highlight_json = match_detail_resp.json()
-
-            # schema based on response of MATCH_DETAIL_ENDPOINT
-            match_detail_list = [result for result in match_highlight_json["Results"] if result.get("CompetitionName", [{}])[0].get("Description") == COMPETITIONS_NAME and result.get("SeasonName", [{}])[0].get("Description") == SEASON_NAME]
-
             for match in matches:
-                id_match, id_stage = None, None
-                for match_detail in match_detail_list:
-                    home_country_code = match_detail.get('Home', {}).get('IdCountry', None).upper()
-                    away_country_code = match_detail.get('Away', {}).get('IdCountry', None).upper()
-                    if (home_country_code == match.team1.fifa_code.upper() and away_country_code == match.team2.fifa_code.upper()) or (
-                        home_country_code == match.team2.fifa_code.upper() and away_country_code == match.team1.fifa_code.upper()
-                    ):
-                        id_match = match_detail.get("IdMatch")
-                        id_stage = match_detail.get("IdStage")
-                        break
-
-                match_highlight_detail_url = MATCH_HIGHTLIGHT_ENDPOINT + f"&stageId={id_stage}&matchId={id_match}" if id_match and id_stage else ""
-
-                async with httpx.AsyncClient(timeout=15) as client:
-                    try:
-                        match_highlight_resp = await client.get(match_highlight_detail_url, headers=HEADERS)
-                        match_highlight_resp.raise_for_status()
-                    except Exception:
-                        logger.warning("Failed to fetch hightlight data")
-
-                if match_highlight_resp.status_code == status.HTTP_200_OK:
-                    match_highlight_json = match_highlight_resp.json()
-
-                if match_highlight_json:
-                    match_highlight_items = match_highlight_json.get("vodVideosBaseCarousel", {}).get("items", [{}])
-                    if len(match_highlight_items):
-                        match_highlight_path = match_highlight_items[0].get("readMorePageUrl", None)
-                        match.highlights_url = (MACTH_SOURCE_BASE_URL + match_highlight_path) if match_highlight_path else None
+                match.highlights_url = await MatchService._get_match_highlights(match)
 
             total = await self._match_repository.count_completed_matches()
 
-            return self._build_list_response(
+            return await self._build_list_response(
                 matches=matches,
                 total=total,
                 limit=limit,
@@ -232,7 +196,7 @@ class MatchService:
         """Return a single match by id."""
         try:
             match = await self._get_match_or_404(match_id)
-            return MatchResponse.model_validate(self._build_response_payload(match))
+            return MatchResponse.model_validate(await self._build_response_payload(match))
         except HTTPException:
             # Re-raise FastAPI HTTP exceptions
             raise
@@ -328,7 +292,7 @@ class MatchService:
             match = Match(**values)
             created_match = await self._match_repository.create(match)
             return MatchResponse.model_validate(
-                self._build_response_payload(created_match),
+                await self._build_response_payload(created_match),
             )
         except HTTPException:
             # Re-raise FastAPI HTTP exceptions
@@ -353,7 +317,7 @@ class MatchService:
             values = data.model_dump(exclude_unset=True)
 
             if not values:
-                return MatchResponse.model_validate(self._build_response_payload(match))
+                return MatchResponse.model_validate(await self._build_response_payload(match))
 
             team1_id = values.get("team1_id", match.team1_id)
             team2_id = values.get("team2_id", match.team2_id)
@@ -402,7 +366,7 @@ class MatchService:
                     from app.services.email_service import send_match_unlocked_email  # noqa: PLC0415
                     active_users = await self._user_repository.list_active_users()
                     recipient_emails = [u.email for u in active_users]
-                    payload = self._build_response_payload(updated_match)
+                    payload = await self._build_response_payload(updated_match)
                     asyncio.create_task(send_match_unlocked_email(
                         recipients=recipient_emails,
                         team1_name=payload["team1_name"],
@@ -414,7 +378,7 @@ class MatchService:
                     )
 
             return MatchResponse.model_validate(
-                self._build_response_payload(updated_match),
+                await self._build_response_payload(updated_match),
             )
         except HTTPException:
             # Re-raise FastAPI HTTP exceptions
@@ -450,6 +414,48 @@ class MatchService:
                 detail="Match not found",
             )
         return match
+
+    @staticmethod
+    def load_match_highlights_cache() -> list[dict]:
+        if not MatchService.MATCH_HIGHLIGHTS_CACHE_FILE.exists():
+            return []
+
+        try:
+            with open(MatchService.MATCH_HIGHLIGHTS_CACHE_FILE, "r", encoding="utf-8") as f:
+                content = f.read().strip()
+                if not content:
+                    return []
+                return json.loads(content)
+        except Exception as e:
+            logger.warning("Error loading match highlights cache: %s", e)
+            return []
+
+    @staticmethod
+    def save_match_highlights_cache(
+        cache_key: str,
+        cache_value: str,
+    ) -> None:
+        existing_highlights = MatchService.load_match_highlights_cache()
+
+        if any(cache_key in item for item in existing_highlights):
+            return
+
+        existing_highlights.append({cache_key: cache_value})
+
+        with open(MatchService.MATCH_HIGHLIGHTS_CACHE_FILE, "w", encoding="utf-8") as f:
+            json.dump(existing_highlights, f, ensure_ascii=False, indent=2)
+
+    @staticmethod
+    def load_match_details_cache() -> dict:
+        if MatchService.MATCH_DETAIL_CACHE_FILE.exists():
+            with open(MatchService.MATCH_DETAIL_CACHE_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        return []
+
+    @staticmethod
+    def save_match_details_cache(cache: dict) -> None:
+        with open(MatchService.MATCH_DETAIL_CACHE_FILE, "w", encoding="utf-8") as f:
+            json.dump(cache, f)
 
     @staticmethod
     def _clean_team_name(team_name: str) -> str:
@@ -563,7 +569,92 @@ class MatchService:
         return team1_score == 0 and team2_score == 0
 
     @staticmethod
-    def _build_list_response(
+    async def get_match_details(match_id: int) -> list:
+
+        match_details_cache = MatchService.load_match_details_cache()
+
+        match_id_exists = next((item for item in match_details_cache if item.get("prediction_match_id") == match_id), None)
+
+        if match_id_exists:
+            return match_details_cache
+
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.get(MATCH_DETAILS_ENDPOINT, headers=HEADERS)
+            resp.raise_for_status()
+
+        data = resp.json()
+
+        results = [
+            {
+                **result,
+                "prediction_match_id": match_id
+            }
+            for result in data.get("Results", [])
+            if result.get("CompetitionName", [{}])[0].get("Description") == COMPETITIONS_NAME
+            and result.get("SeasonName", [{}])[0].get("Description") == SEASON_NAME
+        ]
+
+        MatchService.save_match_details_cache(results)
+
+        return results
+
+    @staticmethod
+    async def _get_match_highlights(
+        match: Match
+    ) -> str | None:
+
+        cache_key = f"{match.id}"
+        match_highlights_list_cache = MatchService.load_match_highlights_cache()
+        
+        match_highlight_cache = None
+        for item in match_highlights_list_cache:
+            if cache_key in item:
+                match_highlight_cache = item
+                break
+
+        if match_highlight_cache:
+            return match_highlight_cache[cache_key]
+
+        match_details_list = await MatchService.get_match_details(match.id)
+        # schema based on response of MATCH_DETAILS_ENDPOINT
+        for match_detail in match_details_list:
+            home_country_code = ((match_detail.get('Home') or {}).get('IdCountry', '') or '').upper()
+            away_country_code = ((match_detail.get('Away') or {}).get('IdCountry', '') or '').upper()
+            if (home_country_code == match.team1.fifa_code.upper() and away_country_code == match.team2.fifa_code.upper()) or (
+                home_country_code == match.team2.fifa_code.upper() and away_country_code == match.team1.fifa_code.upper()
+            ):
+                id_stage = match_detail.get("IdStage")
+                id_match = match_detail.get("IdMatch")
+                break
+
+        url = (
+            MATCH_HIGHTLIGHTS_ENDPOINT
+            + f"&stageId={id_stage}&matchId={id_match}"
+        )
+
+        async with httpx.AsyncClient(timeout=15) as client:
+            highlights_resp = await client.get(url, headers=HEADERS)
+            highlights_resp.raise_for_status()
+
+        data = highlights_resp.json()
+
+        items = (
+            (data.get("vodVideosBaseCarousel", {}) or {}).get("items", [])
+        )
+
+        highlight_url = ''
+
+        if items:
+            path = items[0].get("readMorePageUrl")
+            if path:
+                highlight_url = MACTH_SOURCE_BASE_URL + path
+
+        MatchService.save_match_highlights_cache(cache_key, highlight_url)
+
+        return highlight_url
+
+    @staticmethod
+    async def _build_list_response(
         *,
         matches: list[Match],
         total: int,
@@ -574,7 +665,7 @@ class MatchService:
         return MatchListResponse(
             items=[
                 MatchResponse.model_validate(
-                    MatchService._build_response_payload(match),
+                    await MatchService._build_response_payload(match),
                 )
                 for match in matches
             ],
@@ -584,16 +675,24 @@ class MatchService:
         )
 
     @staticmethod
-    def _build_response_payload(match: Match) -> dict[str, object]:
+    async def _build_response_payload(match: Match) -> dict[str, object]:
         """Build a match response payload with team display fields."""
+
+        highlights_url = None
+        if (match.winner_id is None or match.match_locked) and match.team1_score is not None and match.team2_score is not None:
+            highlights_url = await MatchService._get_match_highlights(match)
+
         return {
             **match.__dict__,
             "team1_name": match.team1.name.replace("-H", "").replace("-A", ""),
             "team1_name_short": match.team1.fifa_code if match.team1.fifa_code != "NEP" else match.team1.name.replace("-H", "").replace("-A", ""),
             "team1_group": match.team1.group,
             "team1_flag_url": TeamService.team_flag_url(match.team1),
+            "team1_fifa_rank": match.team1.fifa_rank,
             "team2_name": match.team2.name.replace("-H", "").replace("-A", ""),
             "team2_name_short": match.team2.fifa_code if match.team2.fifa_code != "NEP" else match.team2.name.replace("-H", "").replace("-A", ""),
             "team2_group": match.team2.group,
             "team2_flag_url": TeamService.team_flag_url(match.team2),
+            "team2_fifa_rank": match.team2.fifa_rank,
+            "highlights_url": highlights_url if highlights_url else "",
         }

@@ -7,7 +7,7 @@ import { Tooltip } from "@/components/ui/tooltip";
 import type { MatchResponse } from "@/lib/matches";
 
 const getHighlightsUrl = (match: MatchResponse): string | null => {
-  return match.highlights_url ?? match.hightlights_url ?? null;
+  return match.highlights_url ?? null;
 };
 
 const TeamScoreRow = ({
@@ -78,7 +78,7 @@ export const MatchResultsList = ({ matches }: { matches: MatchResponse[] }) => {
       "bg-white dark:bg-zinc-900"
     ].join(" ")}>
       <div className="flex gap-3 overflow-x-auto p-4">
-        {matches.map((match) => {
+        {matches.filter((match) => match.winner_id).map((match) => {
           const team1Won = match.winner_id === match.team1_id;
           const team2Won = match.winner_id === match.team2_id;
           const highlightsUrl = getHighlightsUrl(match);

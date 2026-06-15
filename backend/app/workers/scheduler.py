@@ -21,7 +21,7 @@ Register it in app/main.py:
     app = FastAPI(..., lifespan=lifespan)
 """
 from fastapi import status
-from app.models.match import MATCH_DETAIL_ENDPOINT
+from app.models.match import MATCH_DETAILS_ENDPOINT
 from app.models.match import MatchStage
 from app.models.match import MatchDuration
 from app.models.team import Team
@@ -252,7 +252,7 @@ async def extract_live_match_data_fifa() -> None:
     """
     logger.info("[JOB1] extract_live_match_data – starting")
 
-    window_start = _now_utc() - timedelta(minutes=140)
+    window_start = _now_utc() - timedelta(minutes=160) # 160 minutes is tentative possible max match time
     window_end = _now_utc()
 
     async with async_session_factory() as db:
@@ -261,6 +261,7 @@ async def extract_live_match_data_fifa() -> None:
             select(Match)
             .options(selectinload(Match.team1), selectinload(Match.team2))
             .where(Match.match_locked.is_(True))
+            .where(Match.winner_id.is_not(None))
             .where(Match.match_datetime <= window_end)
             .where(Match.match_datetime >= window_start)
             .order_by(Match.match_datetime.asc(), Match.id.asc()),
@@ -275,22 +276,22 @@ async def extract_live_match_data_fifa() -> None:
 
         async with httpx.AsyncClient(timeout=15) as client:
             try:
-                match_detail_resp = await client.get(MATCH_DETAIL_ENDPOINT, headers=HEADERS)
-                match_detail_resp.raise_for_status()
+                match_details_resp = await client.get(MATCH_DETAILS_ENDPOINT, headers=HEADERS)
+                match_details_resp.raise_for_status()
             except Exception:
-                logger.warning("Failed to fetch hightlight data")
+                logger.warning("Failed to fetch details data")
 
-            match_highlight_json = {}
-            if match_detail_resp.status_code == status.HTTP_200_OK:
-                match_highlight_json = match_detail_resp.json()
+            match_details_json = {}
+            if match_details_resp.status_code == status.HTTP_200_OK:
+                match_details_json = match_details_resp.json()
 
-            # schema based on response of MATCH_DETAIL_ENDPOINT
-            match_detail_list = [result for result in match_highlight_json["Results"] if result.get("CompetitionName", [{}])[0].get("Description") == COMPETITIONS_NAME and result.get("SeasonName", [{}])[0].get("Description") == SEASON_NAME]
+            # schema based on response of MATCH_DETAILS_ENDPOINT
+            match_details_list = [result for result in match_details_json["Results"] if result.get("CompetitionName", [{}])[0].get("Description") == COMPETITIONS_NAME and result.get("SeasonName", [{}])[0].get("Description") == SEASON_NAME]
 
 
             id_match = None
             for match in active_matches:
-                for match_detail in match_detail_list:
+                for match_detail in match_details_list:
                     home_country_code = match_detail.get('Home', {}).get('IdCountry', None).upper()
                     away_country_code = match_detail.get('Away', {}).get('IdCountry', None).upper()
                     if (home_country_code == match.team1.fifa_code.upper() and away_country_code == match.team2.fifa_code.upper()) or (
@@ -382,7 +383,7 @@ async def extract_live_match_data_fifa() -> None:
                                 "yellow_card_count": yellow_card_count,
                                 "red_card_count": red_card_count,
                                 "match_duration": match_duration,
-                                "match_status": "LIVE" if result.get('MatchStatus') > 0 else "COMPLETED" if result.get('MatchStatus') == 0 else "SCHEDULED"
+                                "match_status": "COMPLETED" if result.get('OfficialityStatus') == 1 else "LIVE" if result.get('OfficialityStatus') == 0 else "SCHEDULED"
                             }
                         )
 
@@ -390,10 +391,10 @@ async def extract_live_match_data_fifa() -> None:
                         logger.info("[JOB1] Livescore API returned no LIVE/FINISHED matches")
                         return
 
-                    if len(live_entries) >= 2:
-                        live_only = [e for e in live_entries if e["match_status"] == "LIVE"]
-                        if live_only:
-                            live_entries = live_only
+                    # if len(live_entries) >= 2:
+                    #     live_only = [e for e in live_entries if e["match_status"] == "LIVE"]
+                    #     if live_only:
+                    #         live_entries = live_only
 
                     # ── Match live entries to DB rows by position ─────────────────
                     paired = list(zip(active_matches, live_entries))
@@ -407,7 +408,7 @@ async def extract_live_match_data_fifa() -> None:
                         first_scoring_team_id = live.get("first_scoring_team_id", None)
                         kick_off_team_id = live.get("kick_off_team_id", db_match.kick_off_team_id)
                         match_duration = live.get("match_duration", db_match.match_duration)
-                        winner_id = db_match.team1_id if team1_score > team2_score else db_match.team2_id if team2_score > team1_score else None
+                        winner_id = db_match.team1_id if live.get("match_status") == "COMPLETED" and team1_score > team2_score else db_match.team2_id if live.get("match_status") == "COMPLETED" and team2_score > team1_score else None
 
                         if db_match.match_datetime.tzinfo is None:
                             match_datetime = db_match.match_datetime.replace(tzinfo=timezone.utc)

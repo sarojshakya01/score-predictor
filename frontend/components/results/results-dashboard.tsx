@@ -174,7 +174,7 @@ const formatWinner = (match: MatchResponse): string => {
 };
 
 const getHighlightsUrl = (match: MatchResponse): string | null => {
-  return match.highlights_url ?? match.hightlights_url ?? null;
+  return match.highlights_url ?? null;
 };
 
 const formatSignedNumber = (value: number): string => {
@@ -274,7 +274,7 @@ const MatchPointsModal = ({
 
       {!isLoading && details && !error ? (
         <>
-          {/* no importance, hidden for now */}
+          {/* not important, hidden for now */}
           <div className="hidden mb-4 grid gap-3 grid-cols-2 md:grid-cols-3">
             <div className="flex items-center gap-2 justify-between rounded-md border border-zinc-200 bg-zinc-50 px-4 dark:border-zinc-700 dark:bg-zinc-800/50">
               <p className="text-[11px] font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
@@ -334,7 +334,7 @@ const MatchPointsModal = ({
                   <th
                     rowSpan={2}
                     className={[
-                      "static sm:sticky left-[150px] top-0 z-40 w-[80px] min-w-[80px] max-w-[80px]",
+                      "static sm:sticky left-[150px] top-0 z-40 w-[100px] min-w-[100px] max-w-[100px]",
                       "bg-zinc-100 dark:bg-zinc-900",
                       "border-b border-zinc-200 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider text-zinc-400 dark:border-zinc-700 dark:text-zinc-500",
                     ].join(" ")}
@@ -400,18 +400,18 @@ const MatchPointsModal = ({
                     </td>
                     <td
                       className={[
-                        "static sm:sticky left-[150px] z-20 w-[80px] min-w-[80px] max-w-[80px]",
+                        "static sm:sticky left-[150px] z-20 w-[100px] min-w-[100px] max-w-[100px]",
                         "border-b border-zinc-200 px-3 py-3 text-center dark:border-zinc-800",
                         row.user_id === user?.id ? "bg-zinc-200 dark:bg-emerald-900/50 font-bold" : "bg-white dark:bg-zinc-950",
                       ].join(" ")}
                     >
                       <span
                         className={[
-                          "inline-flex h-8 min-w-11 items-center justify-center rounded-md px-2 text-sm font-bold",
+                          "inline-flex min-h-8 min-w-11 items-center justify-center rounded-md px-2 text-sm font-bold",
                           totalColor(row.total_points),
                         ].join(" ")}
                       >
-                        {formatSignedNumber(row.total_points)}
+                        {formatSignedNumber(row.total_points - row.extra_points)} {row.extra_points > 0 ? "(" + formatSignedNumber(row.extra_points) + ")" : ""}
                       </span>
                     </td>
                     {pointGroups.map((group) => (
