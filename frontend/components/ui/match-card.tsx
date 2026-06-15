@@ -78,7 +78,8 @@ export const isMatchPlayedOrLive = (match: MatchResponse): { isMatchPlayed: bool
   const now = new Date();
   const kickoff = new Date(`${match.match_datetime}Z`);
   const isMatchPlayed = match.match_locked && match.team1_score !== null && match.team2_score !== null;
-  const isMatchCompleted = isMatchPlayed && match.winner_id;
+  const matchMinutes = match.match_stage === matchStageLabels.GROUP ? (45 + 15 + 45 + 10) : (45 + 15 + 45 + 10 + 35 + 15); // tentative total minutes for group stage and knockout matches
+  const isMatchCompleted = (match.team1_score != match.team2_score && match.winner_id) || (isMatchPlayed && now.getTime() > kickoff.getTime() + matchMinutes * 60 * 1000);
   const isMatchLive = now.getTime() > kickoff.getTime() && !isMatchCompleted;
 
   return { isMatchPlayed, isMatchLive };

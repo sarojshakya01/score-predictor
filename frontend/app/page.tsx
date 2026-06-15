@@ -51,8 +51,8 @@ const loadHomePageData = async (): Promise<HomePageData> => {
   const [summaryResult, matchesResult, resultsResult] =
     await Promise.allSettled([
       getHomeSummary(),
-      listUpcomingMatches({ includeLocked: false, limit: 10 }),
-      listMatchResults({ limit: 10 }),
+      listUpcomingMatches({ includeLocked: false, limit: 20 }),
+      listMatchResults({ limit: 20 }),
     ]);
   const errors: string[] = [];
   let summary: HomeSummaryResponse | null = null;

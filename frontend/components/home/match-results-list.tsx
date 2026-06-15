@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { IconHighlight } from "@/components/ui/icons";
-import { formatDateTime } from "@/components/ui/match-card";
+import { formatDateTime, isMatchPlayedOrLive } from "@/components/ui/match-card";
 import { Tooltip } from "@/components/ui/tooltip";
 import type { MatchResponse } from "@/lib/matches";
 
@@ -78,10 +78,13 @@ export const MatchResultsList = ({ matches }: { matches: MatchResponse[] }) => {
       "bg-white dark:bg-zinc-900"
     ].join(" ")}>
       <div className="flex gap-3 overflow-x-auto p-4">
-        {matches.filter((match) => match.winner_id).map((match) => {
+        {matches.map((match) => {
           const team1Won = match.winner_id === match.team1_id;
           const team2Won = match.winner_id === match.team2_id;
           const highlightsUrl = getHighlightsUrl(match);
+          const { isMatchLive } = isMatchPlayedOrLive(match);
+
+          if (isMatchLive) return <></>;
 
           return (
             <div
