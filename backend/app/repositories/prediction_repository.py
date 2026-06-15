@@ -143,7 +143,7 @@ class PredictionRepository:
                 prediction = self.to_dummy_prediction_for_match(user_id, locked_match)
                 final_result.append(prediction)
 
-        final_result.sort(key=lambda x: x.match_id)
+        final_result.sort(key=lambda x: x.match_id, reverse=True)
 
         return final_result
 
