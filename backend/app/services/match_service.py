@@ -3,18 +3,19 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from pathlib import Path
 import json
-
-from app.models.match import MACTH_SOURCE_BASE_URL
-from app.models.match import MATCH_HIGHTLIGHTS_ENDPOINT
-from app.workers.scheduler import SEASON_NAME
-from app.workers.scheduler import COMPETITIONS_NAME
-from app.workers.scheduler import HEADERS
 import httpx
 from app.models.match import MATCH_DETAILS_ENDPOINT
 import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Any
+
+from app.models.match import MACTH_SOURCE_BASE_URL
+from app.models.match import MATCH_HIGHTLIGHTS_ENDPOINT
+from app.workers.scheduler import SEASON_NAME
+from app.workers.scheduler import COMPETITIONS_NAME
+from app.workers.scheduler import HEADERS
+from app.core.config import settings
 
 from app.services.openai_service import OpenAIService
 from app.models.match import Match
@@ -35,7 +36,7 @@ from app.services.team_service import TeamService
 logger = logging.getLogger(__name__)
 
 class MatchService:
-    MATCH_HIGHLIGHTS_CACHE_FILE = Path("cache/match_highlights.json")
+    MATCH_HIGHLIGHTS_CACHE_FILE = Path(f"{settings.APP_ROOT_PATH}cache/match_highlights.json")
     MATCH_HIGHLIGHTS_CACHE_FILE.parent.mkdir(exist_ok=True)
     MATCH_DETAIL_CACHE_FILE = Path("cache/match_details.json")
     MATCH_DETAIL_CACHE_FILE.parent.mkdir(exist_ok=True)

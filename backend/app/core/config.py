@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     located in the backend root directory.
     """
 
+    APP_ROOT_PATH: str = ""
+
     # ── App Port ─────────────────────────────────────────────────
     PORT: int = 8025
 
