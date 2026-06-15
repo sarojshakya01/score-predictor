@@ -298,7 +298,7 @@ const MatchPointsModal = ({
           <div className="overflow-auto max-h-[60vh] rounded-md border border-zinc-200 dark:border-zinc-700">
             <table className="min-w-max w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/70">
+                <tr className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800">
                   <th
                     rowSpan={2}
                     className={[
@@ -347,7 +347,7 @@ const MatchPointsModal = ({
                       colSpan={3}
                       className={[
                         "static sm:sticky top-0 z-30",
-                        "border-r border-zinc-200 bg-zinc-50 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider last:border-r-0 dark:border-zinc-700 dark:bg-zinc-800/70",
+                        "border-r border-zinc-200 bg-zinc-50 px-3 py-2 text-center text-xs font-semibold uppercase tracking-wider last:border-r-0 dark:border-zinc-700 dark:bg-zinc-800",
                       ].join(" ")}
                     >
                       {group.label}
