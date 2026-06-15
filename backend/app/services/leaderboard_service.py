@@ -766,7 +766,9 @@ class LeaderboardService:
 
         first_scoring_team_points = (
             rules.first_score_by
-            if (has_predicted_goals and prediction.first_scoring_team_id is not None and prediction.first_scoring_team_id == match.first_scoring_team_id) or (not has_predicted_goals and match.team1_score == 0 and match.team2_score == 0)
+            if (has_predicted_goals and (prediction.first_scoring_team_id is not None and prediction.first_scoring_team_id == match.first_scoring_team_id))
+            or (not has_predicted_goals and match.team1_score == 0 and match.team2_score == 0)
+            or (match.team1_score == 0 and match.team2_score == 0 and prediction.team1_score == 0 and prediction.team2_score == 0 and prediction.first_scoring_team_id is None and match.first_scoring_team_id is None)
             else 0
         )
 
@@ -819,8 +821,8 @@ class LeaderboardService:
     ) -> int:
         """Score first goal in prediction against the actual first goal in."""
         if (
-            match.first_goal_in is None
-            or prediction.first_goal_in != match.first_goal_in
+            match.first_goal_in is not None
+            and prediction.first_goal_in != match.first_goal_in
         ):
             return 0
 
