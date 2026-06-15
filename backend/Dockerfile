@@ -31,8 +31,14 @@ RUN addgroup --system --gid 1001 appgroup \
 # Copy installed packages from builder
 COPY --from=builder /install /usr/local
 
+RUN mkdir -p /app/cache \
+    && chown -R appuser:appgroup /app/cache \
+    && chmod -R 775 /app/cache
+
 # Copy application source
 COPY --chown=appuser:appgroup . .
+
+RUN chmod -R u+rwX,g+rwX /app/cache
 
 USER appuser
 
