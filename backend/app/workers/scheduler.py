@@ -261,7 +261,6 @@ async def extract_live_match_data_fifa() -> None:
             select(Match)
             .options(selectinload(Match.team1), selectinload(Match.team2))
             .where(Match.match_locked.is_(True))
-            .where(Match.winner_id.is_not(None))
             .where(Match.match_datetime <= window_end)
             .where(Match.match_datetime >= window_start)
             .order_by(Match.match_datetime.asc(), Match.id.asc()),
@@ -291,6 +290,9 @@ async def extract_live_match_data_fifa() -> None:
 
             id_match = None
             for match in active_matches:
+                # dont update if winner is already decided
+                if match.winner_id is not None:
+                    continue
                 for match_detail in match_details_list:
                     home_country_code = match_detail.get('Home', {}).get('IdCountry', None).upper()
                     away_country_code = match_detail.get('Away', {}).get('IdCountry', None).upper()
@@ -312,137 +314,141 @@ async def extract_live_match_data_fifa() -> None:
                         logger.exception("[JOB1] Failed to fetch livescore data")
                         continue
 
-                    def minute_key(goal):
-                        minute = goal["Minute"].replace("'", "")
-                        parts = minute.split("+")
-                        base = int(parts[0])
-                        extra = int(parts[1]) if len(parts) > 1 else 0
-                        return (base, extra)
+                def minute_key(goal):
+                    minute = goal["Minute"].replace("'", "")
+                    parts = minute.split("+")
+                    base = int(parts[0])
+                    extra = int(parts[1]) if len(parts) > 1 else 0
+                    return (base, extra)
 
-                    live_entries: list[dict] = []
-                    result = resp.json()
+                live_entries: list[dict] = []
+                result = resp.json()
 
-                    home_country_code = result.get('HomeTeam').get('IdCountry').upper()
-                    away_country_code = result.get('AwayTeam').get('IdCountry').upper()
-                    correct_match = (match.team1.fifa_code.upper() == home_country_code or match.team1.fifa_code.upper() == away_country_code) or (match.team1.fifa_code.upper() == away_country_code and match.team2.fifa_code.upper() == home_country_code)
+                # completed match
+                if result.get('OfficialityStatus') == 1:
+                    continue
+
+                home_country_code = result.get('HomeTeam').get('IdCountry').upper()
+                away_country_code = result.get('AwayTeam').get('IdCountry').upper()
+                correct_match = (match.team1.fifa_code.upper() == home_country_code or match.team1.fifa_code.upper() == away_country_code) or (match.team1.fifa_code.upper() == away_country_code and match.team2.fifa_code.upper() == home_country_code)
 
 
-                    if correct_match:
-                        team1_score = 0
-                        team2_score = 0
-                        first_goal_in = None
-                        first_score_by = None
-                        match_duration = match.match_duration
+                if correct_match:
+                    team1_score = 0
+                    team2_score = 0
+                    first_goal_in = None
+                    first_score_by = None
+                    match_duration = match.match_duration
 
-                        if home_country_code == match.team1.fifa_code:
-                            team1_score = result.get('HomeTeam').get('Score')
-                            team2_score = result.get('AwayTeam').get('Score')
-                        else:
-                            team1_score = result.get('AwayTeam').get('Score')
-                            team2_score = result.get('HomeTeam').get('Score')
+                    if home_country_code == match.team1.fifa_code:
+                        team1_score = result.get('HomeTeam').get('Score')
+                        team2_score = result.get('AwayTeam').get('Score')
+                    else:
+                        team1_score = result.get('AwayTeam').get('Score')
+                        team2_score = result.get('HomeTeam').get('Score')
 
-                        goals = []
-                        goals.extend(result.get('HomeTeam').get('Goals') if result.get('HomeTeam').get('Score') > 0 else [])
-                        goals.extend(result.get('AwayTeam').get('Goals') if result.get('AwayTeam').get('Score') > 0 else [])
+                    goals = []
+                    goals.extend(result.get('HomeTeam').get('Goals') if result.get('HomeTeam').get('Score') > 0 else [])
+                    goals.extend(result.get('AwayTeam').get('Goals') if result.get('AwayTeam').get('Score') > 0 else [])
 
-                        first_goal = min(goals, key=minute_key) if goals else None
+                    first_goal = min(goals, key=minute_key) if goals else None
 
-                        first_goal_min = int(first_goal.get('Minute').split("'")[0]) if first_goal else None
-                        
-                        if first_goal_min is not None:
-                            if first_goal_min <= 45:
-                                first_goal_in = '1H'
-                            elif first_goal_min > 45 and first_goal_min <= 90:
-                                first_goal_in = '2H'
-                            elif first_goal_min > 90 and first_goal_min <= 120:
-                                first_goal_in = 'ET'
+                    first_goal_min = int(first_goal.get('Minute').split("'")[0]) if first_goal else None
+                    
+                    if first_goal_min is not None:
+                        if first_goal_min <= 45:
+                            first_goal_in = '1H'
+                        elif first_goal_min > 45 and first_goal_min <= 90:
+                            first_goal_in = '2H'
+                        elif first_goal_min > 90 and first_goal_min <= 120:
+                            first_goal_in = 'ET'
 
-                        if first_goal is not None:
-                            if first_goal.get('IdTeam') == result.get('HomeTeam').get('IdTeam'):
-                                first_score_by = match.team1_id
-                            elif first_goal.get('IdTeam') == result.get('AwayTeam').get('IdTeam'):
-                                first_score_by = match.team2_id
+                    if first_goal is not None:
+                        if first_goal.get('IdTeam') == result.get('HomeTeam').get('IdTeam'):
+                            first_score_by = match.team1_id
+                        elif first_goal.get('IdTeam') == result.get('AwayTeam').get('IdTeam'):
+                            first_score_by = match.team2_id
 
-                        bookings = []
-                        bookings.extend(result.get('HomeTeam').get('Bookings'))
-                        bookings.extend(result.get('AwayTeam').get('Bookings'))
+                    bookings = []
+                    bookings.extend(result.get('HomeTeam').get('Bookings'))
+                    bookings.extend(result.get('AwayTeam').get('Bookings'))
 
-                        yellow_card_count = len([booking for booking in bookings if booking.get('Card') == 1])
-                        red_card_count = len([booking for booking in bookings if booking.get('Card') == 2])
+                    yellow_card_count = len([booking for booking in bookings if booking.get('Card') == 1])
+                    red_card_count = len([booking for booking in bookings if booking.get('Card') == 2])
 
-                        if match.match_stage != MatchStage.GROUP:
-                            match_time = result.get('MatchTime').split("'")[0]
-                            match_duration = MatchDuration.REGULAR if int(match_time) <= 90 else MatchDuration.EXTRA_TIME if int(match_time) <= 120 else MatchDuration.PENALTY
-                        live_entries.append(
-                            {
-                                "id": match.id,
-                                "team1_score": team1_score,
-                                "team2_score": team2_score,
-                                "first_goal_in": first_goal_in,
-                                "first_scoring_team_id": first_score_by,
-                                "yellow_card_count": yellow_card_count,
-                                "red_card_count": red_card_count,
-                                "match_duration": match_duration,
-                                "match_status": "COMPLETED" if result.get('OfficialityStatus') == 1 else "LIVE" if result.get('OfficialityStatus') == 0 else "SCHEDULED"
-                            }
+                    if match.match_stage != MatchStage.GROUP:
+                        match_time = result.get('MatchTime').split("'")[0]
+                        match_duration = MatchDuration.REGULAR if int(match_time) <= 90 else MatchDuration.EXTRA_TIME if int(match_time) <= 120 else MatchDuration.PENALTY
+                    live_entries.append(
+                        {
+                            "id": match.id,
+                            "team1_score": team1_score,
+                            "team2_score": team2_score,
+                            "first_goal_in": first_goal_in,
+                            "first_scoring_team_id": first_score_by,
+                            "yellow_card_count": yellow_card_count,
+                            "red_card_count": red_card_count,
+                            "match_duration": match_duration,
+                            "match_status": "COMPLETED" if result.get('OfficialityStatus') == 1 else "LIVE" if result.get('OfficialityStatus') == 0 else "SCHEDULED"
+                        }
+                    )
+
+                if len(live_entries) == 0:
+                    logger.info("[JOB1] Livescore API returned no LIVE/FINISHED matches")
+                    return
+
+                # if len(live_entries) >= 2:
+                #     live_only = [e for e in live_entries if e["match_status"] == "LIVE"]
+                #     if live_only:
+                #         live_entries = live_only
+
+                # ── Match live entries to DB rows by position ─────────────────
+                paired = list(zip(active_matches, live_entries))
+
+                for db_match, live in paired:
+                    team1_score: int = live.get("team1_score", 0)
+                    team2_score: int = live.get("team2_score", 0)
+                    yellow_card_count = live.get("yellow_card_count", 0)
+                    red_card_count = live.get("red_card_count", 0)
+                    first_goal_in = live.get("first_goal_in", None)
+                    first_scoring_team_id = live.get("first_scoring_team_id", None)
+                    kick_off_team_id = live.get("kick_off_team_id", db_match.kick_off_team_id)
+                    match_duration = live.get("match_duration", db_match.match_duration)
+                    winner_id = db_match.team1_id if live.get("match_status") == "COMPLETED" and team1_score > team2_score else db_match.team2_id if live.get("match_status") == "COMPLETED" and team2_score > team1_score else None
+
+                    if db_match.match_datetime.tzinfo is None:
+                        match_datetime = db_match.match_datetime.replace(tzinfo=timezone.utc)
+                    else:
+                        match_datetime = db_match.match_datetime.astimezone(timezone.utc)
+
+                    await db.execute(
+                        update(Match)
+                        .where(Match.id == db_match.id)
+                        .values(
+                            team1_score=team1_score,
+                            team2_score=team2_score,
+                            first_goal_in=first_goal_in,
+                            first_scoring_team_id=first_scoring_team_id,
+                            yellow_card_count=yellow_card_count,
+                            red_card_count=red_card_count,
+                            kick_off_team_id=kick_off_team_id,
+                            match_duration=match_duration,
+                            winner_id=winner_id,
+                            match_datetime=match_datetime
                         )
-
-                    if len(live_entries) == 0:
-                        logger.info("[JOB1] Livescore API returned no LIVE/FINISHED matches")
-                        return
-
-                    # if len(live_entries) >= 2:
-                    #     live_only = [e for e in live_entries if e["match_status"] == "LIVE"]
-                    #     if live_only:
-                    #         live_entries = live_only
-
-                    # ── Match live entries to DB rows by position ─────────────────
-                    paired = list(zip(active_matches, live_entries))
-
-                    for db_match, live in paired:
-                        team1_score: int = live.get("team1_score", 0)
-                        team2_score: int = live.get("team2_score", 0)
-                        yellow_card_count = live.get("yellow_card_count", 0)
-                        red_card_count = live.get("red_card_count", 0)
-                        first_goal_in = live.get("first_goal_in", None)
-                        first_scoring_team_id = live.get("first_scoring_team_id", None)
-                        kick_off_team_id = live.get("kick_off_team_id", db_match.kick_off_team_id)
-                        match_duration = live.get("match_duration", db_match.match_duration)
-                        winner_id = db_match.team1_id if live.get("match_status") == "COMPLETED" and team1_score > team2_score else db_match.team2_id if live.get("match_status") == "COMPLETED" and team2_score > team1_score else None
-
-                        if db_match.match_datetime.tzinfo is None:
-                            match_datetime = db_match.match_datetime.replace(tzinfo=timezone.utc)
-                        else:
-                            match_datetime = db_match.match_datetime.astimezone(timezone.utc)
-
-                        await db.execute(
-                            update(Match)
-                            .where(Match.id == db_match.id)
-                            .values(
-                                team1_score=team1_score,
-                                team2_score=team2_score,
-                                first_goal_in=first_goal_in,
-                                first_scoring_team_id=first_scoring_team_id,
-                                yellow_card_count=yellow_card_count,
-                                red_card_count=red_card_count,
-                                kick_off_team_id=kick_off_team_id,
-                                match_duration=match_duration,
-                                winner_id=winner_id,
-                                match_datetime=match_datetime
-                            )
-                        )
-                        logger.info(
-                            "[JOB1] Updated match id=%d  %d–%d  Y=%d R=%d  FGI:%s  FST:%s  KOT:%s  MD:%s  WD:%s",
-                            db_match.id,
-                            team1_score,
-                            team2_score,
-                            yellow_card_count,
-                            red_card_count,
-                            first_goal_in,
-                            first_scoring_team_id,
-                            kick_off_team_id,
-                            match_duration,
-                        )
+                    )
+                    logger.info(
+                        "[JOB1] Updated match id=%d  %d–%d  Y=%d R=%d  FGI:%s  FST:%s  KOT:%s  MD:%s  WD:%s",
+                        db_match.id,
+                        team1_score,
+                        team2_score,
+                        yellow_card_count,
+                        red_card_count,
+                        first_goal_in,
+                        first_scoring_team_id,
+                        kick_off_team_id,
+                        match_duration,
+                    )
 
                 await db.commit()
 

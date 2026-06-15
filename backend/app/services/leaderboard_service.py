@@ -767,7 +767,7 @@ class LeaderboardService:
         first_scoring_team_points = (
             rules.first_score_by
             if has_predicted_goals and prediction.first_scoring_team_id == match.first_scoring_team_id
-            else min(rules.first_score_by.first_half, rules.first_score_by.second_half, rules.first_score_by.extra_time) if match.team1_score == 0 and match.team2_score == 0
+            else rules.first_score_by if match.team1_score == 0 and match.team2_score == 0
             else 0
         )
 
