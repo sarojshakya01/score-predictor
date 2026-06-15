@@ -4,3 +4,6 @@ AI_CONTEXT
 worldcup2026_backup.sql
 .env
 docker-compose.yml
+backend/cache/match_details.json
+.gitignore
+backend/cache/match_highlights.json
