@@ -252,7 +252,7 @@ class MatchRepository:
             statement = statement.where(Match.match_locked.is_(False))
 
         if match_day:
-            statement = statement.where(Match.match_day == match_day)
+            statement = statement.where(Match.match_day <= match_day + 1)
         elif limit is None:
             # Convert naive datetime to local timezone-aware datetime
             # from_datetime = from_datetime.astimezone()

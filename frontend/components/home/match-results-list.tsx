@@ -84,7 +84,7 @@ export const MatchResultsList = ({ matches }: { matches: MatchResponse[] }) => {
           const highlightsUrl = getHighlightsUrl(match);
           const { isMatchLive } = isMatchPlayedOrLive(match);
 
-          if (isMatchLive) return <></>;
+          if (isMatchLive) return null;
 
           return (
             <div
