@@ -103,7 +103,7 @@ const RulesPage = () => {
                         >
                           {isNote ? (
                             /* note row — no badge, italic muted text */
-                            <p className="text-xs italic leading-5 text-zinc-400 dark:text-zinc-500">
+                            <p className="text-xs italic leading-5 text-yellow-700 dark:text-yellow-300">
                               {entry.instruction}
                             </p>
                           ) : (
@@ -161,7 +161,7 @@ const RulesPage = () => {
                         >
                           {isNote ? (
                             /* note row — no badge, italic muted text */
-                            <p className="text-xs italic leading-5 text-zinc-400 dark:text-zinc-500">
+                            <p className="text-xs italic leading-5 text-yellow-700 dark:text-yellow-300">
                               {entry.instruction}
                             </p>
                           ) : (
