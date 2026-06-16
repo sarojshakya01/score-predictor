@@ -438,10 +438,10 @@ class MatchService:
     ) -> None:
         existing_highlights = MatchService.load_match_highlights_cache()
 
-        if any(cache_key in item for item in existing_highlights):
+        if any(cache_key in item and item.get(cache_key) for item in existing_highlights):
             return
 
-        existing_highlights.append({cache_key: cache_value})
+        existing_highlights.insert(0, {cache_key: cache_value})
 
         with open(MatchService.MATCH_HIGHLIGHTS_CACHE_FILE, "w", encoding="utf-8") as f:
             json.dump(existing_highlights, f, ensure_ascii=False, indent=2)
@@ -613,7 +613,7 @@ class MatchService:
                 match_highlight_cache = item
                 break
 
-        if match_highlight_cache:
+        if match_highlight_cache and match_highlight_cache[cache_key]:
             return match_highlight_cache[cache_key]
 
         match_details_list = await MatchService.get_match_details(match.id)
