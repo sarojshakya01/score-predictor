@@ -114,6 +114,10 @@ def _fmt_user_name(user: User) -> str:
     return escape(f"{user.first_name} {user.last_name}".strip())
 
 
+def _user_name_sort_key(user: User) -> tuple[str, str, int]:
+    return (user.first_name.casefold(), user.last_name.casefold(), user.id)
+
+
 def _fmt_team_prediction(team_by_id: dict[int, Team], team_id: int | None) -> str:
     if team_id is None:
         return "Not selected"
@@ -140,7 +144,7 @@ async def _list_prediction_users(db: AsyncSession) -> list[User]:
             (User.is_active.is_(True)) &
             (User.role != UserRole.ADMIN)
         )
-        .order_by(User.id.asc()),
+        .order_by(User.first_name.asc(), User.last_name.asc(), User.id.asc()),
     )
     return list(user_result.scalars().all())
 
@@ -756,6 +760,7 @@ async def send_autolock_email() -> None:
                 .order_by(Prediction.id.asc()),
             )
             predictions: list[Prediction] = list(pred_result.scalars().all())
+            predictions.sort(key=lambda prediction: _user_name_sort_key(prediction.user))
 
             team1_name = match.team1.name
             team2_name = match.team2.name
@@ -847,7 +852,7 @@ async def send_reminder_email() -> None:
             select(User).where(
                 (User.is_active.is_(True)) &
                 (User.role != UserRole.ADMIN)
-            ).order_by(User.id.asc()),
+            ).order_by(User.first_name.asc(), User.last_name.asc(), User.id.asc()),
         )
         all_users: list[User] = list(user_result.scalars().all())
         recipients: list[str] = [u.email for u in all_users]

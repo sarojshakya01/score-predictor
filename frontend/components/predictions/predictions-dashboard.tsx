@@ -159,25 +159,41 @@ const getWinnerTeamId = (team1Score: number | null, team2Score: number | null, s
   return null;
 };
 
+const toFormValue = (value: number | string | null | undefined): string =>
+  value === null || value === undefined ? "" : String(value);
+
 const buildFormState = (
   match: MatchResponse,
   prediction?: PredictionResponse,
 ): PredictionFormState => {
   if (prediction) {
     return {
-      firstScoringTeamId: prediction.first_scoring_team_id ? String(prediction.first_scoring_team_id) : "",
-      firstGoalIn: prediction.first_goal_in || "",
-      matchDuration: prediction.match_duration || "",
-      kickoffTeamId: String(prediction.kick_off_team_id),
-      redCardCount: String(prediction.red_card_count),
-      team1Score: String(prediction.team1_score),
-      team2Score: String(prediction.team2_score),
-      yellowCardCount: String(prediction.yellow_card_count),
+      firstScoringTeamId: toFormValue(prediction.first_scoring_team_id),
+      firstGoalIn: toFormValue(prediction.first_goal_in),
+      matchDuration: toFormValue(prediction.match_duration),
+      kickoffTeamId: toFormValue(prediction.kick_off_team_id),
+      redCardCount: toFormValue(prediction.red_card_count),
+      team1Score: toFormValue(prediction.team1_score),
+      team2Score: toFormValue(prediction.team2_score),
+      yellowCardCount: toFormValue(prediction.yellow_card_count),
     };
   }
 
   return emptyFormState;
 };
+
+const arePredictionFormStatesEqual = (
+  current: PredictionFormState,
+  initial: PredictionFormState,
+): boolean =>
+  current.firstScoringTeamId === initial.firstScoringTeamId &&
+  current.firstGoalIn === initial.firstGoalIn &&
+  current.matchDuration === initial.matchDuration &&
+  current.kickoffTeamId === initial.kickoffTeamId &&
+  current.redCardCount === initial.redCardCount &&
+  current.team1Score === initial.team1Score &&
+  current.team2Score === initial.team2Score &&
+  current.yellowCardCount === initial.yellowCardCount;
 
 const getReferenceMatchDay = (matches: MatchResponse[]): number | null => {
   return matches[0]?.match_day ?? null;
@@ -226,6 +242,16 @@ export const PredictionsDashboard = () => {
         : undefined,
     [predictions, selectedMatch],
   );
+  const initialFormState = useMemo(
+    () =>
+      selectedMatch
+        ? buildFormState(selectedMatch, selectedPrediction)
+        : emptyFormState,
+    [selectedMatch, selectedPrediction],
+  );
+  const isPredictionDirty = selectedPrediction
+    ? !arePredictionFormStatesEqual(formState, initialFormState)
+    : true;
   // Scroll the selected card into view whenever selectedMatchId changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -521,6 +547,10 @@ export const PredictionsDashboard = () => {
       return;
     }
 
+    if (selectedPrediction && !isPredictionDirty) {
+      return;
+    }
+
     let predictionFields: PredictionFields;
     try {
       predictionFields = buildPredictionFields();
@@ -707,6 +737,8 @@ export const PredictionsDashboard = () => {
 
   const isFormDisabled =
     isSubmitting || authRequired || !selectedMatch || selectedStatus === "Locked";
+  const isSubmitDisabled =
+    isFormDisabled || isAiPicking || (Boolean(selectedPrediction) && !isPredictionDirty);
   const hasAnyPredictedGoals = hasAnyGoalPrediction(formState);
 
   const inputCls = "mt-1 h-10 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-emerald-900";
@@ -963,7 +995,7 @@ export const PredictionsDashboard = () => {
             <div className="grid place-items-center w-full">
               <button
                 type="submit"
-                disabled={isAiPicking ? true : false}
+                disabled={isSubmitDisabled}
                 className="inline-flex h-10 px-4 items-center gap-2 mt-5 cursor-pointer justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400 sm:w-auto"
               >
                 <IconSave className="h-4 w-4" />
