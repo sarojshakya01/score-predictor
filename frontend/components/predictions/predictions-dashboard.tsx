@@ -953,7 +953,9 @@ export const PredictionsDashboard = () => {
               <label className="flex flex-col gap-1">
                 <span className={labelTextCls}>Match Duration</span>
                 <select name="match_duration" disabled={!!(selectedMatch && selectedMatch.match_stage === "GROUP")} value={selectedMatch && selectedMatch.match_stage === "GROUP" ? matchDurations[0] : formState.matchDuration} onChange={(e) => updateField("matchDuration", e.target.value)} className={selectCls}>
-                  {matchDurations.map((d) => <option key={d} value={d}>{matchDurationLabels[d]}</option>)}
+                  {Number(formState.team1Score) === Number(formState.team2Score) ?
+                    matchDurations.filter((duration) => duration !== "PENALTY").map((d) => <option key={d} value={d}>{matchDurationLabels[d]}</option>)
+                    : matchDurations.map((d) => <option key={d} value={d}>{matchDurationLabels[d]}</option>)}
                 </select>
               </label>
             </div>
