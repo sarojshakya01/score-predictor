@@ -265,7 +265,7 @@ class UserService:
                         detail="Current match day not set",
                     )
 
-                if int(current_match_day.value['day']) > 8:
+                if int(current_match_day.value['day']) > 7:
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
                         detail="Winners can not be selected after 8th day of tournament",

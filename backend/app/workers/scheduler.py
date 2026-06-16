@@ -27,6 +27,7 @@ from app.models.match import MatchDuration
 from app.models.team import Team
 from app.models.user import UserRole
 from datetime import UTC
+from html import escape
 import logging
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
@@ -38,6 +39,7 @@ from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
 from fastapi import FastAPI
 from sqlalchemy import select, update
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
@@ -106,6 +108,173 @@ def _fmt_bool(value: bool | None) -> str:
 
 def _now_utc() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _fmt_user_name(user: User) -> str:
+    return escape(f"{user.first_name} {user.last_name}".strip())
+
+
+def _fmt_team_prediction(team_by_id: dict[int, Team], team_id: int | None) -> str:
+    if team_id is None:
+        return "Not selected"
+
+    team = team_by_id.get(team_id)
+    if team is None:
+        return "Unknown team"
+
+    return escape(team.name)
+
+
+def _has_final_winners_prediction(user: User) -> bool:
+    return (
+        user.winner_team_id is not None
+        and user.runner_up_team_id is not None
+        and user.third_place_team_id is not None
+    )
+
+
+async def _list_prediction_users(db: AsyncSession) -> list[User]:
+    user_result = await db.execute(
+        select(User)
+        .where(
+            (User.is_active.is_(True)) &
+            (User.role != UserRole.ADMIN)
+        )
+        .order_by(User.id.asc()),
+    )
+    return list(user_result.scalars().all())
+
+
+async def _get_team_by_id_for_users(db: AsyncSession, users: list[User]) -> dict[int, Team]:
+    team_ids = {
+        team_id
+        for user in users
+        for team_id in (
+            user.winner_team_id,
+            user.runner_up_team_id,
+            user.third_place_team_id,
+        )
+        if team_id is not None
+    }
+    if not team_ids:
+        return {}
+
+    team_result = await db.execute(
+        select(Team).where(Team.id.in_(team_ids)),
+    )
+    return {team.id: team for team in team_result.scalars().all()}
+
+
+async def _send_final_winners_reminder_email(db: AsyncSession, now: datetime) -> None:
+    users = await _list_prediction_users(db)
+    recipients = [user.email for user in users]
+
+    if not recipients:
+        logger.info("[JOB2] No active users – skipping final winners reminder email")
+        return
+
+    rows_html = ""
+    for idx, user in enumerate(users, start=1):
+        predicted = _has_final_winners_prediction(user)
+        status_class = "" if predicted else "not-predicted"
+        status_text = "✓ Yes" if predicted else "✗ No"
+        rows_html += (
+            f"<tr>"
+            f"<td>{idx}</td>"
+            f"<td>{_fmt_user_name(user)}</td>"
+            f"<td class='{status_class}'>{status_text}</td>"
+            f"</tr>"
+        )
+
+    table_html = (
+        f"<table>"
+        f"<thead>"
+        f"<tr><th colspan='3'>Final Winners Prediction Status</th></tr>"
+        f"<tr><th>#</th><th>Manager</th><th>Predicted?</th></tr>"
+        f"</thead>"
+        f"<tbody>{rows_html}</tbody>"
+        f"</table>"
+    )
+
+    body = build_base_html(
+        f"<p>Dear all,</p>"
+        f"<p>Match day 7 has arrived. Please submit your final winners "
+        f"predictions before the match day 8 deadline.</p>"
+        f"{table_html}"
+    )
+
+    subject = (
+        "World Cup 2026 – Final Winners Prediction Reminder "
+        f"({now.strftime('%Y-%m-%d')})"
+    )
+    await send_email(
+        subject=subject,
+        html_body=body,
+        recipients=recipients,
+    )
+
+
+async def _send_final_winners_predictions_email(db: AsyncSession, now: datetime) -> None:
+    users = await _list_prediction_users(db)
+    recipients = [user.email for user in users]
+
+    if not recipients:
+        logger.info("[JOB2] No active users – skipping final winners predictions email")
+        return
+
+    team_by_id = await _get_team_by_id_for_users(db, users)
+    rows_html = ""
+    for idx, user in enumerate(users, start=1):
+        predicted = _has_final_winners_prediction(user)
+        status_class = "" if predicted else "not-predicted"
+        rows_html += (
+            f"<tr>"
+            f"<td>{idx}</td>"
+            f"<td>{_fmt_user_name(user)}</td>"
+            f"<td class='{status_class}'>{_fmt_team_prediction(team_by_id, user.winner_team_id)}</td>"
+            f"<td class='{status_class}'>{_fmt_team_prediction(team_by_id, user.runner_up_team_id)}</td>"
+            f"<td class='{status_class}'>{_fmt_team_prediction(team_by_id, user.third_place_team_id)}</td>"
+            f"</tr>"
+        )
+
+    table_html = (
+        f"<table>"
+        f"<thead>"
+        f"<tr><th colspan='5'>Final Winners Predictions</th></tr>"
+        f"<tr><th>#</th><th>Manager</th><th>Winner</th>"
+        f"<th>Runner-up</th><th>Third Place</th></tr>"
+        f"</thead>"
+        f"<tbody>{rows_html}</tbody>"
+        f"</table>"
+    )
+
+    body = build_base_html(
+        f"<p>Dear all,</p>"
+        f"<p>Final winners predictions submitted by all active users are listed below.</p>"
+        f"{table_html}"
+    )
+
+    subject = (
+        "World Cup 2026 – Final Winners Predictions "
+        f"({now.strftime('%Y-%m-%d')})"
+    )
+    await send_email(
+        subject=subject,
+        html_body=body,
+        recipients=recipients,
+    )
+
+
+async def _send_final_winners_match_day_email_if_needed(
+    db: AsyncSession,
+    *,
+    match_day: int,
+    now: datetime,
+) -> None:
+    if match_day == 7:
+        await _send_final_winners_reminder_email(db, now)
+    elif match_day == 8:
+        await _send_final_winners_predictions_email(db, now)
 
 
 # ═════════════════════════════════════════════════════════════════════════════
@@ -511,6 +680,11 @@ async def update_current_match_day() -> None:
             logger.info("[JOB2] current_match_day already = %s – no change", json_value)
 
         await db.commit()
+        await _send_final_winners_match_day_email_if_needed(
+            db,
+            match_day=upcoming.match_day,
+            now=now,
+        )
 
     logger.info("[JOB2] update_current_match_day – done")
 
@@ -938,7 +1112,7 @@ def _create_scheduler() -> AsyncIOScheduler:
         misfire_grace_time=120,
     )
 
-    # Job 4 – Update current match day: every settings.MATCH_DAY_UPDATE_TIME_HR hours
+    # Job 4 – Update current match day: on settings.MATCH_DAY_UPDATE_TIME_HR hours 1 minutes
     scheduler.add_job(
         update_current_match_day,
         trigger=IntervalTrigger(hours=settings.MATCH_DAY_UPDATE_TIME_HR, minutes=1),
