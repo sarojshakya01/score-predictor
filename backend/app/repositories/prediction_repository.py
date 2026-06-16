@@ -123,9 +123,12 @@ class PredictionRepository:
                 selectinload(Prediction.user),
             )
             .where(Prediction.user_id == user_id)
-            .where(Match.match_day <= current_match_day)
-            .order_by(Prediction.match_id.asc())
         )
+
+        if current_user.id != user_id:
+            statement = statement.where(Match.match_day <= current_match_day)
+        
+        statement = statement.order_by(Prediction.match_id.asc())
 
         result = await self._db.execute(statement)
 

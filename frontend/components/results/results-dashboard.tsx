@@ -130,7 +130,7 @@ const formatGoalDifference = (
 ): string => {
   if (team1Score === null || team1Score === undefined) return "—";
   if (team2Score === null || team2Score === undefined) return "—";
-  return String(Math.abs(team1Score - team2Score));
+  return String(team1Score - team2Score);
 };
 
 const formatFirstGoalIn = (value: string | null | undefined): string => {

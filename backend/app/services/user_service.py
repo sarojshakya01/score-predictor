@@ -12,6 +12,8 @@ from app.core.security import hash_password
 from app.models.user import User, UserRole
 from app.repositories.team_repository import TeamRepository
 from app.repositories.user_repository import UserRepository
+from app.repositories.setting_repository import SettingRepository
+
 from app.schemas.user import (
     UserCreate,
     UserListResponse,
@@ -40,6 +42,7 @@ class UserService:
     def __init__(self, db: AsyncSession) -> None:
         self._user_repository = UserRepository(db)
         self._team_repository = TeamRepository(db)
+        self._setting_repository = SettingRepository(db)
 
     async def get_current_profile(self, user: User) -> UserResponse:
         """Return the current user's profile."""
@@ -67,6 +70,7 @@ class UserService:
             )
 
         await self._validate_team_ids(values)
+        await self._validate_winners_prediction_deadline(values)
 
         try:
             updated_user = await self._user_repository.update(user, values)
@@ -248,6 +252,24 @@ class UserService:
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=f"{field_name} must reference an existing team",
                 )
+
+    async def _validate_winners_prediction_deadline(self, values: dict[str, object]) -> None:
+        """Ensure provided finalist team IDs are not set after deadline."""
+        for field_name in FINALIST_TEAM_ID_FIELDS:
+            if values.get(field_name) is not None:
+                current_match_day = await self._setting_repository.get_by_name("current_match_day")
+
+                if current_match_day is None or current_match_day.value is None or current_match_day.value == {}:
+                    raise HTTPException(
+                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                        detail="Current match day not set",
+                    )
+
+                if int(current_match_day.value['day']) > 8:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Winners can not be selected after 8th day of tournament",
+                    )
 
     async def delete_user(self, *, user_id: int, current_admin_id: int) -> None:
         """Delete a user from the admin user management screen."""

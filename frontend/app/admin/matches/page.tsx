@@ -338,9 +338,9 @@ const AdminMatchesPage = () => {
       const team1Score = Number(formState.team1Score);
       const team2Score = Number(formState.team2Score);
       const winnerId =
-        team1Score > team2Score ? formState.team1Id
+        formState.matchStage === "GROUP" ? (team1Score > team2Score ? formState.team1Id
           : team2Score > team1Score ? formState.team2Id
-            : "";
+            : "") : formState.winnerId;
       const isEditing = editingMatchId !== null;
       const payload = buildMatchPayload({ ...formState, winnerId });
       const savedMatch = editingMatchId
@@ -470,7 +470,8 @@ const AdminMatchesPage = () => {
                   <th className={[
                     "static sm:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
-                    "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700"
+                    "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700",
+                    "text-center justify-end"
                   ].join(" ")}>Day</th>
                   <th className={[
                     "static sm:sticky top-0 z-30",
@@ -572,7 +573,7 @@ const AdminMatchesPage = () => {
                         "px-1 py-3 font-medium text-zinc-950 dark:text-zinc-50 text-center",
                         "table-cell md:hidden"
                       ].join(" ")}><p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{match.team2_name_short}</p></td>
-                      <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.match_day}</td>
+                      <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300 text-end">{match.match_day}</td>
                       <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300 whitespace-nowrap px-3 py-4 text-center">
                         {match.highlights_url ? (
                           <Tooltip content="Watch match highlights">
@@ -753,7 +754,9 @@ const AdminMatchesPage = () => {
                 <span className={labelCls}><p>Winner</p></span>
                 <select name="winner_id" value={formState.winnerId} onChange={(event) => updateField("winnerId", event.target.value)} className={selectCls}>
                   {formState.matchStage === "GROUP" && <option value="">{formState.matchLocked && formState.team1Score === formState.team2Score ? "Draw" : "Not set"}</option>}
-                  {formState.matchLocked && formState.team1Score !== formState.team2Score ? selectedTeams.map((team) => (<option key={team.id} value={team.id}>{team.name}</option>)) : null}
+                  {formState.matchStage === "GROUP" && formState.matchLocked && formState.team1Score !== formState.team2Score ? selectedTeams.map((team) => (<option key={team.id} value={team.id}>{team.name}</option>)) : null}
+                  {formState.matchStage !== "GROUP" && <option value="">Not Set</option>}
+                  {formState.matchStage !== "GROUP" && formState.matchLocked ? selectedTeams.map((team) => (<option key={team.id} value={team.id}>{team.name}</option>)) : null}
                 </select>
               </label>
             </div>

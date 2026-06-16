@@ -371,6 +371,9 @@ class LeaderboardService:
                         team2_score=match.team2_score,
                         predicted_team1_score=point_from_prediction.team1_score,
                         predicted_team2_score=point_from_prediction.team2_score,
+                        score_points=score.score_points,
+                        goal_difference_points=score.goal_difference_points,
+
                         # Yellow cards
                         yellow_card_count=match.yellow_card_count,
                         predicted_yellow_card_count=point_from_prediction.yellow_card_count,
@@ -395,9 +398,7 @@ class LeaderboardService:
                         match_duration=match.match_duration.value if match.match_duration else None,
                         predicted_match_duration=point_from_prediction.match_duration.value if point_from_prediction.match_duration else None,
                         match_duration_points=score.match_duration_points,
-                        # Summary
-                        score_points=score.score_points,
-                        goal_difference_points=score.goal_difference_points,
+
                         total_points=score.total_points,
                         match_stage=match.match_stage
                     )
@@ -849,7 +850,6 @@ class LeaderboardService:
             or match.team2_score is None
             or prediction.team1_score is None
             or prediction.team2_score is None
-            or match.match_duration == MatchDuration.PENALTY
         ):
             return 0
 

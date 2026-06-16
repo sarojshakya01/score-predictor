@@ -73,7 +73,6 @@ const GroupsPage = () => {
                   <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
                     <tr>
                       <th className="px-5 py-3 min-w-[100px] md:min-w-[230px]">Team</th>
-                      <th className="px-3 py-3 text-right">Rank</th>
                       <th className="px-3 py-3 text-right">P</th>
                       <th className="px-3 py-3 text-right">W</th>
                       <th className="px-3 py-3 text-right">D</th>
@@ -86,15 +85,15 @@ const GroupsPage = () => {
                     {group.standings.map((team) => (
                       <tr key={team.team_id}>
                         <td className="px-5 py-4 min-w-[100px] md:min-w-[230px] font-medium text-zinc-950 dark:text-zinc-50">
-                          <span className="flex min-w-[80px] items-center gap-3">
+                          <span className="flex min-w-[80px] items-center gap-1">
                             <span className="inline-flex items-center justify-center rounded border border-zinc-200 bg-zinc-50 text-xs font-semibold text-zinc-600 relative dark:border-zinc-700 dark:bg-zinc-800">
                               <Image width={30} height={30} alt={team.fifa_code} className="object-cover rounded min-h-[25px] w-auto" src={team.flag_url} />
                             </span>
-                            <span className="hidden sm:table-cell xl:truncate xl:max-w-[140px]">{team.team}</span>
-                            <span className="sm:hidden xl:truncate xl:max-w-[140px]">{team.fifa_code}</span>
+                            <span className="hidden pl-2 sm:table-cell xl:truncate xl:max-w-[140px]">{team.team}</span>
+                            <span className="sm:hidden pl-2 xl:truncate xl:max-w-[140px]">{team.fifa_code}</span>
+                            <span className="flex w-[100px]">(Rank: {team.fifa_rank})</span>
                           </span>
                         </td>
-                        <td className="px-3 py-4 text-right text-zinc-700 dark:text-zinc-300">{team.fifa_rank}</td>
                         <td className="px-3 py-4 text-right text-zinc-700 dark:text-zinc-300">{team.played}</td>
                         <td className="px-3 py-4 text-right text-zinc-700 dark:text-zinc-300">{team.won}</td>
                         <td className="px-3 py-4 text-right text-zinc-700 dark:text-zinc-300">{team.drawn}</td>
