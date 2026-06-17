@@ -168,10 +168,13 @@ const LiveWindowPanel = ({
           </span>
         </div>
         <div className="text-gray-900/70">
-          <p className="text-sm font-medium">
-            Next match locks in
+          <p className="text-sm font-medium text-tournament-primary">
+            Next match
           </p>
-          <p className="mt-2 text-3xl font-semibold tracking-normal">
+          <p className="text-sm font-medium text-tournament-primary">
+            locks in
+          </p>
+          <p className="mt-2 text-3xl text-tournament-primary font-semibold tracking-normal">
             {nextLock ? formatMinutes(nextLock.minutes_until_lock) : "N/A"}
           </p>
           <p className="mt-3 text-md leading-6 text-emerald-50/90 truncate">
