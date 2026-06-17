@@ -1,5 +1,6 @@
 """Repository for prediction database operations."""
 
+from datetime import datetime
 from app.api.deps import CurrentUser
 from collections.abc import Mapping
 
@@ -195,6 +196,21 @@ class PredictionRepository:
             select(Prediction.user_id, func.count(Prediction.id))
             .join(Prediction.user)
             .where(User.is_active.is_(True))
+            .group_by(Prediction.user_id)
+        )
+
+        result = await self._db.execute(statement)
+        return {user_id: int(count) for user_id, count in result.all()}
+
+    async def count_completed_match_predictions_by_active_user(self) -> dict[int, int]:
+        """Count all predictions made by each active user."""
+        statement = (
+            select(Prediction.user_id, func.count(Prediction.id))
+            .join(Prediction.user)
+            .join(Match)
+            .where(User.is_active.is_(True))
+            .where(Match.match_locked.is_(True))
+            .where(Match.match_datetime < datetime.utcnow())
             .group_by(Prediction.user_id)
         )
 

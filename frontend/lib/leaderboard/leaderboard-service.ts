@@ -17,6 +17,10 @@ const toQueryString = (params: ListLeaderboardParams): string => {
     searchParams.set("limit", String(params.limit));
   }
 
+  if (params.is_race_data_required !== undefined) {
+    searchParams.set("is_race_data_required", String(params.is_race_data_required));
+  }
+
   return searchParams.toString();
 };
 

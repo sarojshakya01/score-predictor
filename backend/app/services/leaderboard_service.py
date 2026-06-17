@@ -276,6 +276,7 @@ class LeaderboardService:
         *,
         offset: int,
         limit: int,
+        is_race_data_required: bool,
     ) -> LeaderboardResponse:
         """Return paginated leaderboard standings."""
         try:
@@ -291,11 +292,13 @@ class LeaderboardService:
             )
 
             self._apply_prediction_scores(totals=totals, predictions=predictions, final_matches=final_matches, users=users, rules=rules)
-            race_frames = self._build_race_frames(
-                users=users,
-                completed_matches=completed_matches,
-                predictions=predictions,
-                rules=rules,
+            race_frames = []
+            if is_race_data_required:
+                race_frames = self._build_race_frames(
+                    users=users,
+                    completed_matches=completed_matches,
+                    predictions=predictions,
+                    rules=rules,
             )
 
             ranked_totals = sorted(totals.values(), key=self._leaderboard_sort_key)
@@ -535,7 +538,7 @@ class LeaderboardService:
         try:
             return (
                 await self._prediction_repository.list_scored_predictions(),
-                await self._prediction_repository.count_predictions_by_active_user(),
+                await self._prediction_repository.count_completed_match_predictions_by_active_user(),
             )
         except ProgrammingError as error:
             if self._is_missing_predictions_table_error(error):

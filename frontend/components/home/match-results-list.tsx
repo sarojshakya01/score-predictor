@@ -89,9 +89,15 @@ export const MatchResultsList = ({ matches }: { matches: MatchResponse[] }) => {
           return (
             <div
               key={match.id}
-              className="relative flex min-h-44 w-60 shrink-0 flex-col justify-between rounded-md border border-zinc-200 bg-zinc-50 p-3 text-left shadow-sm dark:border-zinc-700 dark:bg-zinc-800"
+              className="relative flex min-h-44 w-60 shrink-0 cursor-pointer flex-col justify-between rounded-md border border-zinc-200 bg-zinc-50 p-3 text-left shadow-sm transition hover:border-emerald-300 hover:bg-emerald-50 focus:border-emerald-400 focus:bg-emerald-50 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-emerald-800 dark:hover:bg-emerald-950/40 dark:focus:border-emerald-700 dark:focus:bg-emerald-950/40"
             >
-              <div className="flex items-start justify-between gap-2">
+              <Link
+                href="/results"
+                aria-label={`View results for ${match.team1_name} vs ${match.team2_name}`}
+                className="absolute inset-0 z-10 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-emerald-700 dark:focus:ring-offset-zinc-900"
+              />
+
+              <div className="pointer-events-none relative z-20 flex items-start justify-between gap-2">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:text-zinc-400">
                     Match day {match.match_day}
@@ -102,7 +108,7 @@ export const MatchResultsList = ({ matches }: { matches: MatchResponse[] }) => {
                 </p>
               </div>
 
-              <div className="mt-4 grid gap-2">
+              <div className="pointer-events-none relative z-20 mt-4 grid gap-2">
                 <TeamScoreRow
                   flagUrl={match.team1_flag_url}
                   isWinner={team1Won}
@@ -117,7 +123,7 @@ export const MatchResultsList = ({ matches }: { matches: MatchResponse[] }) => {
                 />
               </div>
 
-              <div className="mt-4 flex items-center justify-between gap-3">
+              <div className="pointer-events-none relative z-20 mt-4 flex items-center justify-between gap-3">
                 <p className="min-w-0 truncate text-xs text-zinc-500 dark:text-zinc-400">
                   {match.venue_name || "Venue TBA"}
                 </p>
@@ -129,7 +135,7 @@ export const MatchResultsList = ({ matches }: { matches: MatchResponse[] }) => {
                       rel="noopener noreferrer"
                       aria-label={`Watch highlights for ${match.team1_name} vs ${match.team2_name}`}
                       className={[
-                        "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition",
+                        "pointer-events-auto relative z-30 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition",
                         "bg-gray-200 dark:bg-blue-700",
                         "ring-1 ring-inset ring-gray-200 dark:ring-gray-500",
                         "hover:bg-gray-300 dark:hover:bg-blue-600",

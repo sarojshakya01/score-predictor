@@ -732,7 +732,7 @@ export const LeaderboardDashboard = () => {
       }
 
       try {
-        const leaderboardResponse = await listLeaderboard({ limit: 10000 });
+        const leaderboardResponse = await listLeaderboard({ limit: 10000, is_race_data_required: true });
 
         if (!isMounted) {
           return;

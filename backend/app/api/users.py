@@ -78,10 +78,11 @@ async def get_leaderboard(
     db: Annotated[AsyncSession, Depends(get_db)],
     offset: Annotated[int, Query(ge=0)] = 0,
     limit: Annotated[int, Query(ge=1, le=10000)] = 1000,
+    is_race_data_required: Annotated[bool | None, Query()] = None,
 ) -> LeaderboardResponse:
     """Return leaderboard standings for authenticated users."""
     service = LeaderboardService(db)
-    return await service.get_leaderboard(offset=offset, limit=limit)
+    return await service.get_leaderboard(offset=offset, limit=limit, is_race_data_required=is_race_data_required)
 
 
 @leaderboard_router.get(

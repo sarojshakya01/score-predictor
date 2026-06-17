@@ -51,6 +51,7 @@ export type LeaderboardResponse = {
 export type ListLeaderboardParams = {
   limit?: number;
   offset?: number;
+  is_race_data_required?: boolean
 };
 
 export type UserPointsDetailsResponse = {
