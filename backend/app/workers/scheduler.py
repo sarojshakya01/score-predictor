@@ -169,7 +169,7 @@ async def _get_team_by_id_for_users(db: AsyncSession, users: list[User]) -> dict
     return {team.id: team for team in team_result.scalars().all()}
 
 
-async def _send_final_winners_reminder_email(db: AsyncSession, now: datetime) -> None:
+async def _send_final_winners_reminder_email(match_day: int, db: AsyncSession, now: datetime) -> None:
     users = await _list_prediction_users(db)
     recipients = [user.email for user in users]
 
@@ -202,7 +202,7 @@ async def _send_final_winners_reminder_email(db: AsyncSession, now: datetime) ->
 
     body = build_base_html(
         f"<p>Dear all,</p>"
-        f"<p>Match day 7 has arrived. Please submit your final winners "
+        f"<p>Match day {match_day} has arrived. Please submit your final winners "
         f"predictions before the match day 8 deadline.</p>"
         f"{table_html}"
     )
@@ -275,8 +275,8 @@ async def _send_final_winners_match_day_email_if_needed(
     match_day: int,
     now: datetime,
 ) -> None:
-    if match_day == 7 or match_day == 6:
-        await _send_final_winners_reminder_email(db, now)
+    if match_day == 6 or match_day == 7:
+        await _send_final_winners_reminder_email(match_day, db, now)
     elif match_day == 8:
         await _send_final_winners_predictions_email(db, now)
 
