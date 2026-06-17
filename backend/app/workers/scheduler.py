@@ -194,7 +194,7 @@ async def _send_final_winners_reminder_email(match_day: int, db: AsyncSession, n
         f"<table>"
         f"<thead>"
         f"<tr><th colspan='3'>Final Winners Prediction Status</th></tr>"
-        f"<tr><th>#</th><th>Manager</th><th>Predicted?</th></tr>"
+        f"<tr><th>#</th><th>Player</th><th>Predicted?</th></tr>"
         f"</thead>"
         f"<tbody>{rows_html}</tbody>"
         f"</table>"
@@ -245,7 +245,7 @@ async def _send_final_winners_predictions_email(db: AsyncSession, now: datetime)
         f"<table>"
         f"<thead>"
         f"<tr><th colspan='5'>Final Winners Predictions</th></tr>"
-        f"<tr><th>#</th><th>Manager</th><th>Winner</th>"
+        f"<tr><th>#</th><th>Player</th><th>Winner</th>"
         f"<th>Runner-up</th><th>Third Place</th></tr>"
         f"</thead>"
         f"<tbody>{rows_html}</tbody>"
@@ -768,7 +768,7 @@ async def send_autolock_email() -> None:
 
             header_html = (
                 f"<tr>"
-                f"<th>#</th><th>Manager</th>"
+                f"<th>#</th><th>Player</th>"
                 f"<th>{team1_name}</th><th>{team2_name}</th>"
                 f"<th>First Goal in</th><th>First Score by</th>"
                 f"<th>Yellow Cards</th><th>Red Cards</th>"
@@ -882,7 +882,7 @@ async def send_reminder_email() -> None:
                 f"<thead>"
                 f"<tr><th colspan='3'>{match_title}</th></tr>"
                 f"<tr><th colspan='3'>{match_time_str}</th></tr>"
-                f"<tr><th>#</th><th>Manager</th><th>Predicted?</th></tr>"
+                f"<tr><th>#</th><th>Player</th><th>Predicted?</th></tr>"
                 f"</thead>"
             )
 
