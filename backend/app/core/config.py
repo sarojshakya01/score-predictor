@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     LIVE_MATH_UPDATE_INTERVAL_MIN: int = 1
     MATCH_LOCK_CHECK_INTERVAL_MIN: int = 5
     REMINDER_CHECK_INTERVAL_MIN: int = 30
-    MATCH_DAY_UPDATE_TIME_HR: int = 4
+    MATCH_DAY_UPDATE_TIME_HR: int = 0
     TODAYS_MATCH_REMINDER_TIME_HR: int = 10
 
     # ── EMAIL ───────────────────────────────────────────────────

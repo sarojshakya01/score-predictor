@@ -1,6 +1,5 @@
 """Match business logic."""
 from app.models.match import MatchStage
-from app.workers.scheduler import _now_utc
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from pathlib import Path
@@ -186,6 +185,7 @@ class MatchService:
                 limit=limit,
                 offset=offset,
             )
+
         except HTTPException:
             # Re-raise FastAPI HTTP exceptions
             raise

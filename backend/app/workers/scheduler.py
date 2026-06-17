@@ -275,7 +275,7 @@ async def _send_final_winners_match_day_email_if_needed(
     match_day: int,
     now: datetime,
 ) -> None:
-    if match_day == 7:
+    if match_day == 7 or match_day == 6:
         await _send_final_winners_reminder_email(db, now)
     elif match_day == 8:
         await _send_final_winners_predictions_email(db, now)
