@@ -1120,12 +1120,12 @@ def _create_scheduler() -> AsyncIOScheduler:
     # Job 4 – Update current match day: on settings.MATCH_DAY_UPDATE_TIME_HR hours 1 minutes
     scheduler.add_job(
         update_current_match_day,
-        trigger=IntervalTrigger(hours=settings.MATCH_DAY_UPDATE_TIME_HR, minutes=1),
+        trigger=CronTrigger(hour=settings.MATCH_DAY_UPDATE_TIME_HR, minute=1),
         id="update_current_match_day",
         name="Update current match day",
         replace_existing=True,
         max_instances=1,
-        misfire_grace_time=120,
+        misfire_grace_time=600,
     )
 
     # Job 5 – Today's matches digest: daily at settings.TODAYS_MATCH_REMINDER_TIME_HR:00 Local time

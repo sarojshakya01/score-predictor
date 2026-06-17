@@ -1,4 +1,6 @@
 """Match business logic."""
+from app.models.match import MatchStage
+from app.workers.scheduler import _now_utc
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from pathlib import Path
@@ -173,7 +175,8 @@ class MatchService:
             )
 
             for match in matches:
-                match.highlights_url = await MatchService._get_match_highlights(match)
+                if match.winner_id is not None:
+                    match.highlights_url = await MatchService._get_match_highlights(match)
 
             total = await self._match_repository.count_completed_matches()
 
@@ -650,7 +653,8 @@ class MatchService:
             if path:
                 highlight_url = MACTH_SOURCE_BASE_URL + path
 
-        MatchService.save_match_highlights_cache(cache_key, highlight_url)
+        if len(highlight_url) > 0:
+            MatchService.save_match_highlights_cache(cache_key, highlight_url)
 
         return highlight_url
 
@@ -680,7 +684,7 @@ class MatchService:
         """Build a match response payload with team display fields."""
 
         highlights_url = None
-        if (match.winner_id is None or match.match_locked) and match.team1_score is not None and match.team2_score is not None:
+        if match.match_locked and match.team1_score is not None and match.team2_score is not None and datetime.utcnow() > match.match_datetime + (timedelta(minutes=120) if match.match_stage == MatchStage.GROUP else timedelta(minutes=150) if match.winner_id else timedelta(minutes=180)):
             highlights_url = await MatchService._get_match_highlights(match)
 
         return {
