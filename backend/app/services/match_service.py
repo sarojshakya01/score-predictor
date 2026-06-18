@@ -39,8 +39,8 @@ logger = logging.getLogger(__name__)
 class MatchService:
     MATCH_HIGHLIGHTS_CACHE_FILE = Path(f"{settings.APP_ROOT_PATH}/cache/match_highlights.json")
     MATCH_HIGHLIGHTS_CACHE_FILE.parent.mkdir(exist_ok=True)
-    MATCH_DETAIL_CACHE_FILE = Path("cache/match_details.json")
-    MATCH_DETAIL_CACHE_FILE.parent.mkdir(exist_ok=True)
+    MATCH_DETAILS_CACHE_FILE = Path("cache/match_details.json")
+    MATCH_DETAILS_CACHE_FILE.parent.mkdir(exist_ok=True)
     """Handles match validation and orchestration."""
 
     def __init__(self, db: AsyncSession) -> None:
@@ -455,14 +455,14 @@ class MatchService:
 
     @staticmethod
     def load_match_details_cache() -> dict:
-        if MatchService.MATCH_DETAIL_CACHE_FILE.exists():
-            with open(MatchService.MATCH_DETAIL_CACHE_FILE, "r", encoding="utf-8") as f:
+        if MatchService.MATCH_DETAILS_CACHE_FILE.exists():
+            with open(MatchService.MATCH_DETAILS_CACHE_FILE, "r", encoding="utf-8") as f:
                 return json.load(f)
         return []
 
     @staticmethod
     def save_match_details_cache(cache: dict) -> None:
-        with open(MatchService.MATCH_DETAIL_CACHE_FILE, "w", encoding="utf-8") as f:
+        with open(MatchService.MATCH_DETAILS_CACHE_FILE, "w", encoding="utf-8") as f:
             json.dump(cache, f)
 
     @staticmethod
