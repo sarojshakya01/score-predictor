@@ -492,7 +492,7 @@ async def extract_live_match_data_fifa() -> None:
                 result = resp.json()
 
                 # completed match
-                if result.get('OfficialityStatus') == 1:
+                if result.get('OfficialityStatus') == 1 and match.winner_id is not None:
                     continue
 
                 home_country_code = result.get('HomeTeam').get('IdCountry').upper()
