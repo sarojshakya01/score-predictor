@@ -85,7 +85,7 @@ export const TopLeaderboardPreview = () => {
             <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">
               Top Players
             </h2>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="hidden md:block mt-1 text-sm text-zinc-500 dark:text-zinc-400">
               Top five players by total points.
             </p>
           </div>

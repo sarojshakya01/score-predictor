@@ -158,7 +158,7 @@ const LiveWindowPanel = ({
   summary: HomeSummaryResponse | null;
 }) => {
   return (
-    <section className="countdown-container relative min-h-[280px] overflow-hidden rounded-md border border-emerald-900/20 p-5 text-white shadow-sm">
+    <section className="countdown-container relative min-h-[280px] overflow-hidden rounded-md border border-emerald-900/20 p-2 md:p-5 text-white shadow-sm">
       <div className="relative z-10 flex h-full flex-col justify-between gap-8">
         <div className="flex items-center justify-between gap-3">
           <StatusPill tone={nextLock ? "secondary" : "accent"}>
@@ -168,7 +168,7 @@ const LiveWindowPanel = ({
             {summary ? `${summary.open_matches} open` : "Live API"}
           </span>
         </div>
-        <div className="text-gray-900/70">
+        <div className="text-gray-900/70 xl:-mb-5">
           <p className="text-sm font-medium text-tournament-primary">
             Next match
           </p>
@@ -178,7 +178,12 @@ const LiveWindowPanel = ({
           <p className="mt-2 text-3xl text-tournament-primary font-semibold tracking-normal">
             {nextLock ? formatMinutes(nextLock.minutes_until_lock) : "N/A"}
           </p>
-          <p className="mt-3 text-md leading-6 text-emerald-50/90 truncate">
+          <p className="hidden xl:block mt-3 text-md leading-6 text-emerald-50/90">
+            {nextLock
+              ? `${nextLock.label} locks at ${formatDateTime(nextLock.lock_datetime, false)}.`
+              : "Predictions will reopen when new unlocked fixtures are available."}
+          </p>
+          <p className="block xl:hidden mt-3 text-md leading-6 text-primary-tournament -mb-3">
             {nextLock
               ? `${nextLock.label} locks at ${formatDateTime(nextLock.lock_datetime, false)}.`
               : "Predictions will reopen when new unlocked fixtures are available."}
@@ -244,7 +249,7 @@ const Home = async () => {
         <li className="list-decimal">Prediction for the final matches (Winner, Runner-up and third place) will be available for 7 days from the date of the tournament start.</li>
       </section>}
 
-      <section className="grid gap-6 lg:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)] lg:items-stretch">
+      <section className="grid gap-6 grid-cols-1 sm:grid-cols-[0.6fr_0.4fr] lg:grid-cols-[minmax(0,1.35fr)_minmax(200px,0.65fr)] lg:items-stretch">
         <TopLeaderboardPreview />
         <LiveWindowPanel nextLock={nextLock} summary={summary} />
       </section>
