@@ -457,9 +457,6 @@ async def extract_live_match_data_fifa() -> None:
 
             id_match = None
             for match in active_matches:
-                # dont update if winner is already decided
-                if match.winner_id is not None:
-                    continue
                 for match_detail in match_details_list:
                     home_country_code = match_detail.get('Home', {}).get('IdCountry', None).upper()
                     away_country_code = match_detail.get('Away', {}).get('IdCountry', None).upper()
@@ -492,8 +489,9 @@ async def extract_live_match_data_fifa() -> None:
                 result = live_match_details_resp.json()
 
                 # completed match
-                # if result.get('OfficialityStatus') == 1 and match.winner_id is not None:
-                #     continue
+                if result.get('OfficialityStatus') == 1 and match.winner_id is not None:
+                    logger.info(f"[JOB1] Match {match.id} already completed and winner decided")
+                    continue
 
                 home_country_code = result.get('HomeTeam').get('IdCountry').upper()
                 away_country_code = result.get('AwayTeam').get('IdCountry').upper()
