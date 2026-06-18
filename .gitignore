@@ -7,3 +7,4 @@ docker-compose.yml
 backend/cache/match_details.json
 .gitignore
 backend/cache/match_highlights.json
+backend/app.log

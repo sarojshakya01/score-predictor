@@ -1,4 +1,5 @@
 """FastAPI application entry point."""
+import logging
 
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -18,6 +19,20 @@ from app.api.users import leaderboard_router
 from app.api.users import router as users_router
 from app.core.config import settings
 from app.workers.scheduler import lifespan
+
+LOG_FILE = "app.log"
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+    handlers=[
+        logging.FileHandler(LOG_FILE),
+        logging.StreamHandler(),
+    ],
+    force=True,
+)
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Match Predictor API",
