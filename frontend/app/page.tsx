@@ -250,7 +250,7 @@ const Home = async () => {
 
       <UpcomingMatchesSection matches={matches} />
 
-      <section className="lg:grid-cols-[1.4fr_0.8fr]">
+      <section className="lg:grid-cols-[1.4fr_0.8fr] z-0">
         <div className="mb-4 flex items-end justify-between gap-4">
           <div>
             <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
