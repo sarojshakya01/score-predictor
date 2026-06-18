@@ -1,38 +1,38 @@
 """Match business logic."""
-from app.models.match import MatchStage
-from fastapi import HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from pathlib import Path
-import json
-import httpx
-from app.models.match import MATCH_DETAILS_ENDPOINT
 import asyncio
+import json
 import logging
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any
 
-from app.models.match import MACTH_SOURCE_BASE_URL
-from app.models.match import MATCH_HIGHTLIGHTS_ENDPOINT
-from app.workers.scheduler import SEASON_NAME
-from app.workers.scheduler import COMPETITIONS_NAME
-from app.workers.scheduler import HEADERS
-from app.core.config import settings
+import httpx
+from fastapi import HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.services.openai_service import OpenAIService
-from app.models.match import Match
+from app.core.config import settings
+from app.models.match import (
+    MACTH_SOURCE_BASE_URL,
+    MATCH_DETAILS_ENDPOINT,
+    MATCH_HIGHTLIGHTS_ENDPOINT,
+    Match,
+    MatchStage,
+)
 from app.repositories.match_repository import MatchRepository
 from app.repositories.setting_repository import SettingRepository
 from app.repositories.team_repository import TeamRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.match import (
-    MatchInsightResponse,
     MatchCreate,
+    MatchInsightResponse,
     MatchListResponse,
     MatchResponse,
     MatchUpdate,
 )
 from app.services.match_prediction_service import MatchScorePredictionService
+from app.services.openai_service import OpenAIService
 from app.services.team_service import TeamService
+from app.workers.scheduler import COMPETITIONS_NAME, HEADERS, SEASON_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +103,7 @@ class MatchService:
         offset: int,
         limit: int,
         include_locked: bool,
+        upcoming_only: bool = False,
     ) -> MatchListResponse:
         """Return upcoming matches for public prediction flows."""
         try:
@@ -113,6 +114,7 @@ class MatchService:
                 offset=offset,
                 limit=limit,
                 include_locked=include_locked,
+                upcoming_only=upcoming_only
             )
             total = len(matches)
             return await self._build_list_response(
@@ -367,7 +369,9 @@ class MatchService:
             now_locked = values.get("match_locked", was_locked)
             if was_locked and not now_locked:
                 try:
-                    from app.services.email_service import send_match_unlocked_email  # noqa: PLC0415
+                    from app.services.email_service import (
+                        send_match_unlocked_email,  # noqa: PLC0415
+                    )
                     active_users = await self._user_repository.list_active_users()
                     recipient_emails = [u.email for u in active_users]
                     payload = await self._build_response_payload(updated_match)

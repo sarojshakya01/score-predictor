@@ -1,7 +1,5 @@
 """Repository for match database operations."""
 
-from app.models.match import MatchStage
-from app.services.setting_service import SettingService
 from collections.abc import Mapping
 from datetime import datetime, timedelta, timezone
 
@@ -9,7 +7,8 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
-from app.models.match import Match
+from app.models.match import Match, MatchStage
+from app.services.setting_service import SettingService
 
 
 class MatchRepository:
@@ -220,6 +219,7 @@ class MatchRepository:
         offset: int = 0,
         limit: int = 100,
         include_locked: bool = True,
+        upcoming_only: bool = False
     ) -> list[Match]:
         """Fetch upcoming matches ordered by match date."""
 
@@ -233,7 +233,6 @@ class MatchRepository:
             current_match_day = await service.get_current_match_day()
         else:
             current_match_day = None
-        
 
         match_day = None
         if current_match_day and current_match_day.value:
@@ -250,6 +249,10 @@ class MatchRepository:
 
         if not include_locked:
             statement = statement.where(Match.match_locked.is_(False))
+
+        if upcoming_only:
+            statement = statement.where(Match.team1_score.is_(None))
+            statement = statement.where(Match.team2_score.is_(None))
 
         if match_day:
             statement = statement.where(Match.match_day <= match_day + 1)

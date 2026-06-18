@@ -1,10 +1,10 @@
 """Match SQLAlchemy model."""
 
-from sqlalchemy import Boolean
 import enum
 from datetime import datetime
 
 from sqlalchemy import (
+    Boolean,
     CheckConstraint,
     DateTime,
     Enum,

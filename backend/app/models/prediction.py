@@ -1,8 +1,5 @@
 """Prediction SQLAlchemy model."""
 
-from app.models.user import User
-from app.models.match import Match
-from app.models.team import Team
 from datetime import datetime
 
 from sqlalchemy import (
@@ -18,7 +15,15 @@ from sqlalchemy import (
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base, TimestampMixin
-from app.models.match import MatchDuration, match_duration_values, FirstGoalIn, first_goal_in_values
+from app.models.match import (
+    FirstGoalIn,
+    Match,
+    MatchDuration,
+    first_goal_in_values,
+    match_duration_values,
+)
+from app.models.team import Team
+from app.models.user import User
 
 
 class Prediction(TimestampMixin, Base):

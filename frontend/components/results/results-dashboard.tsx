@@ -23,7 +23,7 @@ import {
   firstGoalInLabels,
   listMatchResults,
   matchDurationLabels,
-  matchStageLabels,
+  // matchStageLabels,
   type MatchResponse,
 } from "@/lib/matches";
 import { UserResponse } from "@/lib/users";
@@ -143,12 +143,12 @@ const formatMatchDuration = (value: string | null | undefined): string => {
   return matchDurationLabels[value as keyof typeof matchDurationLabels];
 };
 
-const formatGroupLabel = (group: string | null | undefined): string => {
-  const normalizedGroup = group?.trim();
-  if (!normalizedGroup) return "";
-  if (/^group\s+/i.test(normalizedGroup)) return normalizedGroup;
-  return `Group ${normalizedGroup}`;
-};
+// const formatGroupLabel = (group: string | null | undefined): string => {
+//   const normalizedGroup = group?.trim();
+//   if (!normalizedGroup) return "";
+//   if (/^group\s+/i.test(normalizedGroup)) return normalizedGroup;
+//   return `Group ${normalizedGroup}`;
+// };
 
 // const formatGroup = (match: MatchResponse): string => {
 //   if (match.match_stage !== "GROUP") {

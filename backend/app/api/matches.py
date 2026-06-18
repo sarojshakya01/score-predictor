@@ -7,8 +7,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_admin_user
 from app.db.session import get_db
 from app.schemas.match import (
-    MatchInsightResponse,
     MatchCreate,
+    MatchInsightResponse,
     MatchListResponse,
     MatchResponse,
     MatchUpdate,
@@ -41,6 +41,7 @@ async def list_upcoming_matches(
         offset=offset,
         limit=limit,
         include_locked=include_locked,
+        upcoming_only=True
     )
 
 @router.get(

@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
 import math
 import re
+from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, field
 from typing import Any
 
 from app.models.match import Match, MatchStage
-
 
 _SCORE_PAIR_RE = re.compile(r"(?<!\d)(\d{1,2})\s*(?:-|:|–|—)\s*(\d{1,2})(?!\d)")
 _INTEGER_RE = re.compile(r"\d+")

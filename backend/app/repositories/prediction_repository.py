@@ -1,13 +1,13 @@
 """Repository for prediction database operations."""
 
-from datetime import datetime
-from app.api.deps import CurrentUser
 from collections.abc import Mapping
+from datetime import datetime
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.api.deps import CurrentUser
 from app.models.match import Match
 from app.models.prediction import Prediction
 from app.models.user import User, UserRole

@@ -20,34 +20,28 @@ Register it in app/main.py:
     from app.workers.scheduler import lifespan
     app = FastAPI(..., lifespan=lifespan)
 """
-from fastapi import status
-from app.models.match import MATCH_DETAILS_ENDPOINT
-from app.models.match import MatchStage
-from app.models.match import MatchDuration
-from app.models.team import Team
-from app.models.user import UserRole
-from datetime import UTC
-from html import escape
 import logging
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
+from html import escape
 from typing import AsyncGenerator
 
 import httpx
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
 from apscheduler.triggers.interval import IntervalTrigger
-from fastapi import FastAPI
+from fastapi import FastAPI, status
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.config import settings
 from app.db.session import async_session_factory
-from app.models.match import Match
+from app.models.match import MATCH_DETAILS_ENDPOINT, Match, MatchDuration, MatchStage
 from app.models.prediction import Prediction
 from app.models.setting import Setting
-from app.models.user import User
+from app.models.team import Team
+from app.models.user import User, UserRole
 from app.services.email_service import build_base_html, send_email
 
 logger = logging.getLogger(__name__)

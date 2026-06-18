@@ -2,16 +2,17 @@ import Link from "next/link";
 
 import { FinalsWinnerSelector } from "@/components/home/finals-winner-selector";
 import { MatchResultsList } from "@/components/home/match-results-list";
-import { MetricCard, Metrics } from "@/components/ui/metric-card";
+// import { MetricCard, Metrics } from "@/components/ui/metric-card";
 import { PageShell } from "@/components/ui/page-shell";
-import { StatusPill, toneClasses, toneClassesLight } from "@/components/ui/status-pill";
+// import { toneClasses, toneClassesLight } from "@/components/ui/status-pill";
+import { StatusPill } from "@/components/ui/status-pill";
 import { ApiError } from "@/lib/api";
 import { getHomeSummary } from "@/lib/home";
 import type { HomeSummaryResponse } from "@/lib/home";
 import { listMatchResults, listUpcomingMatches } from "@/lib/matches";
 import type { MatchResponse } from "@/lib/matches";
 import { formatDateTime } from "@/components/ui/match-card";
-import { PredictionsMetricCard } from "@/components/home/predictions-metric-card";
+// import { PredictionsMetricCard } from "@/components/home/predictions-metric-card";
 import { TopLeaderboardPreview } from "@/components/home/top-leaderboard-preview";
 import { UpcomingMatchesSection } from "@/components/home/upcoming-matches-section";
 import { DEFAULT_TIMEZONE } from "@/lib/api/config";
@@ -52,7 +53,7 @@ const loadHomePageData = async (): Promise<HomePageData> => {
   const [summaryResult, matchesResult, resultsResult] =
     await Promise.allSettled([
       getHomeSummary(),
-      listUpcomingMatches({ includeLocked: false, limit: 20 }),
+      listUpcomingMatches({ includeLocked: true, limit: 20 }),
       listMatchResults({ limit: 20 }),
     ]);
   const errors: string[] = [];
@@ -96,38 +97,38 @@ const loadHomePageData = async (): Promise<HomePageData> => {
   return { errors, matches, results, summary };
 };
 
-const formatNumber = (value: number | undefined): string => {
-  if (value === undefined) {
-    return "N/A";
-  }
+// const formatNumber = (value: number | undefined): string => {
+//   if (value === undefined) {
+//     return "N/A";
+//   }
 
-  return new Intl.NumberFormat("en").format(value);
-};
+//   return new Intl.NumberFormat("en").format(value);
+// };
 
-const buildDashboardMetrics = (summary: HomeSummaryResponse | null): Metrics[] => {
-  return [
-    {
-      label: "Open matches",
-      tone: toneClassesLight.primary,
-      value: formatNumber(summary?.open_matches),
-    },
-    {
-      label: "Predictions made",
-      tone: toneClasses.primary,
-      value: formatNumber(summary?.predictions_made),
-    },
-    {
-      label: "Locking soon",
-      tone: toneClasses.accent,
-      value: formatNumber(summary?.locking_soon),
-    },
-    {
-      label: "Completed matches",
-      tone: toneClasses.secondary,
-      value: formatNumber(summary?.completed_matches),
-    },
-  ];
-};
+// const buildDashboardMetrics = (summary: HomeSummaryResponse | null): Metrics[] => {
+//   return [
+//     {
+//       label: "Open matches",
+//       tone: toneClassesLight.primary,
+//       value: formatNumber(summary?.open_matches),
+//     },
+//     {
+//       label: "Predictions made",
+//       tone: toneClasses.primary,
+//       value: formatNumber(summary?.predictions_made),
+//     },
+//     {
+//       label: "Locking soon",
+//       tone: toneClasses.accent,
+//       value: formatNumber(summary?.locking_soon),
+//     },
+//     {
+//       label: "Completed matches",
+//       tone: toneClasses.secondary,
+//       value: formatNumber(summary?.completed_matches),
+//     },
+//   ];
+// };
 
 const formatMinutes = (value: number): string => {
   if (value <= 0) {
@@ -190,7 +191,7 @@ const LiveWindowPanel = ({
 
 const Home = async () => {
   const { errors, matches, results, summary } = await loadHomePageData();
-  const dashboardMetrics = buildDashboardMetrics(summary);
+  // const dashboardMetrics = buildDashboardMetrics(summary);
   const nextLock = summary?.next_lock ?? null;
   const nextFirstMatch = matches[0];
   const predictionStartDate = nextFirstMatch ? new Date(`${nextFirstMatch.match_datetime}Z`) : new Date();

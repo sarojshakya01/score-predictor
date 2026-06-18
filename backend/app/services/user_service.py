@@ -10,10 +10,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
 from app.models.user import User, UserRole
+from app.repositories.setting_repository import SettingRepository
 from app.repositories.team_repository import TeamRepository
 from app.repositories.user_repository import UserRepository
-from app.repositories.setting_repository import SettingRepository
-
 from app.schemas.user import (
     UserCreate,
     UserListResponse,
@@ -226,7 +225,9 @@ class UserService:
         new_is_active = values.get("is_active")
         if isinstance(new_is_active, bool) and is_user_active != updated_user.is_active:
             try:
-                from app.services.email_service import send_user_activation_email  # noqa: PLC0415
+                from app.services.email_service import (
+                    send_user_activation_email,  # noqa: PLC0415
+                )
                 asyncio.create_task(send_user_activation_email(
                     email=updated_user.email,
                     first_name=updated_user.first_name,

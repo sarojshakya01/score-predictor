@@ -1,6 +1,6 @@
 """Setting SQLAlchemy model."""
 
-from sqlalchemy import CheckConstraint, JSON, String
+from sqlalchemy import JSON, CheckConstraint, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base, TimestampMixin

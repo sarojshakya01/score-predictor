@@ -1,6 +1,6 @@
 """SQLAlchemy models package."""
 
-from app.models.match import MatchDuration, Match
+from app.models.match import Match, MatchDuration
 from app.models.prediction import Prediction
 from app.models.setting import Setting
 from app.models.team import Team

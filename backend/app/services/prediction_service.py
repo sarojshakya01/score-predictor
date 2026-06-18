@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.match import Match, FirstGoalIn
+from app.models.match import FirstGoalIn, Match
 from app.models.prediction import Prediction
 from app.repositories.match_repository import MatchRepository
 from app.repositories.prediction_repository import PredictionRepository

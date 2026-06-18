@@ -1,11 +1,11 @@
 """Home-page summary API routes."""
 
-from app.api.deps import OptionalCurrentUser
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.deps import OptionalCurrentUser
 from app.db.session import get_db
 from app.schemas.home import HomeSummaryResponse
 from app.services.home_service import HomeService

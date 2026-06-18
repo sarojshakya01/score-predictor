@@ -1,8 +1,4 @@
 """Leaderboard scoring business logic."""
-from app.models.match import MatchStage
-from app.models.match import FirstGoalIn
-from app.schemas.leaderboard import LeaderboardFrame, AccumulatedPoints
-from app.api.deps import CurrentUser
 import logging
 from dataclasses import dataclass, field
 
@@ -10,7 +6,8 @@ from fastapi import HTTPException, status
 from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.match import MatchDuration, Match
+from app.api.deps import CurrentUser
+from app.models.match import FirstGoalIn, Match, MatchDuration, MatchStage
 from app.models.prediction import Prediction
 from app.models.user import User
 from app.repositories.match_repository import MatchRepository
@@ -18,10 +15,12 @@ from app.repositories.prediction_repository import PredictionRepository
 from app.repositories.setting_repository import SettingRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.leaderboard import (
+    AccumulatedPoints,
     LeaderboardEntryResponse,
+    LeaderboardFrame,
+    LeaderboardResponse,
     MatchPointsDetailsResponse,
     MatchUserPointsDetailsResponse,
-    LeaderboardResponse,
 )
 from app.schemas.prediction import (
     UserPointsDetailsListResponse,
