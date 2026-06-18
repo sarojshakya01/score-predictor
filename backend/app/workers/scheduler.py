@@ -475,8 +475,8 @@ async def extract_live_match_data_fifa() -> None:
                 async with httpx.AsyncClient(timeout=15) as client:
                     # ── Fetch live scores ───────────────────────────────────────────────
                     try:
-                        resp = await client.get(f"{FIFA_LIVE_MATCH_ENDPOINT}/{id_match}?language=en", headers=HEADERS)
-                        resp.raise_for_status()
+                        live_match_details_resp = await client.get(f"{FIFA_LIVE_MATCH_ENDPOINT}/{id_match}?language=en", headers=HEADERS)
+                        live_match_details_resp.raise_for_status()
                     except Exception:
                         logger.exception("[JOB1] Failed to fetch livescore data")
                         continue
@@ -489,11 +489,11 @@ async def extract_live_match_data_fifa() -> None:
                     return (base, extra)
 
                 live_entries: list[dict] = []
-                result = resp.json()
+                result = live_match_details_resp.json()
 
                 # completed match
-                if result.get('OfficialityStatus') == 1 and match.winner_id is not None:
-                    continue
+                # if result.get('OfficialityStatus') == 1 and match.winner_id is not None:
+                #     continue
 
                 home_country_code = result.get('HomeTeam').get('IdCountry').upper()
                 away_country_code = result.get('AwayTeam').get('IdCountry').upper()
