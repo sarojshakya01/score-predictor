@@ -20,7 +20,7 @@ from app.api.users import router as users_router
 from app.core.config import settings
 from app.workers.scheduler import lifespan
 
-LOG_FILE = "app.log"
+LOG_FILE = "cache/app.log"
 
 logging.basicConfig(
     level=logging.INFO,
