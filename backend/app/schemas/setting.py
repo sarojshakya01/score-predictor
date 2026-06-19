@@ -87,6 +87,12 @@ class MatchDayResponse(BaseModel):
     value: int
 
 
+class FinalistPredictionDeadlineResponse(BaseModel):
+    """Finalist prediction deadline response."""
+
+    value: int
+
+
 class GameRuleEntry(BaseModel):
     """A single scoring line within a rule group."""
 

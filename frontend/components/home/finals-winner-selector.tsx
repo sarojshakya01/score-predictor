@@ -27,10 +27,13 @@ import { getCurrentUser, isAuthenticated, MissingAuthTokenError, SessionExpiredE
 import { Modal } from "../ui/modal";
 import { ApiError } from "@/lib/api";
 import { getErrorMessage } from "@/lib/forms/error-message";
+import { getFinalistPredictionDeadline } from "@/lib/settings";
 import { updateCurrentUserFinalist, UserCreate } from "@/lib/users";
 import { WorldCupHistoryTooltip } from "./world-cup-history-tooltip";
 
 type PlaceId = 1 | 2 | 3;
+
+const DEFAULT_FINALIST_PREDICTION_DEADLINE = 7;
 
 type PlaceDefinition = {
   id: PlaceId;
@@ -314,6 +317,9 @@ const getMatchForPlace = (
 export const FinalsWinnerSelector = () => {
   const [authRequired, setAuthRequired] = useState(false);
   const [currentMatchDay, setCurrentMatchDay] = useState<number | null>(null);
+  const [finalistPredictionDeadline, setFinalistPredictionDeadline] = useState(
+    DEFAULT_FINALIST_PREDICTION_DEADLINE,
+  );
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -409,14 +415,22 @@ export const FinalsWinnerSelector = () => {
       setAuthRequired(!hasAuthToken);
 
       try {
-        const [matchDayResult, finalMatchesResult, teamsResult, userResult] =
+        const [
+          matchDayResult,
+          deadlineResult,
+          finalMatchesResult,
+          teamsResult,
+          userResult,
+        ] =
           await Promise.allSettled([
             getCurrentMatchDay(),
+            getFinalistPredictionDeadline(),
             listFinalMatches({ includeLocked: true, limit: 3 }),
             listAllTeams(),
             getCurrentUser()
           ]);
         let matchDay: number | null = null;
+        let deadline = DEFAULT_FINALIST_PREDICTION_DEADLINE;
         let finalMatches: MatchResponse[] = [];
         let teams: TeamResponse[] = [];
         let currrentUser: UserResponse | null = null;
@@ -426,6 +440,15 @@ export const FinalsWinnerSelector = () => {
         } else {
           showToast({
             message: getErrorMessage(matchDayResult.reason, "Unable to get data. Please try again."),
+            tone: "error",
+          });
+        }
+
+        if (deadlineResult.status === "fulfilled") {
+          deadline = deadlineResult.value.value;
+        } else {
+          showToast({
+            message: getErrorMessage(deadlineResult.reason, "Unable to load finalist prediction deadline."),
             tone: "error",
           });
         }
@@ -455,6 +478,7 @@ export const FinalsWinnerSelector = () => {
         }
 
         setCurrentMatchDay(matchDay);
+        setFinalistPredictionDeadline(deadline);
         setFinalMatches(finalMatches);
         setTeams(teams);
 
@@ -528,8 +552,9 @@ export const FinalsWinnerSelector = () => {
     thirdPlaceMatch,
   );
 
-  const predictionLocked = currentMatchDay ? currentMatchDay > 7 : false;
-  const predictionStatus = !currentMatchDay ? "Open" : predictionLocked ? "Locked" : currentMatchDay >= 5 ? "Locking soon" : "Open";
+  const predictionLocked = currentMatchDay ? currentMatchDay > finalistPredictionDeadline : false;
+  const lockingSoonMatchDay = Math.max(1, finalistPredictionDeadline - 2);
+  const predictionStatus = !currentMatchDay ? "Open" : predictionLocked ? "Locked" : currentMatchDay >= lockingSoonMatchDay ? "Locking soon" : "Open";
   const IconActivePlace = activePlace.icon;
 
   const selectTeam = (teamId: number) => {

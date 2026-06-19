@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.setting import Setting
 from app.repositories.setting_repository import SettingRepository
 from app.schemas.setting import (
+    FinalistPredictionDeadlineResponse,
     GameRuleGroup,
     GameRulesResponse,
     MatchDayResponse,
@@ -19,6 +20,35 @@ from app.schemas.setting import (
 )
 
 logger = logging.getLogger(__name__)
+
+FINALIST_PREDICTION_DEADLINE_SETTING_NAME = "finalist_prediction_deadline"
+FINALIST_PREDICTION_DEADLINE_FRIENDLY_NAME = "Finalist Prediction Deadline"
+DEFAULT_FINALIST_PREDICTION_DEADLINE_DAYS = 7
+
+
+def get_default_finalist_prediction_deadline_value() -> dict[str, int]:
+    """Return the default stored JSON value for the finalist deadline setting."""
+    return {"days": DEFAULT_FINALIST_PREDICTION_DEADLINE_DAYS}
+
+
+def parse_finalist_prediction_deadline_days(value: dict | None) -> int:
+    """Parse finalist prediction deadline days from a setting value."""
+    if not value:
+        raise ValueError("finalist_prediction_deadline value is empty")
+
+    raw_days = value["days"]
+    if isinstance(raw_days, bool):
+        raise ValueError("finalist_prediction_deadline days must be an integer")
+    if isinstance(raw_days, int):
+        days = raw_days
+    elif isinstance(raw_days, str):
+        days = int(raw_days.strip())
+    else:
+        raise ValueError("finalist_prediction_deadline days must be an integer")
+
+    if days < 1:
+        raise ValueError("finalist_prediction_deadline days must be positive")
+    return days
 
 
 class SettingService:
@@ -132,6 +162,19 @@ class SettingService:
             ) from exc
         return MatchDayResponse(value=day)
 
+    async def get_finalist_prediction_deadline(self) -> FinalistPredictionDeadlineResponse:
+        """Return the parsed finalist_prediction_deadline setting."""
+        setting = await self._get_or_create_finalist_prediction_deadline_setting()
+        try:
+            days = parse_finalist_prediction_deadline_days(setting.value)
+        except (KeyError, TypeError, ValueError) as exc:
+            logger.exception("Malformed finalist_prediction_deadline setting value")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="finalist_prediction_deadline setting is misconfigured",
+            ) from exc
+        return FinalistPredictionDeadlineResponse(value=days)
+
     async def get_game_rules(self) -> GameRulesResponse:
         """Return the parsed game_rules setting."""
         setting = await self._get_setting_or_404_by_name("game_rules")
@@ -164,6 +207,22 @@ class SettingService:
                 detail="Setting not found",
             )
         return setting
+
+    async def _get_or_create_finalist_prediction_deadline_setting(self) -> Setting:
+        """Fetch the finalist deadline setting, creating the default if missing."""
+        setting = await self._setting_repository.get_by_name(
+            FINALIST_PREDICTION_DEADLINE_SETTING_NAME,
+        )
+        if setting is not None:
+            return setting
+
+        return await self._setting_repository.create(
+            Setting(
+                name=FINALIST_PREDICTION_DEADLINE_SETTING_NAME,
+                friendly_name=FINALIST_PREDICTION_DEADLINE_FRIENDLY_NAME,
+                value=get_default_finalist_prediction_deadline_value(),
+            ),
+        )
 
     @staticmethod
     def _build_list_response(

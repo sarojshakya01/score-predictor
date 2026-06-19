@@ -45,6 +45,11 @@ from app.models.setting import Setting
 from app.models.team import Team
 from app.models.user import User, UserRole
 from app.services.email_service import build_base_html, send_email
+from app.services.setting_service import (
+    DEFAULT_FINALIST_PREDICTION_DEADLINE_DAYS,
+    FINALIST_PREDICTION_DEADLINE_SETTING_NAME,
+    parse_finalist_prediction_deadline_days,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -134,6 +139,29 @@ def _has_final_winners_prediction(user: User) -> bool:
     )
 
 
+async def _get_finalist_prediction_deadline_days(db: AsyncSession) -> int:
+    setting_result = await db.execute(
+        select(Setting).where(
+            Setting.name == FINALIST_PREDICTION_DEADLINE_SETTING_NAME,
+        ),
+    )
+    setting: Setting | None = setting_result.scalar_one_or_none()
+    if setting is None:
+        logger.info(
+            "[JOB2] finalist_prediction_deadline missing – using default %d",
+            DEFAULT_FINALIST_PREDICTION_DEADLINE_DAYS,
+        )
+        return DEFAULT_FINALIST_PREDICTION_DEADLINE_DAYS
+
+    try:
+        return parse_finalist_prediction_deadline_days(setting.value)
+    except (KeyError, TypeError, ValueError) as exc:
+        logger.exception("Malformed finalist_prediction_deadline setting value")
+        raise RuntimeError(
+            "finalist_prediction_deadline setting is misconfigured",
+        ) from exc
+
+
 async def _list_prediction_users(db: AsyncSession) -> list[User]:
     user_result = await db.execute(
         select(User)
@@ -166,7 +194,13 @@ async def _get_team_by_id_for_users(db: AsyncSession, users: list[User]) -> dict
     return {team.id: team for team in team_result.scalars().all()}
 
 
-async def _send_final_winners_reminder_email(match_day: int, db: AsyncSession, now: datetime) -> None:
+async def _send_final_winners_reminder_email(
+    match_day: int,
+    db: AsyncSession,
+    now: datetime,
+    *,
+    deadline_days: int,
+) -> None:
     users = await _list_prediction_users(db)
     recipients = [user.email for user in users]
 
@@ -200,7 +234,7 @@ async def _send_final_winners_reminder_email(match_day: int, db: AsyncSession, n
     body = build_base_html(
         f"<p>Dear all,</p>"
         f"<p>Match day {match_day} has arrived. Please submit your final winners "
-        f"predictions before the match day 8 deadline.</p>"
+        f"predictions before they close after match day {deadline_days}.</p>"
         f"{table_html}"
     )
 
@@ -272,9 +306,17 @@ async def _send_final_winners_match_day_email_if_needed(
     match_day: int,
     now: datetime,
 ) -> None:
-    if match_day == 6 or match_day == 7:
-        await _send_final_winners_reminder_email(match_day, db, now)
-    elif match_day == 8:
+    deadline_days = await _get_finalist_prediction_deadline_days(db)
+    reminder_start_day = max(1, deadline_days - 1)
+
+    if reminder_start_day <= match_day <= deadline_days:
+        await _send_final_winners_reminder_email(
+            match_day,
+            db,
+            now,
+            deadline_days=deadline_days,
+        )
+    elif match_day == deadline_days + 1:
         await _send_final_winners_predictions_email(db, now)
 
 
@@ -676,8 +718,7 @@ async def update_current_match_day() -> None:
             logger.info("[JOB2] No upcoming match within the next 24 hours – skipping")
             return
 
-        new_day = str(upcoming.match_day)
-        json_value = {"day": new_day}
+        json_value = {"day": upcoming.match_day}
 
         # Upsert the setting row
         setting_result = await db.execute(

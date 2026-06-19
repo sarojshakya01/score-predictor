@@ -20,6 +20,11 @@ from app.schemas.user import (
     UserResponse,
     UserUpdate,
 )
+from app.services.setting_service import (
+    DEFAULT_FINALIST_PREDICTION_DEADLINE_DAYS,
+    FINALIST_PREDICTION_DEADLINE_SETTING_NAME,
+    parse_finalist_prediction_deadline_days,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -256,21 +261,48 @@ class UserService:
 
     async def _validate_winners_prediction_deadline(self, values: dict[str, object]) -> None:
         """Ensure provided finalist team IDs are not set after deadline."""
-        for field_name in FINALIST_TEAM_ID_FIELDS:
-            if values.get(field_name) is not None:
-                current_match_day = await self._setting_repository.get_by_name("current_match_day")
+        if not any(values.get(field_name) is not None for field_name in FINALIST_TEAM_ID_FIELDS):
+            return
 
-                if current_match_day is None or current_match_day.value is None or current_match_day.value == {}:
-                    raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail="Current match day not set",
-                    )
+        current_match_day = await self._setting_repository.get_by_name("current_match_day")
+        if current_match_day is None or not current_match_day.value:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Current match day not set",
+            )
 
-                if int(current_match_day.value['day']) > 7:
-                    raise HTTPException(
-                        status_code=status.HTTP_400_BAD_REQUEST,
-                        detail="Winners can not be selected after 8th day of tournament",
-                    )
+        try:
+            current_day = int(current_match_day.value["day"])
+        except (KeyError, TypeError, ValueError) as exc:
+            logger.exception("Malformed current_match_day setting value")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="current_match_day setting is misconfigured",
+            ) from exc
+
+        deadline_days = await self._get_finalist_prediction_deadline_days()
+        if current_day > deadline_days:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Winners cannot be selected after match day {deadline_days}",
+            )
+
+    async def _get_finalist_prediction_deadline_days(self) -> int:
+        """Return configured finalist prediction deadline days."""
+        setting = await self._setting_repository.get_by_name(
+            FINALIST_PREDICTION_DEADLINE_SETTING_NAME,
+        )
+        if setting is None:
+            return DEFAULT_FINALIST_PREDICTION_DEADLINE_DAYS
+
+        try:
+            return parse_finalist_prediction_deadline_days(setting.value)
+        except (KeyError, TypeError, ValueError) as exc:
+            logger.exception("Malformed finalist_prediction_deadline setting value")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="finalist_prediction_deadline setting is misconfigured",
+            ) from exc
 
     async def delete_user(self, *, user_id: int, current_admin_id: int) -> None:
         """Delete a user from the admin user management screen."""

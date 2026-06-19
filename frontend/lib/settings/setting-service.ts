@@ -1,6 +1,7 @@
 import { apiFetch } from "@/lib/api";
 import { authenticatedApiFetch } from "@/lib/auth";
 import type {
+  FinalistPredictionDeadlineResponse,
   GameRulesResponse,
   ListSettingsParams,
   MatchDayResponse,
@@ -40,6 +41,10 @@ export const getMatchDay = async (): Promise<MatchDayResponse> => {
   return apiFetch<MatchDayResponse>("/matchday", { method: "GET" });
 };
 
+export const getFinalistPredictionDeadline = async (): Promise<FinalistPredictionDeadlineResponse> => {
+  return apiFetch<FinalistPredictionDeadlineResponse>("/finalist-prediction-deadline", { method: "GET" });
+};
+
 export const createSetting = async (data: SettingCreate): Promise<SettingResponse> => {
   return authenticatedApiFetch<SettingResponse, SettingCreate>("/admin/settings", {
     body: data,
@@ -67,6 +72,7 @@ export const settingService = {
   createSetting,
   deleteSetting,
   getAdminSetting,
+  getFinalistPredictionDeadline,
   getGameRules,
   getMatchDay,
   listSetting,

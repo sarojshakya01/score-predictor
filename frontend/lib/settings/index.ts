@@ -2,6 +2,7 @@ export {
   createSetting,
   deleteSetting,
   getAdminSetting,
+  getFinalistPredictionDeadline,
   getGameRules,
   getMatchDay,
   listSetting,
@@ -9,6 +10,7 @@ export {
   updateSetting,
 } from "@/lib/settings/setting-service";
 export type {
+  FinalistPredictionDeadlineResponse,
   GameRuleEntry,
   GameRuleGroup,
   GameRulesResponse,

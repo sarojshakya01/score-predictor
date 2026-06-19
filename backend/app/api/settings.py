@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_admin_user
 from app.db.session import get_db
 from app.schemas.setting import (
+    FinalistPredictionDeadlineResponse,
     GameRulesResponse,
     MatchDayResponse,
     SettingCreate,
@@ -39,6 +40,19 @@ async def get_current_match_day(
     """Return the current match day number."""
     service = SettingService(db)
     return await service.get_current_match_day()
+
+
+@router.get(
+    "/finalist-prediction-deadline",
+    response_model=FinalistPredictionDeadlineResponse,
+    summary="Finalist prediction deadline",
+)
+async def get_finalist_prediction_deadline(
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> FinalistPredictionDeadlineResponse:
+    """Return the finalist prediction deadline in match days."""
+    service = SettingService(db)
+    return await service.get_finalist_prediction_deadline()
 
 
 @router.get(

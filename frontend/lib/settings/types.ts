@@ -62,6 +62,10 @@ export type MatchDayResponse = {
   value: number;
 };
 
+export type FinalistPredictionDeadlineResponse = {
+  value: number;
+};
+
 export type GameRulesResponse = {
   rules: GameRuleGroup[];
 };
