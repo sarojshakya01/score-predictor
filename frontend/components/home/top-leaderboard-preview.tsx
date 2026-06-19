@@ -138,11 +138,11 @@ export const TopLeaderboardPreview = () => {
                 <div className="min-w-0 flex-1">
                   <div className="flex min-w-0 items-center gap-2">
                     {player.rank === 1 ? (
-                      <IconTrophy />
+                      <IconTrophy className="h-4 w-4 shrink-0 text-yellow-600 dark:text-yellow-300" />
                     ) : player.rank === 2 ? (
-                      <IconMedal />
+                      <IconMedal className="h-4 w-4 shrink-0 text-gray-600 dark:text-gray-300" />
                     ) : player.rank === 3 ? (
-                      <IconAward />
+                      <IconAward className="h-4 w-4 shrink-0 text-orange-600 dark:text-orange-300" />
                     ) : null}
                     <p className="truncate text-sm font-semibold text-zinc-950 dark:text-zinc-50">
                       {player.name}

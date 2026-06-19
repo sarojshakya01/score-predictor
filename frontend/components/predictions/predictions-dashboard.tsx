@@ -916,6 +916,7 @@ export const PredictionsDashboard = () => {
                 <input min="0" max="100" name="team1_score" type="number" value={formState.team1Score} onChange={(e) => {
                   updateField("team1Score", e.target.value);
                   if (e.target.value && formState.team2Score === '') updateField("team2Score", '0');
+                  else if (!e.target.value && formState.team2Score === '0') updateField("team2Score", '');
                 }} className={inputCls} />
               </label>
 
@@ -934,6 +935,7 @@ export const PredictionsDashboard = () => {
                 <input min="0" max="100" name="team2_score" type="number" value={formState.team2Score} onChange={(e) => {
                   updateField("team2Score", e.target.value);
                   if (e.target.value && formState.team1Score === '') updateField("team1Score", '0');
+                  else if (!e.target.value && formState.team1Score === '0') updateField("team1Score", '');
                 }} className={inputCls} />
               </label>
 
