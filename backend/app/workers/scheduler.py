@@ -838,7 +838,7 @@ async def send_autolock_email() -> None:
 async def send_reminder_email() -> None:
     """
     Every 30 minutes: find matches within the next 3 hours that have not had
-    a reminder sent yet, then email all users showing who has/hasn't predicted.
+    a reminder sent yet, then email only users who have not predicted.
     """
     logger.info("[JOB4] send_reminder_email – starting")
 
@@ -864,7 +864,7 @@ async def send_reminder_email() -> None:
             logger.info("[JOB4] No matches needing a reminder – skipping")
             return
 
-        # Fetch all active user
+        # Fetch all active users eligible for prediction reminders.
         user_result = await db.execute(
             select(User).where(
                 (User.is_active.is_(True)) &
@@ -872,17 +872,18 @@ async def send_reminder_email() -> None:
             ).order_by(User.first_name.asc(), User.last_name.asc(), User.id.asc()),
         )
         all_users: list[User] = list(user_result.scalars().all())
-        recipients: list[str] = [u.email for u in all_users]
 
-        if not recipients:
-            logger.info("[JOB4] No active users – skipping email")
+        if not all_users:
+            logger.info("[JOB4] No active users – skipping reminder email")
             return
 
-        tables_html = ""
+        missed_matches_by_user: dict[int, list[tuple[str, str]]] = {
+            user.id: [] for user in all_users
+        }
 
         for match in upcoming:
-            team1_name = match.team1.name
-            team2_name = match.team2.name
+            team1_name = escape(match.team1.name)
+            team2_name = escape(match.team2.name)
             match_title = f"{team1_name} vs {team2_name}"
             match_time_str = match.match_datetime.replace(tzinfo=UTC).astimezone().strftime("%Y-%m-%d %I:%M %p")
 
@@ -895,30 +896,11 @@ async def send_reminder_email() -> None:
             existing_preds: list[Prediction] = list(pred_result.scalars().all())
             predicted_user_ids = {p.user_id for p in existing_preds}
 
-            header_html = (
-                f"<thead>"
-                f"<tr><th colspan='3'>{match_title}</th></tr>"
-                f"<tr><th colspan='3'>{match_time_str}</th></tr>"
-                f"<tr><th>#</th><th>Player</th><th>Predicted?</th></tr>"
-                f"</thead>"
-            )
-
-            rows_html = ""
-            for idx, user in enumerate(all_users, start=1):
-                predicted = user.id in predicted_user_ids
-                status_class = "" if predicted else "not-predicted"
-                status_text = "✓ Yes" if predicted else "✗ No"
-                rows_html += (
-                    f"<tr>"
-                    f"<td>{idx}</td>"
-                    f"<td>{user.first_name} {user.last_name}</td>"
-                    f"<td class='{status_class}'>{status_text}</td>"
-                    f"</tr>"
-                )
-
-            tables_html += (
-                f"<table>{header_html}<tbody>{rows_html}</tbody></table><br>"
-            )
+            missing_users = [
+                user for user in all_users if user.id not in predicted_user_ids
+            ]
+            for user in missing_users:
+                missed_matches_by_user[user.id].append((match_title, match_time_str))
 
             # Mark reminder sent
             match.match_reminder_sent = True
@@ -930,17 +912,58 @@ async def send_reminder_email() -> None:
 
         await db.commit()
 
-        body = build_base_html(
-            f"<p>Dear all,</p>"
-            f"<p>A match is starting soon! Please submit your predictions before kick-off.</p>"
-            f"{tables_html}"
-        )
+        emails_sent = 0
+        for user in all_users:
+            missed_matches = missed_matches_by_user[user.id]
+            if not missed_matches:
+                continue
 
-        await send_email(
-            subject=f"World Cup 2026 – Prediction Reminder ({now.strftime('%Y-%m-%d')})",
-            html_body=body,
-            recipients=recipients,
-        )
+            rows_html = "".join(
+                f"<tr>"
+                f"<td>{idx}</td>"
+                f"<td>{match_title}</td>"
+                f"<td>{match_time_str}</td>"
+                f"</tr>"
+                for idx, (match_title, match_time_str) in enumerate(
+                    missed_matches,
+                    start=1,
+                )
+            )
+            table_html = (
+                f"<table>"
+                f"<thead>"
+                f"<tr><th>#</th><th>Match</th><th>Match Time</th></tr>"
+                f"</thead>"
+                f"<tbody>{rows_html}</tbody>"
+                f"</table>"
+            )
+            match_copy = (
+                "A match is starting soon"
+                if len(missed_matches) == 1
+                else "Matches are starting soon"
+            )
+            prediction_copy = (
+                "prediction" if len(missed_matches) == 1 else "predictions"
+            )
+
+            body = build_base_html(
+                f"<p>Hi {_fmt_user_name(user)},</p>"
+                f"<p>{match_copy} and you have not submitted your "
+                f"{prediction_copy} yet. Please submit before kick-off.</p>"
+                f"{table_html}"
+            )
+
+            await send_email(
+                subject=f"World Cup 2026 – Prediction Reminder ({now.strftime('%Y-%m-%d')})",
+                html_body=body,
+                recipients=[user.email],
+            )
+            emails_sent += 1
+
+        if emails_sent == 0:
+            logger.info("[JOB4] No users missing predictions – no reminder emails sent")
+        else:
+            logger.info("[JOB4] Sent %d individual reminder email(s)", emails_sent)
 
     logger.info("[JOB4] send_reminder_email – done")
 
