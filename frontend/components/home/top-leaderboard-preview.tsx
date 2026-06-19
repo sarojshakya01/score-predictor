@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { IconLeaderboard, IconTrophy } from "@/components/ui/icons";
+import { IconAward, IconLeaderboard, IconMedal, IconTrophy } from "@/components/ui/icons";
 import { ApiError } from "@/lib/api";
 import {
   isAuthenticated,
@@ -138,7 +138,11 @@ export const TopLeaderboardPreview = () => {
                 <div className="min-w-0 flex-1">
                   <div className="flex min-w-0 items-center gap-2">
                     {player.rank === 1 ? (
-                      <IconTrophy className="h-4 w-4 shrink-0 text-yellow-600 dark:text-yellow-300" />
+                      <IconTrophy />
+                    ) : player.rank === 2 ? (
+                      <IconMedal />
+                    ) : player.rank === 3 ? (
+                      <IconAward />
                     ) : null}
                     <p className="truncate text-sm font-semibold text-zinc-950 dark:text-zinc-50">
                       {player.name}
