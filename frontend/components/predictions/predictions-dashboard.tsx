@@ -1096,7 +1096,7 @@ export const PredictionsDashboard = () => {
                   "static sm:sticky top-0 z-30",
                   "bg-zinc-100 dark:bg-zinc-700",
                   "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[135px]"
-                ].join(" ")}>Submitted by</th>
+                ].join(" ")}>Submitted at</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
