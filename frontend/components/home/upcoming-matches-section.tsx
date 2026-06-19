@@ -53,7 +53,7 @@ export const UpcomingMatchesSection = ({ matches }: UpcomingMatchesSectionProps)
       {matches.length > 0 ? (
         <div
           className={[
-            "flex gap-4 overflow-x-auto p-4 overflow-hidden rounded-md",
+            "flex gap-4 overflow-x-auto p-4 overflow-hidden cursor-pointer rounded-md",
             "border border-zinc-200 dark:border-zinc-700",
             "shadow-sm dark:shadow-zinc-950",
             "bg-white dark:bg-zinc-900",

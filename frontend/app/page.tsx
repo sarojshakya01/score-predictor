@@ -261,6 +261,12 @@ const Home = async () => {
               See the latest match results.
             </p>
           </div>
+          <Link
+            href="/results"
+            className="hidden text-sm font-semibold text-emerald-700 hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-300 sm:inline"
+          >
+            All results
+          </Link>
         </div>
 
         <MatchResultsList matches={results} />
