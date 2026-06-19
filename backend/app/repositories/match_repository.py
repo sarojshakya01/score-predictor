@@ -179,8 +179,8 @@ class MatchRepository:
         to_datetime: datetime,
     ) -> int:
         """Count matches whose prediction lock is inside the supplied window."""
-        from_match_datetime = from_datetime.astimezone() + timedelta(hours=1)
-        to_match_datetime = to_datetime.astimezone() + timedelta(hours=1)
+        from_match_datetime = from_datetime + timedelta(hours=1)
+        to_match_datetime = to_datetime + timedelta(hours=1)
         statement = (
             select(func.count())
             .select_from(Match)
@@ -194,7 +194,7 @@ class MatchRepository:
 
     async def get_next_open_match(self, from_datetime: datetime) -> Match | None:
         """Fetch the next match whose prediction lock has not passed."""
-        prediction_deadline_floor = from_datetime.astimezone() + timedelta(hours=1)
+        prediction_deadline_floor = from_datetime + timedelta(hours=1)
         statement = (
             select(Match)
             .options(
