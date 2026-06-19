@@ -140,7 +140,7 @@ export const TopLeaderboardPreview = () => {
                     {player.rank === 1 ? (
                       <IconTrophy className="h-4 w-4 shrink-0 text-yellow-600 dark:text-yellow-300" />
                     ) : player.rank === 2 ? (
-                      <IconMedal className="h-4 w-4 shrink-0 text-gray-600 dark:text-gray-300" />
+                      <IconMedal className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
                     ) : player.rank === 3 ? (
                       <IconAward className="h-4 w-4 shrink-0 text-orange-600 dark:text-orange-300" />
                     ) : null}
