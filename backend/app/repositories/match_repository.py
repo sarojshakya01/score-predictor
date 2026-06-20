@@ -1,5 +1,7 @@
 """Repository for match database operations."""
 
+from sqlalchemy import and_
+from sqlalchemy import case
 from collections.abc import Mapping
 from datetime import datetime, timedelta, timezone
 
@@ -57,8 +59,34 @@ class MatchRepository:
         if match_locked is not None:
             statement = statement.where(Match.match_locked == match_locked)
 
+        match_start_time = datetime.utcnow() - timedelta(days=1)
+
         result = await self._db.execute(
-            statement.order_by(Match.updated_at.desc(), Match.id.asc())
+            statement.order_by(
+                case(
+                    (
+                        and_(
+                            Match.match_datetime >= match_start_time,
+                            Match.team1_score.is_not(None),
+                            Match.team2_score.is_not(None),
+                        ),
+                        0,
+                    ),
+                    (
+                        Match.match_datetime >= match_start_time,
+                        1,
+                    ),
+                    else_=2,
+                ),
+                case(
+                    (Match.match_datetime >= match_start_time, Match.match_datetime),
+                    else_=None
+                ).asc(),
+                case(
+                    (Match.match_datetime < match_start_time, Match.match_datetime),
+                    else_=None
+                ).desc(),
+            )
             .offset(offset)
             .limit(limit),
         )

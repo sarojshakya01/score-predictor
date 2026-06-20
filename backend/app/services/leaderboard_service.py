@@ -399,7 +399,7 @@ class LeaderboardService:
                         # Match duration
                         match_duration=match.match_duration.value if match.match_duration else None,
                         predicted_match_duration=point_from_prediction.match_duration.value if point_from_prediction.match_duration else None,
-                        match_duration_points=score.match_duration_points,
+                        match_duration_points=score.match_duration_points if match.team1_score is not None and match.team2_score is not None else 0, # for group stage match, match_duration is already set to 90, so count only if match already startes
 
                         total_points=score.total_points,
                         match_stage=match.match_stage

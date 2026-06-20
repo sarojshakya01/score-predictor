@@ -14,7 +14,7 @@ import {
 import type { TeamCreate, TeamResponse } from "@/lib/teams";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import Image from "next/image";
-import { IconCancel, IconPencil, IconPlus, IconSave, IconSearch, IconTrash, IconX } from "@/components/ui/icons";
+import { IconCancel, IconPencil, IconPlus, IconSave, IconSearch, IconTrash } from "@/components/ui/icons";
 import { Pagination } from "@/components/ui/pagination";
 import { ToastViewport, useToast } from "@/components/ui/toast";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -239,18 +239,8 @@ const AdminTeamsPage = () => {
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
               placeholder="Search by name, group, FIFA code, or rank..."
-              className="h-10 w-full rounded-md border border-zinc-200 bg-white pl-9 pr-9 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:ring-emerald-900"
+              className="h-10 w-full rounded-md border border-zinc-200 bg-white pl-9 pr-2 text-sm text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:ring-emerald-900"
             />
-            {isSearchActive && (
-              <button
-                type="button"
-                aria-label="Clear search"
-                onClick={() => handleSearch("")}
-                className="absolute inset-y-0 right-3 flex items-center text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
-              >
-                <IconX className="h-4 w-4" />
-              </button>
-            )}
           </div>
           <div className="pl-10">
             <Pagination page={page} pageSize={PAGE_SIZE} total={filteredTeams.length} onChange={setPage} />

@@ -19,7 +19,6 @@ import {
   IconSearch,
   IconSparkles,
   IconTrophy,
-  IconX,
 } from "@/components/ui/icons";
 import { getCurrentMatchDay, listFinalMatches, type MatchResponse } from "@/lib/matches";
 import { listAllTeams, type TeamResponse } from "@/lib/teams";
@@ -718,24 +717,14 @@ export const FinalsWinnerSelector = () => {
             <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 dark:text-zinc-500" />
             <input
               id="winner-team-search"
-              type="text"
+              type="search"
               inputMode="search"
               autoComplete="off"
               value={searchTerm}
               onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Search team..."
-              className="h-8 w-full rounded-md border border-zinc-300 text-sm bg-white pl-9 pr-5 text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500 dark:focus:ring-emerald-900"
+              className="h-8 w-full rounded-md border border-zinc-300 text-sm bg-white pl-9 pr-2 text-zinc-950 outline-none transition placeholder:text-zinc-400 focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:placeholder-zinc-500 dark:focus:ring-emerald-900"
             />
-            {searchTerm ? (
-              <button
-                type="button"
-                aria-label="Clear team search"
-                onClick={() => setSearchTerm("")}
-                className="absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-md text-zinc-400 transition hover:bg-zinc-100 hover:text-zinc-700 dark:text-zinc-500 dark:hover:bg-zinc-700 dark:hover:text-zinc-200"
-              >
-                <IconX className="h-4 w-4" />
-              </button>
-            ) : null}
           </div>
         </div>
       </div>
