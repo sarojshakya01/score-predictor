@@ -500,7 +500,10 @@ async def extract_live_match_data_fifa() -> None:
             .where(Match.match_datetime >= window_start)
             .order_by(Match.match_datetime.asc(), Match.id.asc()),
         )
-        active_matches: list[Match] = list(result.scalars().all())
+        active_matches_from_window: list[Match] = list(result.scalars().all())
+
+        # filter already completed matches
+        active_matches = [match for match in active_matches_from_window if match.winner_id is None]
 
         if not active_matches:
             logger.info("[JOB1] No active matches in the live window – nothing to do")
@@ -670,7 +673,7 @@ async def extract_live_match_data_fifa() -> None:
                     )
                 )
                 logger.info(
-                    "[JOB1] Updated match id=%d  %d–%d  Y=%d R=%d  FGI:%s  FST:%s  KOT:%s  MD:%s  WD:%s",
+                    "[JOB1] Updated match id=%d  %d–%d  Y=%d R=%d  FG:%s  FST:%s  KOT:%s  MD:%s  W:%s  DT:%s",
                     db_match.id,
                     team1_score,
                     team2_score,
@@ -680,6 +683,8 @@ async def extract_live_match_data_fifa() -> None:
                     first_scoring_team_id,
                     kick_off_team_id,
                     match_duration,
+                    winner_id,
+                    match_datetime
                 )
 
             await db.commit()
