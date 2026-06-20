@@ -455,7 +455,7 @@ const UserPointsDetailModal = ({
                         "px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
                       ].join(" ")}>
                         <span className="hidden md:block">Winner Points ({data.winner_prediction || "—"})</span>
-                        <span className="md:hidden">Winner Pts({data.winner_prediction || "—"})</span>
+                        <span className="md:hidden">Winner Pts ({data.winner_prediction || "—"})</span>
                       </td>
                       {/* Score pts */}
                       <td className={[
@@ -522,7 +522,7 @@ const UserPointsDetailModal = ({
                         "px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
                       ].join(" ")}>
                         <span className="hidden md:block">Third Place Points ({data.third_place_prediction || "—"})</span>
-                        <span className="md:hidden">3rd Place Pts({data.third_place_prediction || "—"})</span>
+                        <span className="md:hidden">3rd Place Pts ({data.third_place_prediction || "—"})</span>
                       </td>
                       {/* Score pts */}
                       <td className={[
@@ -541,18 +541,18 @@ const UserPointsDetailModal = ({
                     </tr>
                   )}
                   <tr>
-                    <td className={[
+                    {/* <td className={[
                       "static sm:sticky left-0 z-20 w-[30px] min-w-[30px] max-w-[30px]",
                       "bg-white dark:bg-zinc-950",
                       "border-b border-zinc-200 dark:border-zinc-800",
                       "whitespace-nowrap px-3 md:px-5 py-2.5 text-left text-xs font-medium text-zinc-400 dark:text-zinc-500"
-                    ].join(" ")}></td>
+                    ].join(" ")}></td> */}
                     <td className={[
-                      "static sm:sticky left-[30px] z-20 w-[110px] min-w-[110px] max-w-[110px] md:left-[40px] md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
+                      "static sm:sticky left-0 z-20 w-[110px] min-w-[110px] max-w-[110px] md:left-[40px] md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
                       "bg-white dark:bg-zinc-950",
                       "border-b border-zinc-200 dark:border-zinc-800",
                       "px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
-                    ].join(" ")}>
+                    ].join(" ")} colSpan={2}>
                       <button
                         type="button"
                         aria-expanded={areFinalRowsExpanded}
