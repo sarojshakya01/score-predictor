@@ -23,7 +23,7 @@ import {
 import type { MatchCreate, MatchDuration, MatchResponse } from "@/lib/matches";
 import { listAdminTeams } from "@/lib/teams";
 import type { TeamResponse } from "@/lib/teams";
-import { formatDateTime, getTeam1WithFlag, getTeam2WithFlag, getVs } from "@/components/ui/match-card";
+import { formatDateTime, getTeam1WithFlag, getTeam2WithFlag, getVs, isMatchPlayedOrLive } from "@/components/ui/match-card";
 import { ConfirmModal } from "@/components/ui/confirm-modal";
 import { IconCancel, IconHighlight, IconPencil, IconPlus, IconSave, IconSearch, IconTrash } from "@/components/ui/icons";
 import { Pagination } from "@/components/ui/pagination";
@@ -481,11 +481,6 @@ const AdminMatchesPage = () => {
                   <th className={[
                     "static sm:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
-                    "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[150px]"
-                  ].join(" ")}>Kickoff Team</th>
-                  <th className={[
-                    "static sm:sticky top-0 z-30",
-                    "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[140px]"
                   ].join(" ")}>First Goal in</th>
                   <th className={[
@@ -493,6 +488,21 @@ const AdminMatchesPage = () => {
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[145px]"
                   ].join(" ")}>First Score by</th>
+                  <th className={[
+                    "static sm:sticky top-0 z-30",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[130px]"
+                  ].join(" ")}>Yellow Card</th>
+                  <th className={[
+                    "static sm:sticky top-0 z-30",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[120px]"
+                  ].join(" ")}>Red Card</th>
+                  <th className={[
+                    "static sm:sticky top-0 z-30",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 min-w-[150px]"
+                  ].join(" ")}>Kickoff Team</th>
                   <th className={[
                     "static sm:sticky top-0 z-30",
                     "bg-zinc-100 dark:bg-zinc-700",
@@ -516,102 +526,110 @@ const AdminMatchesPage = () => {
                     <td className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400" colSpan={14}>Loading matches…</td>
                   </tr>
                 ) : pagedMatches.length > 0 ? (
-                  pagedMatches.map((match, idx) => (
-                    <tr key={match.id} className="transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40">
-                      <td className={[
-                        "static sm:sticky left-0 z-20 w-[50px] min-w-[50px] max-w-[50px] md:w-[64px] md:min-w-[64px] md:max-w-[64px]",
-                        "bg-white dark:bg-zinc-950",
-                        "border-b border-zinc-200 dark:border-zinc-800",
-                        "pl-5 pr-3 py-3 text-left text-zinc-700 dark:text-zinc-300"
-                      ].join(" ")}>{idx + 1}</td>
-                      <td className={[
-                        "static md:sticky left-[64px] z-20 w-32 min-w-[128px] max-w-[128px]",
-                        "bg-white dark:bg-zinc-950",
-                        "border-b border-zinc-200 dark:border-zinc-800",
-                        "pl-3 pr-0 py-3 font-medium text-zinc-950 dark:text-zinc-50",
-                        "hidden md:table-cell"
-                      ].join(" ")}>{getTeam1WithFlag(match, "sm")}</td>
-                      <td className={[
-                        "static sm:sticky left-[50px] z-20 w-[75px] min-w-[75px] max-w-[75px]",
-                        "bg-white dark:bg-zinc-950",
-                        "border-b border-zinc-200 dark:border-zinc-800",
-                        "px-1 py-3 font-medium text-zinc-950 dark:text-zinc-50 text-center",
-                        "table-cell md:hidden"
-                      ].join(" ")}><p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{match.team1_name_short}</p></td>
-                      <td className={[
-                        "static sm:sticky left-[125px] md:left-[192px] z-20 w-[25px] min-w-[25px] max-w-[25px] md:w-[64px] md:min-w-[64px] md:max-w-[64px]",
-                        "bg-white dark:bg-zinc-950",
-                        "border-b border-zinc-200 dark:border-zinc-800",
-                        "px-0 md:px-3 py-3 text-center font-medium text-zinc-950 dark:text-zinc-50"
-                      ].join(" ")}>{getVs("sm")}</td>
-                      <td className={[
-                        "static md:sticky md:left-[256px] z-20 w-32 min-w-[128px] max-w-[128px]",
-                        "bg-white dark:bg-zinc-950",
-                        "border-b border-zinc-200 dark:border-zinc-800",
-                        "pl-0 pr-3 py-3 font-medium text-zinc-950 dark:text-zinc-50",
-                        "hidden md:table-cell"
-                      ].join(" ")}>{getTeam2WithFlag(match, "sm")}</td>
-                      <td className={[
-                        "static sm:sticky left-[150px] z-[50px] w-[75px] min-w-[75px] max-w-[75px]",
-                        "bg-white dark:bg-zinc-950",
-                        "border-b border-zinc-200 dark:border-zinc-800",
-                        "px-1 py-3 font-medium text-zinc-950 dark:text-zinc-50 text-center",
-                        "table-cell md:hidden"
-                      ].join(" ")}><p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{match.team2_name_short}</p></td>
-                      <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300 text-end">{match.match_day}</td>
-                      <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300 whitespace-nowrap px-3 py-4 text-center">
-                        {match.highlights_url ? (
-                          <Tooltip content="Watch match highlights">
-                            <Link
-                              href={match.highlights_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              aria-label={`Watch highlights for ${match.team1_name} vs ${match.team2_name}`}
-                              onClick={(event) => event.stopPropagation()}
-                              onKeyDown={(event) => event.stopPropagation()}
-                              className={[
-                                "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition",
-                                "bg-gray-200 dark:bg-blue-700",
-                                "ring-1 ring-inset ring-gray-200 dark:ring-gray-500",
-                                "hover:bg-gray-300 dark:hover:bg-blue-600",
-                                "text-blue-600 hover:text-blue-700 dark:text-blue-300 "
-                              ].join(" ")}
-                            >
-                              <IconHighlight className="h-4 w-4" />
-                            </Link>
-                          </Tooltip>
-                        ) : (
-                          <span className="text-zinc-300 dark:text-zinc-600">—</span>
-                        )}
-                      </td>
-                      <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{formatDateTime(match.match_datetime)}</td>
-                      <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{formatScore(match)}</td>
-                      <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{getWinnerLabel(match, teams)}</td>
-                      <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{getTeamNameById(teams, match.kick_off_team_id) || "—"}</td>
-                      <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.first_goal_in ? firstGoalInLabels[match.first_goal_in as FirstGoalIn] : "—"}</td>
-                      <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{getTeamNameById(teams, match.first_scoring_team_id) || "—"}</td>
-                      <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.match_duration ? matchDurationLabels[match.match_duration as MatchDuration] : "—"}</td>
-                      <td className="px-3 py-3">
-                        <StatusPill tone={match.match_locked ? "accent" : "secondary"}>{getMatchStatus(match)}</StatusPill>
-                      </td>
-                      <td className="px-3 py-3 text-right">
-                        <div className="flex justify-end gap-1">
-                          <Tooltip content="Edit">
-                            <button aria-label="Edit" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-50 cursor-pointer transition disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-400 dark:hover:bg-emerald-950" disabled={openingEditMatchId !== null} type="button" onClick={() => void startEditingMatch(match)}>
-                              <IconPencil className="h-4 w-4" />
-                              <span className="sr-only">Edit</span>
-                            </button>
-                          </Tooltip>
-                          <Tooltip content="Delete">
-                            <button aria-label="Delete" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-700 hover:bg-rose-50 cursor-pointer transition disabled:opacity-40 dark:text-rose-400 dark:hover:bg-rose-950" disabled={isDeletingId === match.id} type="button" onClick={() => handleDeleteClick(match)}>
-                              <IconTrash className="h-4 w-4" />
-                              <span className="sr-only">Delete</span>
-                            </button>
-                          </Tooltip>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                  pagedMatches.map((match, idx) => {
+                    const { isMatchPlayed, isMatchLive } = isMatchPlayedOrLive(match)
+                    return (
+                      <tr key={match.id} className={[
+                        "transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40",
+                        !isMatchPlayed && match.match_locked ? "bg-green-200 dark:bg-green-950/50" : isMatchLive ? "bg-green-300 dark:bg-green-950/70 animate-pulse" : "",
+                      ].join(" ")}>
+                        <td className={[
+                          "static sm:sticky left-0 z-20 w-[50px] min-w-[50px] max-w-[50px] md:w-[64px] md:min-w-[64px] md:max-w-[64px]",
+                          !isMatchPlayed && match.match_locked ? "bg-green-200 dark:bg-green-950/50" : isMatchLive ? "bg-green-300 dark:bg-green-950/70" : "bg-white dark:bg-zinc-950",
+                          "border-b border-zinc-200 dark:border-zinc-800",
+                          "pl-5 pr-3 py-3 text-left text-zinc-700 dark:text-zinc-300"
+                        ].join(" ")}>{idx + 1}</td>
+                        <td className={[
+                          "static md:sticky left-[64px] z-20 w-32 min-w-[128px] max-w-[128px]",
+                          !isMatchPlayed && match.match_locked ? "bg-green-200 dark:bg-green-950/50" : isMatchLive ? "bg-green-300 dark:bg-green-950/70" : "bg-white dark:bg-zinc-950",
+                          "border-b border-zinc-200 dark:border-zinc-800",
+                          "pl-3 pr-0 py-3 font-medium text-zinc-950 dark:text-zinc-50",
+                          "hidden md:table-cell"
+                        ].join(" ")}>{getTeam1WithFlag(match, "sm")}</td>
+                        <td className={[
+                          "static sm:sticky left-[50px] z-20 w-[75px] min-w-[75px] max-w-[75px]",
+                          !isMatchPlayed && match.match_locked ? "bg-green-200 dark:bg-green-950/50" : isMatchLive ? "bg-green-300 dark:bg-green-950/70" : "bg-white dark:bg-zinc-950",
+                          "border-b border-zinc-200 dark:border-zinc-800",
+                          "px-1 py-3 font-medium text-zinc-950 dark:text-zinc-50 text-center",
+                          "table-cell md:hidden"
+                        ].join(" ")}><p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{match.team1_name_short}</p></td>
+                        <td className={[
+                          "static sm:sticky left-[125px] md:left-[192px] z-20 w-[25px] min-w-[25px] max-w-[25px] md:w-[64px] md:min-w-[64px] md:max-w-[64px]",
+                          !isMatchPlayed && match.match_locked ? "bg-green-200 dark:bg-green-950/50" : isMatchLive ? "bg-green-300 dark:bg-green-950/70" : "bg-white dark:bg-zinc-950",
+                          "border-b border-zinc-200 dark:border-zinc-800",
+                          "px-0 md:px-3 py-3 text-center font-medium text-zinc-950 dark:text-zinc-50"
+                        ].join(" ")}>{getVs("sm")}</td>
+                        <td className={[
+                          "static md:sticky md:left-[256px] z-20 w-32 min-w-[128px] max-w-[128px]",
+                          !isMatchPlayed && match.match_locked ? "bg-green-200 dark:bg-green-950/50" : isMatchLive ? "bg-green-300 dark:bg-green-950/70" : "bg-white dark:bg-zinc-950",
+                          "border-b border-zinc-200 dark:border-zinc-800",
+                          "pl-0 pr-3 py-3 font-medium text-zinc-950 dark:text-zinc-50",
+                          "hidden md:table-cell"
+                        ].join(" ")}>{getTeam2WithFlag(match, "sm")}</td>
+                        <td className={[
+                          "static sm:sticky left-[150px] z-[50px] w-[75px] min-w-[75px] max-w-[75px]",
+                          !isMatchPlayed && match.match_locked ? "bg-green-200 dark:bg-green-950/50" : isMatchLive ? "bg-green-300 dark:bg-green-950/70" : "bg-white dark:bg-zinc-950",
+                          "border-b border-zinc-200 dark:border-zinc-800",
+                          "px-1 py-3 font-medium text-zinc-950 dark:text-zinc-50 text-center",
+                          "table-cell md:hidden"
+                        ].join(" ")}><p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{match.team2_name_short}</p></td>
+                        <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300 text-end">{match.match_day}</td>
+                        <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300 whitespace-nowrap px-3 py-4 text-center">
+                          {match.highlights_url ? (
+                            <Tooltip content="Watch match highlights">
+                              <Link
+                                href={match.highlights_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                aria-label={`Watch highlights for ${match.team1_name} vs ${match.team2_name}`}
+                                onClick={(event) => event.stopPropagation()}
+                                onKeyDown={(event) => event.stopPropagation()}
+                                className={[
+                                  "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition",
+                                  "bg-gray-200 dark:bg-blue-700",
+                                  "ring-1 ring-inset ring-gray-200 dark:ring-gray-500",
+                                  "hover:bg-gray-300 dark:hover:bg-blue-600",
+                                  "text-blue-600 hover:text-blue-700 dark:text-blue-300 "
+                                ].join(" ")}
+                              >
+                                <IconHighlight className="h-4 w-4" />
+                              </Link>
+                            </Tooltip>
+                          ) : (
+                            <span className="text-zinc-300 dark:text-zinc-600">—</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{formatDateTime(match.match_datetime)}</td>
+                        <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{formatScore(match)}</td>
+                        <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{getWinnerLabel(match, teams)}</td>
+                        <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.first_goal_in ? firstGoalInLabels[match.first_goal_in as FirstGoalIn] : "—"}</td>
+                        <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{getTeamNameById(teams, match.first_scoring_team_id) || "—"}</td>
+                        <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.yellow_card_count || "—"}</td>
+                        <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.red_card_count || "—"}</td>
+                        <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{getTeamNameById(teams, match.kick_off_team_id) || "—"}</td>
+                        <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.match_duration ? matchDurationLabels[match.match_duration as MatchDuration] : "—"}</td>
+                        <td className="px-3 py-3">
+                          <StatusPill tone={match.match_locked ? "accent" : "secondary"}>{getMatchStatus(match)}</StatusPill>
+                        </td>
+                        <td className="px-3 py-3 text-right">
+                          <div className="flex justify-end gap-1">
+                            <Tooltip content="Edit">
+                              <button aria-label="Edit" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-50 cursor-pointer transition disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-400 dark:hover:bg-emerald-950" disabled={openingEditMatchId !== null} type="button" onClick={() => void startEditingMatch(match)}>
+                                <IconPencil className="h-4 w-4" />
+                                <span className="sr-only">Edit</span>
+                              </button>
+                            </Tooltip>
+                            <Tooltip content="Delete">
+                              <button aria-label="Delete" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-700 hover:bg-rose-50 cursor-pointer transition disabled:opacity-40 dark:text-rose-400 dark:hover:bg-rose-950" disabled={isDeletingId === match.id} type="button" onClick={() => handleDeleteClick(match)}>
+                                <IconTrash className="h-4 w-4" />
+                                <span className="sr-only">Delete</span>
+                              </button>
+                            </Tooltip>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })
                 ) : (
                   <tr>
                     <td className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400" colSpan={14}>
@@ -764,7 +782,7 @@ const AdminMatchesPage = () => {
             </div>
           </form>
         </Modal>
-      </main>
+      </main >
     </>
   );
 };
