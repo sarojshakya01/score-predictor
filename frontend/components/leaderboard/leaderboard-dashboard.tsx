@@ -548,7 +548,7 @@ const UserPointsDetailModal = ({
                       "whitespace-nowrap px-3 md:px-5 py-2.5 text-left text-xs font-medium text-zinc-400 dark:text-zinc-500"
                     ].join(" ")}></td> */}
                     <td className={[
-                      "static sm:sticky left-0 z-20 w-[110px] min-w-[110px] max-w-[110px] md:left-[40px] md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
+                      "static sm:sticky left-0 z-20 w-[110px] min-w-[110px] max-w-[110px] md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
                       "bg-white dark:bg-zinc-950",
                       "border-b border-zinc-200 dark:border-zinc-800",
                       "px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
