@@ -650,11 +650,14 @@ class LeaderboardService:
                 )
             )
 
-            cumulative_points[user.id] = (
-                winner_points
-                + runner_up_points
-                + third_place_points
-            )
+            cumulative_points[user.id] = {
+                "total_points": winner_points + runner_up_points + third_place_points,
+                "winner_points": winner_points,
+                "runner_up_points": runner_up_points,
+                "third_place_points": third_place_points,
+                "score_points": 0,
+                "goal_difference_points": 0,
+            }
 
         predictions_by_match: dict[int, list[Prediction]] = {}
 
@@ -677,8 +680,14 @@ class LeaderboardService:
                     rules,
                 )
 
-                cumulative_points[prediction.user_id] += (
+                cumulative_points[prediction.user_id]["total_points"] += (
                     score.total_points
+                )
+                cumulative_points[prediction.user_id]["score_points"] += (
+                    score.score_points
+                )
+                cumulative_points[prediction.user_id]["goal_difference_points"] += (
+                    score.goal_difference_points
                 )
 
             # Capture standings after this match
@@ -686,7 +695,12 @@ class LeaderboardService:
                 user_match_points[user.id].append(
                     AccumulatedPoints(
                         match_num=idx,
-                        acc_points=cumulative_points[user.id],
+                        points=cumulative_points[user.id]["total_points"],
+                        winner_points=cumulative_points[user.id]["winner_points"],
+                        runner_up_points=cumulative_points[user.id]["runner_up_points"],
+                        third_place_points=cumulative_points[user.id]["third_place_points"],
+                        score_points=cumulative_points[user.id]["score_points"],
+                        goal_difference_points=cumulative_points[user.id]["goal_difference_points"],
                     )
                 )
 

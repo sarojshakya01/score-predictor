@@ -35,7 +35,12 @@ export type RaceFrame = {
   user_name: string;
   acc_points: Array<{
     match_num: number;
-    acc_points: number;
+    points: number;
+    winner_points: number;
+    runner_up_points: number;
+    third_place_points: number;
+    score_points: number;
+    goal_difference_points: number;
   }>;
 }
 

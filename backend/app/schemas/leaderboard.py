@@ -24,7 +24,12 @@ class LeaderboardEntryResponse(BaseModel):
 class AccumulatedPoints(BaseModel):
     """Points for a single match."""
     match_num: int
-    acc_points: int
+    points: int
+    winner_points: int
+    runner_up_points: int
+    third_place_points: int
+    score_points: int
+    goal_difference_points: int
 
 
 class LeaderboardFrame(BaseModel):
