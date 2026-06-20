@@ -48,7 +48,7 @@ def _send_sync(
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = "World Cup Prediction<noreply@worldcup.com>"
-    msg["To"] = admin_emails
+    msg["To"] = ",".join(admin_emails)
     msg.attach(MIMEText(html_body, "html"))
 
     with smtplib.SMTP(settings.EMAIL_SMTP, settings.EMAIL_PORT) as mail:
