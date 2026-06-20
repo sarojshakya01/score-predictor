@@ -38,7 +38,8 @@ export default function RaceChart({
           sort_param1: (user.acc_points.find((point) => point.match_num === matchNum)?.winner_points || 0),
           sort_param2: (user.acc_points.find((point) => point.match_num === matchNum)?.runner_up_points || 0),
           sort_param3: (user.acc_points.find((point) => point.match_num === matchNum)?.third_place_points || 0),
-          sort_param4: (user.acc_points.find((point) => point.match_num === matchNum)?.goal_difference_points || 0),
+          sort_param4: (user.acc_points.find((point) => point.match_num === matchNum)?.score_points || 0),
+          sort_param5: (user.acc_points.find((point) => point.match_num === matchNum)?.goal_difference_points || 0),
         };
       });
 
@@ -47,7 +48,8 @@ export default function RaceChart({
       Number(b.sort_param1) - Number(a.sort_param1) ||
       Number(b.sort_param2) - Number(a.sort_param2) ||
       Number(b.sort_param3) - Number(a.sort_param3) ||
-      Number(b.sort_param4) - Number(a.sort_param4)
+      Number(b.sort_param4) - Number(a.sort_param4) ||
+      Number(b.sort_param5) - Number(a.sort_param5)
     );
 
     const slicedOutput = sortedOutput.slice(0, TOP_PERFORMER);
@@ -58,6 +60,11 @@ export default function RaceChart({
         name: 'You',
         id: `user_${userId}`,
         y: (you?.acc_points.find((point) => point.match_num === matchNum)?.points || 0),
+        sort_param1: (you?.acc_points.find((point) => point.match_num === matchNum)?.winner_points || 0),
+        sort_param2: (you?.acc_points.find((point) => point.match_num === matchNum)?.runner_up_points || 0),
+        sort_param3: (you?.acc_points.find((point) => point.match_num === matchNum)?.third_place_points || 0),
+        sort_param4: (you?.acc_points.find((point) => point.match_num === matchNum)?.score_points || 0),
+        sort_param5: (you?.acc_points.find((point) => point.match_num === matchNum)?.goal_difference_points || 0),
       });
     }
 
