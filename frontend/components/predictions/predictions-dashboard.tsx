@@ -642,9 +642,45 @@ export const PredictionsDashboard = () => {
       const availableFirstGoalIns: string[] = isKnockout
         ? [...firstGoalIns]
         : firstGoalIns.filter((fg) => fg !== "ET");
+
+      const getRandomFirstGoalIn = () => {
+        const weights = availableFirstGoalIns.map((fg, idx) => {
+          if (isKnockout) {
+            return {
+              label: fg,
+              value: idx === 0 ? 60 : idx === 1 ? 27 : 13,
+            };
+          }
+
+          return {
+            label: fg,
+            value: idx === 0 ? 70 : 30,
+          };
+
+        });
+
+        const totalWeight = weights.reduce(
+          (sum, weight) => sum + weight.value,
+          0
+        );
+
+        console.log(12121, totalWeight)
+
+        let random = Math.random() * totalWeight;
+
+        for (const option of weights) {
+          random -= option.value;
+          if (random <= 0) {
+            return option.label;
+          }
+        }
+
+        return availableFirstGoalIns[0];
+      };
+
       const randomFirstGoalIn =
         totalGoals > 0
-          ? availableFirstGoalIns[Math.floor(Math.random() * availableFirstGoalIns.length)]
+          ? getRandomFirstGoalIn()
           : "";
 
       // Random kick-off team (only for knockout stage)
