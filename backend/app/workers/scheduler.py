@@ -500,12 +500,13 @@ async def extract_live_match_data_fifa() -> None:
             .where(Match.match_datetime >= window_start)
             .order_by(Match.match_datetime.asc(), Match.id.asc()),
         )
+
         active_matches_from_window: list[Match] = list(result.scalars().all())
 
         # filter already completed matches
         active_matches = [match for match in active_matches_from_window if match.winner_id is None]
 
-        if not active_matches:
+        if len(active_matches) == 0:
             logger.info("[JOB1] No active matches in the live window – nothing to do")
             return
 
@@ -1253,11 +1254,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:  # noqa: ARG001
     """
     scheduler = _create_scheduler()
     scheduler.start()
-    logger.info(
-        "Scheduler started with %d job(s): %s",
-        len(scheduler.get_jobs()),
-        [j.id for j in scheduler.get_jobs()],
-    )
 
     try:
         yield

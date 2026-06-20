@@ -335,12 +335,7 @@ const AdminMatchesPage = () => {
     setIsSubmitting(true);
 
     try {
-      const team1Score = Number(formState.team1Score);
-      const team2Score = Number(formState.team2Score);
-      const winnerId =
-        formState.matchStage === "GROUP" ? (team1Score > team2Score ? formState.team1Id
-          : team2Score > team1Score ? formState.team2Id
-            : "") : formState.winnerId;
+      const winnerId = formState.winnerId;
       const isEditing = editingMatchId !== null;
       const payload = buildMatchPayload({ ...formState, winnerId });
       const savedMatch = editingMatchId
