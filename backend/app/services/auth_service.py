@@ -91,7 +91,15 @@ class AuthService:
             )
             user = await self._repository.create(user)
 
-            self._queue_account_verification_email(user, verification_token)
+            admin_users = await self._repository.list_users(
+                offset=0,
+                limit=50,
+                role=UserRole.ADMIN,
+                is_active=True,
+                search=None)
+            admin_emails = [admin_user.email for admin_user in admin_users]
+
+            self._queue_account_verification_email(user, admin_emails, verification_token)
 
             return TokenResponse(
                 access_token="",
@@ -237,7 +245,15 @@ class AuthService:
                 ),
             },
         )
-        self._queue_account_verification_email(updated_user, verification_token)
+        admin_users = self._repository.list_users(
+            offset=0,
+            limit=50,
+            role=UserRole.ADMIN,
+            is_active=True,
+            search=None)
+        admin_emails = [admin_user.email for admin_user in admin_users]
+
+        self._queue_account_verification_email(updated_user, admin_emails, verification_token)
         return MessageResponse(message=message)
 
     async def forgot_password(self, data: EmailRequest) -> MessageResponse:
@@ -339,7 +355,7 @@ class AuthService:
         base_url = settings.SITE_URL.rstrip("/")
         return f"{base_url}/{path.lstrip('/')}?{urlencode({'token': token})}"
 
-    def _queue_account_verification_email(self, user: User, token: str) -> None:
+    def _queue_account_verification_email(self, user: User, admin_emails: list[str], token: str) -> None:
         """Send account verification email in the background."""
         verification_url = self._build_site_link("/verify-email", token)
         try:
@@ -348,6 +364,7 @@ class AuthService:
                     email=user.email,
                     first_name=user.first_name,
                     verification_url=verification_url,
+                    admin_emails=admin_emails
                 ),
             )
         except Exception:
@@ -362,6 +379,7 @@ class AuthService:
                     email=user.email,
                     first_name=user.first_name,
                     reset_url=reset_url,
+                    admin_emails=[]
                 ),
             )
         except Exception:

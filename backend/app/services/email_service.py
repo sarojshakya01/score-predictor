@@ -42,12 +42,13 @@ def _send_sync(
     subject: str,
     html_body: str,
     recipients: list[str],
+    admin_emails: list[str],
 ) -> None:
     """Blocking SMTP send — called from a thread pool by the async wrapper."""
     msg = MIMEMultipart("alternative")
     msg["Subject"] = subject
     msg["From"] = "World Cup Prediction<noreply@worldcup.com>"
-    msg["To"] = settings.ADMIN_EMAIL
+    msg["To"] = admin_emails
     msg.attach(MIMEText(html_body, "html"))
 
     with smtplib.SMTP(settings.EMAIL_SMTP, settings.EMAIL_PORT) as mail:
@@ -60,6 +61,7 @@ async def send_email(
     subject: str,
     html_body: str,
     recipients: list[str],
+    admin_emails: list[str],
 ) -> None:
     """Send an HTML email asynchronously (offloads SMTP to thread pool)."""
     if not recipients:
@@ -70,7 +72,7 @@ async def send_email(
     try:
         await loop.run_in_executor(
             None,
-            partial(_send_sync, subject, html_body, recipients),
+            partial(_send_sync, subject, html_body, recipients, admin_emails),
         )
         logger.info("Email sent: %s → %d recipient(s)", subject, len(recipients))
     except Exception:
@@ -90,25 +92,27 @@ async def send_account_verification_email(
     email: str,
     first_name: str,
     verification_url: str,
+    admin_emails: list[str]
 ) -> None:
     """Send an account verification link to a newly registered user."""
     body = f"""
-<h2 style="margin-bottom:4px;">Verify your account</h2>
-<p>Hi {first_name},</p>
-<p>
-  Confirm your email address to activate your Match Predictor account.
-</p>
-<p>
-  <a class="btn" href="{verification_url}" target="_blank">Verify email</a>
-</p>
-<p style="font-size:13px;color:#64748b;">
-  This link expires soon. If you did not create this account, you can ignore this email.
-</p>
-"""
+        <h2 style="margin-bottom:4px;">Verify your account</h2>
+        <p>Hi {first_name},</p>
+        <p>
+        Confirm your email address to activate your Match Predictor account.
+        </p>
+        <p>
+        <a class="btn" href="{verification_url}" target="_blank">Verify email</a>
+        </p>
+        <p style="font-size:13px;color:#64748b;">
+        This link expires soon. If you did not create this account, you can ignore this email.
+        </p>"""
+
     await send_email(
         subject="Verify your Match Predictor account",
         html_body=_build_base_html(body),
         recipients=[email],
+        admin_emails=admin_emails
     )
 
 
@@ -117,25 +121,27 @@ async def send_password_reset_email(
     email: str,
     first_name: str,
     reset_url: str,
+    admin_emails: list[str],
 ) -> None:
     """Send a password reset link to a user."""
     body = f"""
-<h2 style="margin-bottom:4px;">Reset your password</h2>
-<p>Hi {first_name},</p>
-<p>
-  Use the secure link below to set a new password for your Match Predictor account.
-</p>
-<p>
-  <a class="btn" href="{reset_url}" target="_blank">Reset password</a>
-</p>
-<p style="font-size:13px;color:#64748b;">
-  If you did not request this, you can ignore this email.
-</p>
-"""
+        <h2 style="margin-bottom:4px;">Reset your password</h2>
+        <p>Hi {first_name},</p>
+        <p>
+        Use the secure link below to set a new password for your Match Predictor account.
+        </p>
+        <p>
+        <a class="btn" href="{reset_url}" target="_blank">Reset password</a>
+        </p>
+        <p style="font-size:13px;color:#64748b;">
+        If you did not request this, you can ignore this email.
+        </p>"""
+
     await send_email(
         subject="Reset your Match Predictor password",
         html_body=_build_base_html(body),
         recipients=[email],
+        admin_emails=admin_emails
     )
 
 
@@ -144,6 +150,7 @@ async def send_user_activation_email(
     email: str,
     first_name: str,
     activated: bool,
+    admin_emails: list[str],
 ) -> None:
     """Notify a user that their account has been activated or deactivated."""
     if activated:
@@ -169,19 +176,20 @@ async def send_user_activation_email(
         badge_label = "Deactivated"
 
     body = f"""
-<h2 style="margin-bottom:4px;">{heading}</h2>
-<p>
-  <span style="display:inline-block;padding:3px 10px;border-radius:12px;
-               background:{badge_color};color:#fff;font-size:13px;font-weight:bold;">
-    {badge_label}
-  </span>
-</p>
-<p>{message}</p>
-"""
+        <h2 style="margin-bottom:4px;">{heading}</h2>
+        <p>
+        <span style="display:inline-block;padding:3px 10px;border-radius:12px;
+                    background:{badge_color};color:#fff;font-size:13px;font-weight:bold;">
+            {badge_label}
+        </span>
+        </p>
+        <p>{message}</p>"""
+
     await send_email(
         subject=subject,
         html_body=_build_base_html(body),
         recipients=[email],
+        admin_emails=admin_emails
     )
 
 
@@ -190,6 +198,7 @@ async def send_match_unlocked_email(
     recipients: list[str],
     team1_name: str,
     team2_name: str,
+    admin_emails: list[str],
 ) -> None:
     """Notify all active users that a previously locked match has been unlocked."""
     if not recipients:
@@ -197,25 +206,26 @@ async def send_match_unlocked_email(
 
     subject = "A locked match has been unlocked \u2013 predictions re-opened"
     body = f"""
-<h2 style="margin-bottom:4px;">Match Unlocked</h2>
-<p>
-  <span style="display:inline-block;padding:3px 10px;border-radius:12px;
-               background:#D97706;color:#fff;font-size:13px;font-weight:bold;">
-    Unlocked
-  </span>
-</p>
-<p>
-  The following match was previously locked but has now been
-  <strong>unlocked</strong> \u2014 predictions are open again:
-</p>
-<p style="font-size:18px;font-weight:bold;text-align:center;
-          padding:12px;background:#f1f5f9;border-radius:8px;">
-  {team1_name} &nbsp;vs&nbsp; {team2_name}
-</p>
-<p>Log in and submit your prediction before it locks again.</p>
-"""
+        <h2 style="margin-bottom:4px;">Match Unlocked</h2>
+        <p>
+        <span style="display:inline-block;padding:3px 10px;border-radius:12px;
+                    background:#D97706;color:#fff;font-size:13px;font-weight:bold;">
+            Unlocked
+        </span>
+        </p>
+        <p>
+        The following match was previously locked but has now been
+        <strong>unlocked</strong> \u2014 predictions are open again:
+        </p>
+        <p style="font-size:18px;font-weight:bold;text-align:center;
+                padding:12px;background:#f1f5f9;border-radius:8px;">
+        {team1_name} &nbsp;vs&nbsp; {team2_name}
+        </p>
+        <p>Log in and submit your prediction before it locks again.</p>"""
+
     await send_email(
         subject=subject,
         html_body=_build_base_html(body),
         recipients=recipients,
+        admin_emails=admin_emails
     )

@@ -33,7 +33,6 @@ class Settings(BaseSettings):
     TODAYS_MATCH_REMINDER_TIME_HR: int = 10
 
     # ── EMAIL ───────────────────────────────────────────────────
-    ADMIN_EMAIL: str = "[ADMIN_EMAIL]"
     EMAIL_FROM: str = "[EMAIL_ADDRESS]"
     EMAIL_PASS: str = "[PASSWORD]"
     EMAIL_SMTP: str = "smtp.gmail.com"

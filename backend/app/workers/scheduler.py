@@ -242,10 +242,21 @@ async def _send_final_winners_reminder_email(
         "World Cup 2026 – Final Winners Prediction Reminder "
         f"({now.strftime('%Y-%m-%d')})"
     )
+
+    # Fetch all admin user's email
+    admin_result = await db.execute(
+        select(User.email).where(
+            (User.is_active.is_(True)) &
+            (User.role == UserRole.ADMIN)
+        ).order_by(User.id.asc()),
+    )
+    admin_emails: list[str] = list(admin_result.scalars().all())
+
     await send_email(
         subject=subject,
         html_body=body,
         recipients=recipients,
+        admin_emails=admin_emails
     )
 
 
@@ -293,10 +304,21 @@ async def _send_final_winners_predictions_email(db: AsyncSession, now: datetime)
         "World Cup 2026 – Final Winners Predictions "
         f"({now.strftime('%Y-%m-%d')})"
     )
+
+    # Fetch all admin user's email
+    admin_result = await db.execute(
+        select(User.email).where(
+            (User.is_active.is_(True)) &
+            (User.role == UserRole.ADMIN)
+        ).order_by(User.id.asc()),
+    )
+    admin_emails: list[str] = list(admin_result.scalars().all())
+
     await send_email(
         subject=subject,
         html_body=body,
         recipients=recipients,
+        admin_emails=admin_emails
     )
 
 
@@ -876,9 +898,12 @@ async def send_autolock_email() -> None:
 
         # Fetch all user emails
         user_result = await db.execute(
-            select(User.email).where(User.is_active.is_(True)),
+            select(User).where(User.is_active.is_(True)),
         )
-        recipients: list[str] = list(user_result.scalars().all())
+        all_users: list[User] = list(user_result.scalars().all())
+
+        recipients = [user.email for user in all_users if user.role == UserRole.USER]
+        admin_emails = [user.email for user in all_users if user.role == UserRole.ADMIN]
 
         if not recipients:
             logger.info("[JOB3] No active users – skipping email")
@@ -945,6 +970,7 @@ async def send_autolock_email() -> None:
                 subject=f"World Cup 2026 – {match_title} Locked",
                 html_body=body,
                 recipients=recipients,
+                admin_emails=admin_emails
             )
 
     logger.info("[JOB3] send_autolock_email – done")
@@ -987,18 +1013,20 @@ async def send_reminder_email() -> None:
         # Fetch all active users eligible for prediction reminders.
         user_result = await db.execute(
             select(User).where(
-                (User.is_active.is_(True)) &
-                (User.role != UserRole.ADMIN)
+                (User.is_active.is_(True))
             ).order_by(User.first_name.asc(), User.last_name.asc(), User.id.asc()),
         )
         all_users: list[User] = list(user_result.scalars().all())
 
-        if not all_users:
+        active_users = [user for user in all_users if user.role == UserRole.USER]
+        admin_users = [user for user in all_users if user.role == UserRole.ADMIN]
+
+        if not active_users:
             logger.info("[JOB4] No active users – skipping reminder email")
             return
 
         missed_matches_by_user: dict[int, list[tuple[str, str]]] = {
-            user.id: [] for user in all_users
+            user.id: [] for user in active_users
         }
 
         for match in upcoming:
@@ -1017,7 +1045,7 @@ async def send_reminder_email() -> None:
             predicted_user_ids = {p.user_id for p in existing_preds}
 
             missing_users = [
-                user for user in all_users if user.id not in predicted_user_ids
+                user for user in active_users if user.id not in predicted_user_ids
             ]
             for user in missing_users:
                 missed_matches_by_user[user.id].append((match_title, match_time_str))
@@ -1033,7 +1061,7 @@ async def send_reminder_email() -> None:
         await db.commit()
 
         emails_sent = 0
-        for user in all_users:
+        for user in active_users:
             missed_matches = missed_matches_by_user[user.id]
             if not missed_matches:
                 continue
@@ -1077,6 +1105,7 @@ async def send_reminder_email() -> None:
                 subject=f"World Cup 2026 – Prediction Reminder ({now.strftime('%Y-%m-%d')})",
                 html_body=body,
                 recipients=[user.email],
+                admin_emails=[user.email for user in admin_users]
             )
             emails_sent += 1
 
@@ -1120,12 +1149,13 @@ async def send_todays_matches_email() -> None:
 
         # Fetch all active user's email
         user_result = await db.execute(
-            select(User.email).where(
-                (User.is_active.is_(True)) &
-                (User.role != UserRole.ADMIN)
+            select(User).where(
+                (User.is_active.is_(True))
             ).order_by(User.id.asc()),
         )
-        recipients: list[str] = list(user_result.scalars().all())
+        all_users: list[User] = list(user_result.scalars().all())
+        recipients: list[str] = [user.email for user in all_users if user.role == UserRole.USER]
+        admin_emails: list[str] = [user.email for user in all_users if user.role == UserRole.ADMIN]
 
     if not recipients:
         logger.info("[JOB5] No active users – skipping email")
@@ -1159,6 +1189,7 @@ async def send_todays_matches_email() -> None:
         subject=f"World Cup 2026 – Today's Matches ({now.strftime('%Y-%m-%d')})",
         html_body=body,
         recipients=recipients,
+        admin_emails=admin_emails
     )
 
     logger.info("[JOB5] send_todays_matches_email – done")
