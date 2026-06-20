@@ -129,3 +129,6 @@ class UserPointsDetailsListResponse(BaseModel):
     winner_points: int
     runner_up_points: int
     third_place_points: int
+    winner_prediction: str | None
+    runner_up_prediction: str | None
+    third_place_prediction: str | None

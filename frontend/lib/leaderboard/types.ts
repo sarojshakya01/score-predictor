@@ -104,6 +104,9 @@ export type UserPointsDetailsListResponse = {
   winner_points: number;
   runner_up_points: number;
   third_place_points: number;
+  winner_prediction: string | null;
+  runner_up_prediction: string | null;
+  third_place_prediction: string | null;
 };
 
 export type MatchUserPointsDetailsResponse = {

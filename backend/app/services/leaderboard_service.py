@@ -1,4 +1,5 @@
 """Leaderboard scoring business logic."""
+from app.repositories.team_repository import TeamRepository
 import logging
 from dataclasses import dataclass, field
 
@@ -247,6 +248,7 @@ class LeaderboardService:
         self._match_repository = MatchRepository(db)
         self._prediction_repository = PredictionRepository(db)
         self._user_repository = UserRepository(db)
+        self._team_repository = TeamRepository(db)
         self._setting_repository = SettingRepository(db)
         self._scoring_rules: ScoringRules | None = None
 
@@ -409,6 +411,8 @@ class LeaderboardService:
             final_matches = await self._match_repository.list_finals(include_locked=True)
             winner_points, runner_up_points, third_place_points = self._calculate_finalist_points(final_matches, user, rules)
 
+            winner_prediction, runner_up_prediction, third_place_prediction = await self._team_repository.get_by_id(user.winner_team_id), await self._team_repository.get_by_id(user.runner_up_team_id), await self._team_repository.get_by_id(user.third_place_team_id)
+
             return UserPointsDetailsListResponse(
                 user_id=user_id,
                 user_name=self._format_user_name(user),
@@ -417,6 +421,9 @@ class LeaderboardService:
                 winner_points=winner_points,
                 runner_up_points=runner_up_points,
                 third_place_points=third_place_points,
+                winner_prediction=winner_prediction.fifa_code if winner_prediction else None,
+                runner_up_prediction=runner_up_prediction.fifa_code if runner_up_prediction else None,
+                third_place_prediction=third_place_prediction.fifa_code if third_place_prediction else None,
             )
         except HTTPException:
             raise

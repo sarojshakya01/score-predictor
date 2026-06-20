@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useState } from "react";
 
 import { Modal } from "@/components/ui/modal";
 import { SearchInput } from "@/components/ui/search-input";
+import { IconChevronDown } from "@/components/ui/icons";
 import { ApiError } from "@/lib/api";
 import { getCurrentUser, isAuthenticated, MissingAuthTokenError, SessionExpiredError } from "@/lib/auth";
 import { getUserPredictionDetails, listLeaderboard } from "@/lib/leaderboard";
@@ -165,7 +166,7 @@ const ScoreRow = ({
       {/* Score */}
       <ActualCell>
         <span className="font-semibold text-zinc-700 dark:text-zinc-300">
-          {item.team1_score} – {item.team2_score}
+          {item.team1_score !== null && item.team2_score !== null ? `${item.team1_score} - ${item.team2_score}` : "—"}
         </span>
       </ActualCell>
       <PredCell>
@@ -242,6 +243,7 @@ const UserPointsDetailModal = ({
   const [data, setData] = useState<UserPointsDetailsListResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [areFinalRowsExpanded, setAreFinalRowsExpanded] = useState(false);
 
   useEffect(() => {
     if (!isOpen || userId === null) {
@@ -255,6 +257,7 @@ const UserPointsDetailModal = ({
         setIsLoading(true);
         setError(null);
         setData(null);
+        setAreFinalRowsExpanded(false);
         const result = await getUserPredictionDetails(userId);
         if (isMounted) {
           setData(result);
@@ -277,8 +280,14 @@ const UserPointsDetailModal = ({
     };
   }, [isOpen, userId]);
 
+  const hasFinalMatch = data?.items.some((d) => d.match_stage === "F") ?? false;
+  const hasThirdPlaceMatch = data?.items.some(
+    (d) => d.match_stage === "3P",
+  ) ?? false;
+  const hasFinalRows = true;
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Points Breakdown — ${userName}`} isLarge>
+    <Modal isOpen={isOpen} onClose={onClose} title={`Points Breakdown — ${userName}`} isLarge isSticky={true}>
       {/* Loading skeleton */}
       {isLoading && (
         <div className="flex flex-col gap-3 py-2">
@@ -431,7 +440,7 @@ const UserPointsDetailModal = ({
                 </tbody>
                 {/* Totals footer */}
                 <tfoot className="border-t-2 border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/70 mb-2">
-                  {data.items.some((item) => item.match_stage === "F") && (<>
+                  {areFinalRowsExpanded && (
                     <tr>
                       <td className={[
                         "static sm:sticky left-0 z-20 w-[30px] min-w-[30px] max-w-[30px]",
@@ -445,8 +454,8 @@ const UserPointsDetailModal = ({
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
                       ].join(" ")}>
-                        <span className="hidden md:block">Winner Prediction Points</span>
-                        <span className="md:hidden">Winner Pts</span>
+                        <span className="hidden md:block">Winner Points ({data.winner_prediction || "—"})</span>
+                        <span className="md:hidden">Winner Pts({data.winner_prediction || "—"})</span>
                       </td>
                       {/* Score pts */}
                       <td className={[
@@ -463,6 +472,8 @@ const UserPointsDetailModal = ({
                       </td>
                       <td colSpan={24} />
                     </tr>
+                  )}
+                  {areFinalRowsExpanded && (
                     <tr>
                       <td className={[
                         "static sm:sticky left-0 z-20 w-[30px] min-w-[30px] max-w-[30px]",
@@ -476,8 +487,8 @@ const UserPointsDetailModal = ({
                         "border-b border-zinc-200 dark:border-zinc-800",
                         "px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
                       ].join(" ")}>
-                        <span className="hidden md:block">Runner up Prediction Points</span>
-                        <span className="md:hidden">Runner-up Pts</span>
+                        <span className="hidden md:block">Runner up Points ({data.runner_up_prediction || "—"})</span>
+                        <span className="md:hidden">Runner-up Pts ({data.runner_up_prediction || "—"})</span>
 
                       </td>
                       {/* Score pts */}
@@ -495,42 +506,40 @@ const UserPointsDetailModal = ({
                       </td>
                       <td colSpan={24} />
                     </tr>
-                  </>)}
-
-                  {data.items.some((item) => item.match_stage === "3P") && (
-                    <>
-                      <tr>
-                        <td className={[
-                          "static sm:sticky left-0 z-20 w-[30px] min-w-[30px] max-w-[30px]",
-                          "bg-white dark:bg-zinc-950",
-                          "border-b border-zinc-200 dark:border-zinc-800",
-                          "whitespace-nowrap px-3 md:px-5 py-2.5 text-left text-xs font-medium text-zinc-400 dark:text-zinc-500"
-                        ].join(" ")}></td>
-                        <td className={[
-                          "static sm:sticky left-[30px] z-20 w-[110px] min-w-[110px] max-w-[110px] md:left-[40px] md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
-                          "bg-white dark:bg-zinc-950",
-                          "border-b border-zinc-200 dark:border-zinc-800",
-                          "px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
-                        ].join(" ")}>
-                          <span className="hidden md:block">Third Place Prediction Points</span>
-                          <span className="md:hidden">3rd Place Pts</span>
-                        </td>
-                        {/* Score pts */}
-                        <td className={[
-                          "static sm:sticky left-[140px] md:left-[325px] z-20 w-16 min-w-[80px] max-w-[80px]",
-                          "bg-white dark:bg-zinc-950",
-                          "border-b border-zinc-200 dark:border-zinc-800",
-                          "whitespace-nowrap px-3 py-2.5 text-center"
-                        ].join(" ")}>
-                          <span
-                            className={`inline-flex h-8 w-12 items-center justify-center rounded-lg text-sm font-bold ${totalColor(data.total_points)}`}
-                          >
-                            {data.third_place_points}
-                          </span>
-                        </td>
-                        <td colSpan={24} />
-                      </tr>
-                    </>)}
+                  )}
+                  {areFinalRowsExpanded && (
+                    <tr>
+                      <td className={[
+                        "static sm:sticky left-0 z-20 w-[30px] min-w-[30px] max-w-[30px]",
+                        "bg-white dark:bg-zinc-950",
+                        "border-b border-zinc-200 dark:border-zinc-800",
+                        "whitespace-nowrap px-3 md:px-5 py-2.5 text-left text-xs font-medium text-zinc-400 dark:text-zinc-500"
+                      ].join(" ")}></td>
+                      <td className={[
+                        "static sm:sticky left-[30px] z-20 w-[110px] min-w-[110px] max-w-[110px] md:left-[40px] md:w-[285px] md:min-w-[285px] md:max-w-[285px]",
+                        "bg-white dark:bg-zinc-950",
+                        "border-b border-zinc-200 dark:border-zinc-800",
+                        "px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+                      ].join(" ")}>
+                        <span className="hidden md:block">Third Place Points ({data.third_place_prediction || "—"})</span>
+                        <span className="md:hidden">3rd Place Pts({data.third_place_prediction || "—"})</span>
+                      </td>
+                      {/* Score pts */}
+                      <td className={[
+                        "static sm:sticky left-[140px] md:left-[325px] z-20 w-16 min-w-[80px] max-w-[80px]",
+                        "bg-white dark:bg-zinc-950",
+                        "border-b border-zinc-200 dark:border-zinc-800",
+                        "whitespace-nowrap px-3 py-2.5 text-center"
+                      ].join(" ")}>
+                        <span
+                          className={`inline-flex h-8 w-12 items-center justify-center rounded-lg text-sm font-bold ${totalColor(data.total_points)}`}
+                        >
+                          {data.third_place_points}
+                        </span>
+                      </td>
+                      <td colSpan={24} />
+                    </tr>
+                  )}
                   <tr>
                     <td className={[
                       "static sm:sticky left-0 z-20 w-[30px] min-w-[30px] max-w-[30px]",
@@ -544,8 +553,21 @@ const UserPointsDetailModal = ({
                       "border-b border-zinc-200 dark:border-zinc-800",
                       "px-3 py-2.5 text-center text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
                     ].join(" ")}>
-                      <span className="hidden md:block">Total Points</span>
-                      <span className="md:hidden">Total Pts</span>
+                      <button
+                        type="button"
+                        aria-expanded={areFinalRowsExpanded}
+                        onClick={() => setAreFinalRowsExpanded((expanded) => !expanded)}
+                        className="inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2.5 text-xs font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+                      >
+                        <IconChevronDown
+                          className={[
+                            "h-4 w-4 transition-transform",
+                            areFinalRowsExpanded ? "rotate-180" : "",
+                          ].join(" ")}
+                        />
+                        <span className="hidden md:block">Total Points</span>
+                        <span className="md:hidden">Total Pts</span>
+                      </button>
                     </td>
                     {/* Total pts */}
                     <td className={[
@@ -614,8 +636,7 @@ const UserPointsDetailModal = ({
             </div>
           )}
         </>
-      )
-      }
+      )}
     </Modal >
   );
 };
