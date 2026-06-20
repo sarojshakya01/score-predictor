@@ -67,6 +67,7 @@ export const UpcomingMatchesSection = ({ matches }: UpcomingMatchesSectionProps)
                 match={match}
                 isSaved={isSaved}
                 isPredictionAvailable={hasPredictions}
+                isCorrectWinner={null}
                 className="h-60 shrink-0 w-[360px]"
               />
             );

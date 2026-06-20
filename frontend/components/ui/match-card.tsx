@@ -163,7 +163,7 @@ export const MatchVenue = (match: MatchResponse) => (
   </dl>
 );
 
-const MatchSaveStatus = (isPredictionAvailable: boolean, isSaved: boolean, isMatchLocked: boolean) => {
+const MatchSaveStatus = (isPredictionAvailable: boolean, isSaved: boolean, isMatchLocked: boolean, isCorrectWinner: boolean | null = null) => {
   if (!isPredictionAvailable) return <></>
   if (isMatchLocked && !isSaved) {
     return (
@@ -174,7 +174,17 @@ const MatchSaveStatus = (isPredictionAvailable: boolean, isSaved: boolean, isMat
     );
   } else if (isSaved) {
     return (
-      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-tournament-secondary text-white">
+      isCorrectWinner !== null && isCorrectWinner ? (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-tournament-secondary text-white">
+          <IconCheck className="h-4 w-4 shrink-0" />
+          Correct
+        </span>
+      ) : isCorrectWinner !== null && !isCorrectWinner ? (
+        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-tournament-accent text-white">
+          <IconCross className="h-4 w-4 shrink-0" />
+          Wrong
+        </span>
+      ) : <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-tournament-secondary text-white">
         <IconCheck className="h-4 w-4 shrink-0" />
         Saved
       </span>
@@ -198,10 +208,11 @@ export const SelectableMatchCard = (props: {
   isSelected: boolean;
   isSaved: boolean;
   isPredictionAvailable: boolean;
+  isCorrectWinner: boolean | null;
   handleCardClick: (match: MatchResponse) => void;
   className?: string;
 }) => {
-  const { match, isSelected, isSaved, isPredictionAvailable, handleCardClick, className } = props;
+  const { match, isSelected, isSaved, isPredictionAvailable, isCorrectWinner, handleCardClick, className } = props;
 
   const { isMatchLive } = isMatchPlayedOrLive(match);
 
@@ -234,7 +245,7 @@ export const SelectableMatchCard = (props: {
         </div>
         <div className="flex items-end justify-self-end">
           <dd className="font-medium text-zinc-950 dark:text-zinc-50">
-            {MatchSaveStatus(isPredictionAvailable, isSaved, match.match_locked)}
+            {MatchSaveStatus(isPredictionAvailable, isSaved, match.match_locked, isCorrectWinner)}
           </dd>
         </div>
       </dl>
@@ -247,8 +258,9 @@ export const MatchCard = (props: {
   className?: string;
   isSaved?: boolean;
   isPredictionAvailable?: boolean;
+  isCorrectWinner: boolean | null;
 }) => {
-  const { match, className, isSaved = false, isPredictionAvailable = false } = props;
+  const { match, className, isSaved = false, isPredictionAvailable = false, isCorrectWinner = false } = props;
   const predictionHref = `/predictions?matchday=${match.match_day}&id=${match.id}`;
 
   const cardContent = (
@@ -280,7 +292,7 @@ export const MatchCard = (props: {
         <div className="flex justify-end">
           {isSaved ? (
             <dd className="font-medium text-zinc-950 dark:text-zinc-50">
-              {MatchSaveStatus(isPredictionAvailable, isSaved, match.match_locked)}
+              {MatchSaveStatus(isPredictionAvailable, isSaved, match.match_locked, isCorrectWinner)}
             </dd>
           ) : (
             <Link

@@ -815,9 +815,15 @@ export const PredictionsDashboard = () => {
           ) : matches.length > 0 ? (
             matches.map((match) => {
               const isSelected = match.id === selectedMatchId;
-              const isSaved = predictions.some(
+              const prediction = predictions.find(
                 (prediction) => prediction.match_id === match.id,
               );
+
+              const isSaved = !!prediction;
+              let isCorrectWinner = null;
+              if (match.team1_score !== null && match.team2_score !== null) {
+                isCorrectWinner = prediction ? (match.match_locked && ((prediction.team1_score ?? 0) > (prediction.team2_score ?? 0) && match.winner_id === match.team1_id) || ((prediction.team2_score ?? 0) > (prediction.team1_score ?? 0) && match.winner_id === match.team2_id) || (prediction.team1_score === prediction.team2_score && match.winner_id === null)) : false;
+              }
 
               return (
                 <SelectableMatchCard
@@ -825,6 +831,7 @@ export const PredictionsDashboard = () => {
                   match={match}
                   isSaved={isSaved}
                   isPredictionAvailable={predictions.length > 0}
+                  isCorrectWinner={isCorrectWinner}
                   isSelected={isSelected}
                   handleCardClick={handleCardClick}
                   className="h-55 shrink-0 w-[360px]"
