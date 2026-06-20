@@ -149,7 +149,7 @@ export const TopLeaderboardPreview = () => {
                     </p>
                   </div>
                   <p className="mt-0.5 text-xs text-zinc-500 dark:text-zinc-400">
-                    prediction from {player.predicted_matches} matches
+                    points from {player.predicted_matches} matches
                   </p>
                 </div>
                 <div className="text-right">

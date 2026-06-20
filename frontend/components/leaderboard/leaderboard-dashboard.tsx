@@ -311,7 +311,7 @@ const UserPointsDetailModal = ({
           {/* Summary cards */}
           <div className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
-              { label: "Total Match Predictions", value: data.items.length, color: "text-zinc-900" },
+              { label: "Total Match Predictions", value: data.items.filter((i) => i.predicted_team1_score !== null && i.predicted_team1_score !== null).length, color: "text-zinc-900" },
               {
                 label: "Total Points",
                 value: formatSignedNumber(data.total_points),
@@ -326,7 +326,7 @@ const UserPointsDetailModal = ({
                 label: "Avg per Match",
                 value:
                   data.items.length > 0
-                    ? ((data.total_points - (data.winner_points + data.runner_up_points + data.third_place_points)) / data.items.filter((i) => i.kick_off_team).length).toFixed(1)
+                    ? ((data.total_points - (data.winner_points + data.runner_up_points + data.third_place_points)) / data.items.filter((i) => i.kick_off_team && i.predicted_team1_score !== null && i.predicted_team1_score !== null).length).toFixed(1)
                     : "—",
                 color: "text-zinc-900",
               },
