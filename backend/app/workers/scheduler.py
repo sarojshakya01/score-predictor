@@ -320,14 +320,78 @@ async def _send_final_winners_match_day_email_if_needed(
         await _send_final_winners_predictions_email(db, now)
 
 
-def load_match_details_cache() -> dict:
+def _load_match_details_cache() -> dict:
     if MATCH_DETAILS_CACHE_FILE.exists():
         with open(MATCH_DETAILS_CACHE_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     return []
 
 
-def minute_key(goal: dict) -> tuple[int, int]:
+async def _save_match_details_cache() -> None:
+    async with async_session_factory() as db:
+        future_3_days = _now_utc() + timedelta(days=3)
+        # Fetch locked matches that could be live right now
+        result = await db.execute(
+            select(Match)
+            .options(selectinload(Match.team1), selectinload(Match.team2))
+            .where(Match.match_datetime <= future_3_days)
+            .order_by(Match.id.asc()),
+        )
+
+    matches: list[Match] = list(result.scalars().all())
+
+    cached_match_details = _load_match_details_cache()
+
+    wrong_match_in_cache = False
+
+    for match in matches:
+        match_id_in_cache = next((cached_match.get("prediction_match_id") for cached_match in cached_match_details if match.id == cached_match.get("prediction_match_id")), None)
+        if match_id_in_cache is None:
+            wrong_match_in_cache = True
+            break
+
+    if not wrong_match_in_cache:
+        logger.info("[JOB1] No wrong matches in cache – nothing to do")
+        return
+
+    logger.info("[JOB1] Prediction match ids not found in cache – updating")
+
+    async with httpx.AsyncClient(timeout=15) as client:
+        resp = await client.get(MATCH_DETAILS_ENDPOINT, headers=HEADERS)
+        resp.raise_for_status()
+
+    data = resp.json()
+
+    results = [
+        {
+            **result,
+        }
+        for result in data.get("Results", [])
+        if result.get("CompetitionName", [{}])[0].get("Description") == COMPETITIONS_NAME
+        and result.get("SeasonName", [{}])[0].get("Description") == SEASON_NAME
+    ]
+
+    updated_match_count = 0
+    for result in results:
+        if result.get('Home') is None or result.get('Away') is None:
+            continue
+
+        home_country_code = result.get('Home', {}).get('IdCountry', None).upper()
+        away_country_code = result.get('Away', {}).get('IdCountry', None).upper()
+        match = next((m for m in matches if 
+                     m.team1.fifa_code == home_country_code and m.team2.fifa_code == away_country_code), None)
+
+        if match is None:
+            continue
+
+        result["prediction_match_id"] = match.id
+        updated_match_count = updated_match_count + 1
+
+    with open(MATCH_DETAILS_CACHE_FILE, "w", encoding="utf-8") as f:
+        json.dump(results, f)
+    logger.info(f"[JOB1] Updated match details cache - {updated_match_count} matches")
+
+def _minute_key(goal: dict) -> tuple[int, int]:
     """
     Convert goal minute string to sortable tuple (base, extra).
 
@@ -487,6 +551,8 @@ async def extract_live_match_data_fifa() -> None:
     """
     logger.info("[JOB1] extract_live_match_data – starting")
 
+    await _save_match_details_cache()
+
     window_start = _now_utc() - timedelta(minutes=160) # 160 minutes is tentative possible max match time
     window_end = _now_utc()
 
@@ -512,7 +578,7 @@ async def extract_live_match_data_fifa() -> None:
 
         logger.info("[JOB1] %d active match(es) found", len(active_matches))
 
-        match_details_list = load_match_details_cache()
+        match_details_list = _load_match_details_cache()
 
         match_id_exists = next((item for item in match_details_list if item.get("prediction_match_id") in [match.id for match in active_matches]), None)
 
@@ -575,6 +641,7 @@ async def extract_live_match_data_fifa() -> None:
                 first_goal_in = None
                 first_score_by = None
                 match_duration = match.match_duration
+                winner_id = match.winner_id
 
                 if home_country_code == match.team1.fifa_code:
                     team1_score = result.get('HomeTeam').get('Score')
@@ -587,7 +654,7 @@ async def extract_live_match_data_fifa() -> None:
                 goals.extend(result.get('HomeTeam').get('Goals') if result.get('HomeTeam').get('Score') > 0 else [])
                 goals.extend(result.get('AwayTeam').get('Goals') if result.get('AwayTeam').get('Score') > 0 else [])
 
-                first_goal = min(goals, key=minute_key) if goals else None
+                first_goal = min(goals, key=_minute_key) if goals else None
 
                 first_goal_min = int(first_goal.get('Minute').split("'")[0]) if first_goal else None
                 
@@ -615,6 +682,12 @@ async def extract_live_match_data_fifa() -> None:
                 if match.match_stage != MatchStage.GROUP:
                     match_time = result.get('MatchTime').split("'")[0]
                     match_duration = MatchDuration.REGULAR if int(match_time) <= 90 else MatchDuration.EXTRA_TIME if int(match_time) <= 120 else MatchDuration.PENALTY
+
+                if result.get('Winner') and team1_score > team2_score:
+                    winner_id = match.team1_id
+                elif result.get('Winner') and team2_score > team1_score:
+                    winner_id = match.team2_id
+
                 live_entries.append(
                     {
                         "id": match.id,
@@ -625,7 +698,7 @@ async def extract_live_match_data_fifa() -> None:
                         "yellow_card_count": yellow_card_count,
                         "red_card_count": red_card_count,
                         "match_duration": match_duration,
-                        "match_status": "COMPLETED" if result.get('OfficialityStatus') == 1 else "LIVE" if result.get('OfficialityStatus') == 0 else "SCHEDULED"
+                        "winner_id": winner_id
                     }
                 )
 
@@ -650,7 +723,7 @@ async def extract_live_match_data_fifa() -> None:
                 first_scoring_team_id = live.get("first_scoring_team_id", None)
                 kick_off_team_id = live.get("kick_off_team_id", db_match.kick_off_team_id)
                 match_duration = live.get("match_duration", db_match.match_duration)
-                winner_id = db_match.team1_id if live.get("match_status") == "COMPLETED" and team1_score > team2_score else db_match.team2_id if live.get("match_status") == "COMPLETED" and team2_score > team1_score else None
+                winner_id = live.get("winner_id", db_match.winner_id)
 
                 if db_match.match_datetime.tzinfo is None:
                     match_datetime = db_match.match_datetime.replace(tzinfo=timezone.utc)

@@ -602,6 +602,9 @@ class MatchService:
             and result.get("SeasonName", [{}])[0].get("Description") == SEASON_NAME
         ]
 
+        for idx, result in enumerate(results):
+            result["prediction_match_id"] = idx + 1
+
         MatchService.save_match_details_cache(results)
 
         return results
