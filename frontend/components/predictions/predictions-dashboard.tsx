@@ -858,7 +858,7 @@ export const PredictionsDashboard = () => {
               const isSaved = !!prediction;
               let isCorrectWinner = null;
               if (match.team1_score !== null && match.team2_score !== null) {
-                isCorrectWinner = prediction ? (match.match_locked && ((prediction.team1_score ?? 0) > (prediction.team2_score ?? 0) && match.winner_id === match.team1_id) || ((prediction.team2_score ?? 0) > (prediction.team1_score ?? 0) && match.winner_id === match.team2_id) || (prediction.team1_score === prediction.team2_score && match.winner_id === null)) : false;
+                isCorrectWinner = prediction ? (match.match_locked && ((prediction.team1_score ?? 0) > (prediction.team2_score ?? 0) && match.team1_score > match.team2_score) || ((prediction.team2_score ?? 0) > (prediction.team1_score ?? 0) && match.team2_score > match.team1_score) || (prediction.team1_score === prediction.team2_score && match.team1_score === match.team2_score)) : false;
               }
 
               return (
