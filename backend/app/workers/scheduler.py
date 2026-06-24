@@ -734,7 +734,7 @@ async def extract_live_match_data_fifa() -> None:
             #         live_entries = live_only
 
             # ── Match live entries to DB rows by position ─────────────────
-            paired = list(zip(active_matches, live_entries))
+            paired = list(zip([match], live_entries))
 
             for db_match, live in paired:
                 team1_score: int = live.get("team1_score", 0)
