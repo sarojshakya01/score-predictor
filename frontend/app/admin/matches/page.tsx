@@ -698,11 +698,11 @@ const AdminMatchesPage = () => {
                 </select>
               </label>
               <label className="block">
-                <span className={labelCls}><p>{formState.team1Id ? teams.find((team) => team.id.toString() === formState.team1Id)?.name : "Team 1 score"}</p></span>
+                <span className={labelCls}><p>{formState.team1Id ? teams.find((team) => team.id.toString() === formState.team1Id)?.name || "Team 1 score" : "Team 1 score"}</p></span>
                 <input min="0" name="team1_score" type="number" value={formState.team1Score || ""} onChange={(event) => updateField("team1Score", event.target.value)} className={inputCls} />
               </label>
               <label className="block">
-                <span className={labelCls}><p>{formState.team2Id ? teams.find((team) => team.id.toString() === formState.team2Id)?.name : "Team 2 score"}</p></span>
+                <span className={labelCls}><p>{formState.team2Id ? teams.find((team) => team.id.toString() === formState.team2Id)?.name || "Team 2 score" : "Team 2 score"}</p></span>
                 <input min="0" name="team2_score" type="number" value={formState.team2Score || ""} onChange={(event) => updateField("team2Score", event.target.value)} className={inputCls} />
               </label>
               <label className="block">
