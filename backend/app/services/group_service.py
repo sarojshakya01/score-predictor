@@ -1,12 +1,13 @@
 """Group standings business logic."""
 
 import logging
+from collections import defaultdict
 from dataclasses import dataclass
 
 from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.match import Match
+from app.models.match import Match, MatchStage
 from app.models.team import Team
 from app.repositories.match_repository import MatchRepository
 from app.repositories.team_repository import TeamRepository
@@ -61,6 +62,20 @@ class StandingTotals:
         )
 
 
+@dataclass
+class HeadToHeadTotals:
+    """Totals from matches between teams tied on points."""
+
+    points: int = 0
+    goals_for: int = 0
+    goals_against: int = 0
+
+    @property
+    def goal_difference(self) -> int:
+        """Return head-to-head goals scored minus conceded."""
+        return self.goals_for - self.goals_against
+
+
 class GroupService:
     """Builds group-stage tables from teams and completed group matches."""
 
@@ -82,9 +97,9 @@ class GroupService:
                     group=group_name,
                     standings=[
                         standing.to_response()
-                        for standing in sorted(
-                            standings.values(),
-                            key=self._standing_sort_key,
+                        for standing in self._sort_group_standings(
+                            standings=list(standings.values()),
+                            matches=matches,
                         )
                     ],
                 )
@@ -134,6 +149,7 @@ class GroupService:
             if (
                 match.team1_score is None
                 or match.team2_score is None
+                or not GroupService._is_group_stage_match(match)
                 or match.team1.group != match.team2.group
             ):
                 continue
@@ -182,11 +198,116 @@ class GroupService:
     @staticmethod
     def _standing_sort_key(
         standing: StandingTotals,
-    ) -> tuple[int, int, int, str]:
-        """Sort by points, goal difference, goals scored, then team name."""
+    ) -> tuple[int, int, str]:
+        """Sort by goal difference, goals scored, then team name."""
         return (
-            -standing.points,
             -standing.goal_difference,
             -standing.goals_for,
             standing.team,
         )
+
+    @staticmethod
+    def _sort_group_standings(
+        *,
+        standings: list[StandingTotals],
+        matches: list[Match],
+    ) -> list[StandingTotals]:
+        """Sort group standings with head-to-head before goal difference."""
+        standings_by_points: dict[int, list[StandingTotals]] = defaultdict(list)
+        for standing in standings:
+            standings_by_points[standing.points].append(standing)
+
+        sorted_standings: list[StandingTotals] = []
+        for points in sorted(standings_by_points.keys(), reverse=True):
+            tied_standings = standings_by_points[points]
+            if len(tied_standings) == 1:
+                sorted_standings.extend(tied_standings)
+                continue
+
+            head_to_head = GroupService._calculate_head_to_head_totals(
+                team_ids={standing.team_id for standing in tied_standings},
+                matches=matches,
+            )
+            sorted_standings.extend(
+                sorted(
+                    tied_standings,
+                    key=lambda standing: GroupService._tied_standing_sort_key(
+                        standing=standing,
+                        head_to_head=head_to_head[standing.team_id],
+                    ),
+                ),
+            )
+
+        return sorted_standings
+
+    @staticmethod
+    def _tied_standing_sort_key(
+        *,
+        standing: StandingTotals,
+        head_to_head: HeadToHeadTotals,
+    ) -> tuple[int, int, int, int, int, str]:
+        """Sort tied teams by head-to-head before overall goal difference."""
+        return (
+            -head_to_head.points,
+            -head_to_head.goal_difference,
+            -head_to_head.goals_for,
+            *GroupService._standing_sort_key(standing),
+        )
+
+    @staticmethod
+    def _calculate_head_to_head_totals(
+        *,
+        team_ids: set[int],
+        matches: list[Match],
+    ) -> dict[int, HeadToHeadTotals]:
+        """Build a mini-table from matches between tied teams."""
+        head_to_head = {team_id: HeadToHeadTotals() for team_id in team_ids}
+
+        for match in matches:
+            if (
+                match.team1_score is None
+                or match.team2_score is None
+                or not GroupService._is_group_stage_match(match)
+                or match.team1_id not in team_ids
+                or match.team2_id not in team_ids
+            ):
+                continue
+
+            GroupService._apply_head_to_head_result(
+                totals=head_to_head[match.team1_id],
+                goals_for=match.team1_score,
+                goals_against=match.team2_score,
+            )
+            GroupService._apply_head_to_head_result(
+                totals=head_to_head[match.team2_id],
+                goals_for=match.team2_score,
+                goals_against=match.team1_score,
+            )
+
+        return head_to_head
+
+    @staticmethod
+    def _apply_head_to_head_result(
+        *,
+        totals: HeadToHeadTotals,
+        goals_for: int,
+        goals_against: int,
+    ) -> None:
+        """Update one team's head-to-head totals."""
+        totals.goals_for += goals_for
+        totals.goals_against += goals_against
+
+        if goals_for > goals_against:
+            totals.points += 3
+        elif goals_for == goals_against:
+            totals.points += 1
+
+    @staticmethod
+    def _is_group_stage_match(match: Match) -> bool:
+        """Return true when a match should count toward group standings."""
+        if match.match_stage is None:
+            return True
+        if isinstance(match.match_stage, MatchStage):
+            return match.match_stage == MatchStage.GROUP
+
+        return str(match.match_stage) == MatchStage.GROUP.value
