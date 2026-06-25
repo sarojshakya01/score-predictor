@@ -666,14 +666,14 @@ const AdminMatchesPage = () => {
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block">
                 <span className={labelCls}><p>Team 1</p></span>
-                <select name="team1_id" required value={formState.team1Id} onChange={(event) => updateField("team1Id", event.target.value)} className={selectCls}>
+                <select name="team1_id" value={formState.team1Id} onChange={(event) => updateField("team1Id", event.target.value)} className={selectCls}>
                   <option value="">Select team</option>
                   {teams.map((team) => (<option key={team.id} value={team.id}>{team.name}</option>))}
                 </select>
               </label>
               <label className="block">
                 <span className={labelCls}><p>Team 2</p></span>
-                <select name="team2_id" required value={formState.team2Id} onChange={(event) => updateField("team2Id", event.target.value)} className={selectCls}>
+                <select name="team2_id" value={formState.team2Id} onChange={(event) => updateField("team2Id", event.target.value)} className={selectCls}>
                   <option value="">Select team</option>
                   {teams.map((team) => (<option key={team.id} value={team.id}>{team.name}</option>))}
                 </select>

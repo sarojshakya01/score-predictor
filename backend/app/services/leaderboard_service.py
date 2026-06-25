@@ -77,8 +77,11 @@ class DurationRules:
 class ScoringRules:
     """Complete point table loaded from the game_rules setting."""
     winner: int = 100
-    runner_up: int = 50
-    third_place: int = 25
+    runner_up: int = 76
+    third_place: int = 50
+    correct_3_in_3: int = 0
+    correct_2_in_3: int = 0
+    correct_1_in_3: int = 0
     score: ScoreRules = field(default_factory=ScoreRules)
     goal_difference: BandedRules = field(default_factory=BandedRules)
     yellow_card: BandedRules = field(default_factory=BandedRules)
@@ -173,6 +176,12 @@ def _parse_scoring_rules(raw_groups: list[dict]) -> ScoringRules:
         duration = DurationRules()
 
     return ScoringRules(
+        winner=single("winners", order=1, default=100),
+        runner_up=single("winners", order=2, default=75),
+        third_place=single("winners", order=3, default=50),
+        correct_1_in_3=single("winners", order=4, default=0),
+        correct_2_in_3=single("winners", order=5, default=0),
+        correct_3_in_3=single("winners", order=6, default=0),
         score=score,
         goal_difference=banded("goal_difference"),
         yellow_card=banded("yellow_card"),
@@ -1021,7 +1030,52 @@ class LeaderboardService:
             )
         )
 
+        top_3_actual = []
+        if final_match is not None:
+            top_3_actual.append(final_match.winner)
+        if runner_up_team is not None:
+            top_3_actual.append(runner_up_team)
+        if third_place_match is not None:
+            top_3_actual.append(third_place_match.winner_id)
+
         winner_points = rules.winner if user.winner_team_id is not None and final_match is not None and user.winner_team_id == final_match.winner else 0
         runner_up_points = rules.runner_up if user.runner_up_team_id is not None and runner_up_team is not None and user.runner_up_team_id == runner_up_team else 0
         third_place_points = rules.third_place if user.third_place_team_id is not None and third_place_match is not None and user.third_place_team_id == third_place_match.winner_id else 0
+        if winner_points + runner_up_points + third_place_points == 0:
+            if user.third_place_team_id in top_3_actual and user.runner_up_team_id in top_3_actual and user.winner_team_id in top_3_actual:
+                winner_points = rules.correct_3_in_3 - rules.correct_2_in_3
+                runner_up_points = rules.correct_2_in_3 - rules.correct_1_in_3
+                third_place_points = rules.correct_1_in_3
+            elif (user.third_place_team_id in top_3_actual and user.runner_up_team_id in top_3_actual) or (user.third_place_team_id in top_3_actual and user.winner_team_id in top_3_actual) or (user.runner_up_team_id in top_3_actual and user.winner_team_id in top_3_actual):
+                runner_up_points = rules.correct_2_in_3 - rules.correct_1_in_3
+                third_place_points = rules.correct_1_in_3
+            elif user.third_place_team_id in top_3_actual or user.runner_up_team_id in top_3_actual or user.winner_team_id in top_3_actual:
+                third_place_points = rules.correct_1_in_3
+        elif (third_place_points + runner_up_points == 0 and winner_points > 0) or (third_place_points + winner_points == 0 and runner_up_points > 0) or (runner_up_points + winner_points == 0 and third_place_points > 0):
+            if (third_place_points + runner_up_points == 0 and winner_points > 0):
+                if (user.third_place_team_id in top_3_actual and user.runner_up_team_id in top_3_actual):
+                    runner_up_points = rules.correct_2_in_3 - rules.correct_1_in_3
+                    third_place_points = rules.correct_1_in_3
+                elif (user.third_place_team_id in top_3_actual or user.runner_up_team_id in top_3_actual):
+                    third_place_points = rules.correct_1_in_3
+            elif (third_place_points + winner_points == 0 and runner_up_points > 0):
+                if (user.third_place_team_id in top_3_actual and user.winner_team_id in top_3_actual):
+                    winner_points = rules.correct_2_in_3 - rules.correct_1_in_3
+                    third_place_points = rules.correct_1_in_3
+                elif (user.third_place_team_id in top_3_actual or user.winner_team_id in top_3_actual):
+                    third_place_points = rules.correct_1_in_3
+            elif (runner_up_points + winner_points == 0 and third_place_points > 0):
+                if (user.runner_up_team_id in top_3_actual and user.winner_team_id in top_3_actual):
+                    winner_points = rules.correct_2_in_3 - rules.correct_1_in_3
+                    runner_up_points = rules.correct_1_in_3
+                elif (user.runner_up_team_id in top_3_actual or user.winner_team_id in top_3_actual):
+                    runner_up_points = rules.correct_1_in_3
+        elif (third_place_points == 0 and runner_up_points > 0 and winner_points > 0) or (third_place_points > 0 and runner_up_points == 0 and winner_points > 0) or (third_place_points > 0 and runner_up_points > 0 and winner_points == 0):
+            if (third_place_points == 0 and runner_up_points > 0 and winner_points > 0) and user.third_place_team_id in top_3_actual:
+                third_place_points = rules.correct_1_in_3
+            elif (third_place_points > 0 and runner_up_points == 0 and winner_points > 0) and user.runner_up_team_id in top_3_actual:
+                runner_up_points = rules.correct_1_in_3
+            elif (third_place_points > 0 and runner_up_points > 0 and winner_points == 0) and user.winner_team_id in top_3_actual:
+                winner_points = rules.correct_1_in_3
+
         return winner_points, runner_up_points, third_place_points
