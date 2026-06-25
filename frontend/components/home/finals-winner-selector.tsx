@@ -995,7 +995,7 @@ export const FinalsWinnerSelector = () => {
           <button
             type="button"
             onClick={handleCancelSubmit}
-            className="inline-flex h-10 items-center justify-center rounded-md border border-zinc-300 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            className="inline-flex h-10 items-center cursor-pointer justify-center rounded-md border border-zinc-300 px-4 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
           >
             Cancel
           </button>
@@ -1003,7 +1003,7 @@ export const FinalsWinnerSelector = () => {
             type="button"
             onClick={() => void handleConfirmClick()}
             disabled={isSubmitting}
-            className="inline-flex h-10 items-center gap-2 justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400"
+            className="inline-flex h-10 items-center gap-2 cursor-pointer justify-center rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400"
           >
             {isSubmitting
               ? (isUpdating ? "Updating..." : "Submitting...")
