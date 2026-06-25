@@ -66,8 +66,8 @@ export const formatDateTime = (value: string, isUTC: boolean = true): string => 
   if (Number.isNaN(date.getTime())) return value;
 
   return new Intl.DateTimeFormat("en", {
-    day: "numeric",
-    hour: "numeric",
+    day: "2-digit",
+    hour: "2-digit",
     minute: "2-digit",
     month: "short",
     timeZone: DEFAULT_TIMEZONE,

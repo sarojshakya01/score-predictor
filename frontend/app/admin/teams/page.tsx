@@ -275,9 +275,9 @@ const AdminTeamsPage = () => {
                     </td>
                   </tr>
                 ) : pagedTeams.length > 0 ? (
-                  pagedTeams.map((team, idx) => (
+                  pagedTeams.map((team) => (
                     <tr key={team.id} className="transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40">
-                      <td className="px-5 py-4 font-medium text-zinc-950 dark:text-zinc-50">{idx + 1}</td>
+                      <td className="px-5 py-4 font-medium text-zinc-950 dark:text-zinc-50">{team.id}</td>
                       <td className="px-5 py-4 font-medium text-zinc-950 dark:text-zinc-50">
                         <div className="flex items-center gap-2">
                           <Image width={30} height={30} className="min-h-[25px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={team.flag_url} alt="flag" />

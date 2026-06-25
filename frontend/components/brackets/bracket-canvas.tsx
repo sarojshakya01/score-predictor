@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 
+import { Modal } from "@/components/ui/modal";
 import { PillTone, StatusPill } from "@/components/ui/status-pill";
 import { getErrorMessage } from "@/lib/forms/error-message";
 import { listMatches } from "@/lib/matches";
@@ -30,14 +31,18 @@ const STAGES: StageConfig[] = [
   { expectedMatches: 1, label: "Final", queryStage: "F" },
 ];
 
-const CANVAS_PADDING_X = 32;
-const CANVAS_PADDING_TOP = 82;
-const CANVAS_PADDING_BOTTOM = 54;
-const CARD_WIDTH = 170;
-const CARD_HEIGHT = 90;
-const COLUMN_GAP = 78;
-const SLOT_PITCH = 50;
+const CANVAS_PADDING_X = 14;
+const CANVAS_PADDING_TOP = 60;
+const CANVAS_PADDING_BOTTOM = 28;
+const CARD_WIDTH = 114;
+const CARD_HEIGHT = 60;
+const COLUMN_GAP = 20;
+const SLOT_PITCH = CARD_HEIGHT + 32;
 const CARD_RADIUS = 8;
+const SPLIT_STAGE_COUNT = 4;
+const CENTER_COLUMN_INDEX = SPLIT_STAGE_COUNT;
+const BRACKET_COLUMN_COUNT = SPLIT_STAGE_COUNT * 2 + 1;
+const CENTER_MATCH_VERTICAL_OFFSET = CARD_HEIGHT + 48;
 
 const imageCache = new Map<string, Promise<HTMLImageElement | null>>();
 
@@ -60,12 +65,18 @@ const emptyRounds = (): BracketRound[] => STAGES.map((config) => ({ config, matc
 const getSlotId = (roundIndex: number, slotIndex: number): string => `${roundIndex}:${slotIndex}`;
 
 const sortMatches = (matches: MatchResponse[]): MatchResponse[] => {
-  return [...matches].sort((left, right) => {
-    const leftTime = new Date(`${left.match_datetime}Z`).getTime();
-    const rightTime = new Date(`${right.match_datetime}Z`).getTime();
-    if (Number.isFinite(leftTime) && Number.isFinite(rightTime)) return leftTime - rightTime || left.id - right.id;
-    return left.id - right.id;
+  const sortOrderMatchId = [73, 76, 75, 78, 81, 82, 83, 84, 74, 77, 79, 80, 85, 88, 86, 87];
+  const orderMap = new Map(
+    sortOrderMatchId.map((id, index) => [id, index])
+  );
+  const sortedMatches = [...matches].sort((a, b) => {
+    const aOrder = orderMap.get(a.id) ?? Number.MAX_SAFE_INTEGER;
+    const bOrder = orderMap.get(b.id) ?? Number.MAX_SAFE_INTEGER;
+
+    return aOrder - bOrder;
   });
+
+  return sortedMatches;
 };
 
 const fetchStageMatches = async (config: StageConfig): Promise<Pick<BracketRound, "matches" | "queryStage">> => {
@@ -75,65 +86,136 @@ const fetchStageMatches = async (config: StageConfig): Promise<Pick<BracketRound
 };
 
 const getFirstRoundSlotCount = (rounds: BracketRound[]): number => {
-  return rounds.reduce((maximum, round, roundIndex) => {
+  return rounds.slice(0, SPLIT_STAGE_COUNT).reduce((maximum, round, roundIndex) => {
     const slotCount = Math.max(round.config.expectedMatches, round.matches.length);
     return Math.max(maximum, slotCount * 2 ** roundIndex);
   }, STAGES[0].expectedMatches);
 };
 
+const getColumnX = (columnIndex: number): number => {
+  return CANVAS_PADDING_X + columnIndex * (CARD_WIDTH + COLUMN_GAP);
+};
+
+const getSplitRoundColumnIndex = (roundIndex: number, isRightSide: boolean): number => {
+  return isRightSide ? BRACKET_COLUMN_COUNT - 1 - roundIndex : roundIndex;
+};
+
+const getSideSlotCenterY = (slotIndex: number, slotCount: number, firstRoundSideSlotCount: number): number => {
+  const slotSpan = firstRoundSideSlotCount / slotCount;
+  const centerSlot = (slotIndex + 0.5) * slotSpan - 0.5;
+  return CANVAS_PADDING_TOP + centerSlot * SLOT_PITCH + SLOT_PITCH / 2;
+};
+
+const getSlotCenterY = (slot: BracketSlot): number => slot.y + slot.height / 2;
+
+const getSlotEdgeX = (slot: BracketSlot, side: "left" | "right"): number => {
+  return side === "left" ? slot.x : slot.x + slot.width;
+};
+
+const addConnector = (
+  connectors: Connector[],
+  startSlot: BracketSlot,
+  endSlot: BracketSlot,
+  direction: "left" | "right",
+): void => {
+  const startX = getSlotEdgeX(startSlot, direction === "right" ? "right" : "left");
+  const endX = getSlotEdgeX(endSlot, direction === "right" ? "left" : "right");
+  connectors.push({
+    endX,
+    endY: getSlotCenterY(endSlot),
+    midX: startX + (endX - startX) / 2,
+    startX,
+    startY: getSlotCenterY(startSlot),
+  });
+};
+
 const createBracketLayout = (rounds: BracketRound[]): BracketLayout => {
   const firstRoundSlotCount = getFirstRoundSlotCount(rounds);
-  const width = CANVAS_PADDING_X * 2 + STAGES.length * CARD_WIDTH + (STAGES.length - 1) * COLUMN_GAP;
-  const height = CANVAS_PADDING_TOP + firstRoundSlotCount * SLOT_PITCH + CANVAS_PADDING_BOTTOM;
+  const firstRoundSideSlotCount = Math.ceil(firstRoundSlotCount / 2);
+  const centerX = getColumnX(CENTER_COLUMN_INDEX);
+  const centerY = CANVAS_PADDING_TOP + firstRoundSideSlotCount * SLOT_PITCH / 2;
+  const sideHeight = CANVAS_PADDING_TOP + firstRoundSideSlotCount * SLOT_PITCH + CANVAS_PADDING_BOTTOM;
+  const centerHeight = centerY + CENTER_MATCH_VERTICAL_OFFSET + CARD_HEIGHT / 2 + CANVAS_PADDING_BOTTOM;
+  const width = CANVAS_PADDING_X * 2 + BRACKET_COLUMN_COUNT * CARD_WIDTH + (BRACKET_COLUMN_COUNT - 1) * COLUMN_GAP;
+  const height = Math.max(sideHeight, centerHeight);
 
   const slotsByRound = rounds.map((round, roundIndex) => {
     const slotCount = Math.max(round.config.expectedMatches, round.matches.length);
-    const slotSpan = firstRoundSlotCount / slotCount;
-    const x = CANVAS_PADDING_X + roundIndex * (CARD_WIDTH + COLUMN_GAP);
+    if (roundIndex >= SPLIT_STAGE_COUNT) {
+      const centerMatchY = round.config.queryStage === "F"
+        ? centerY - CENTER_MATCH_VERTICAL_OFFSET
+        : centerY + CENTER_MATCH_VERTICAL_OFFSET;
+      return Array.from({ length: slotCount }, (_, slotIndex) => ({
+        height: CARD_HEIGHT,
+        id: getSlotId(roundIndex, slotIndex),
+        match: round.matches[slotIndex] ?? null,
+        roundIndex,
+        slotIndex,
+        width: CARD_WIDTH,
+        x: centerX,
+        y: centerMatchY - CARD_HEIGHT / 2,
+      }));
+    }
+
+    const leftSlotCount = Math.ceil(slotCount / 2);
     return Array.from({ length: slotCount }, (_, slotIndex) => {
-      const centerSlot = (slotIndex + 0.5) * slotSpan - 0.5;
-      const centerY = CANVAS_PADDING_TOP + centerSlot * SLOT_PITCH + SLOT_PITCH / 2;
-      return { height: CARD_HEIGHT, id: getSlotId(roundIndex, slotIndex), match: round.matches[slotIndex] ?? null, roundIndex, slotIndex, width: CARD_WIDTH, x, y: centerY - CARD_HEIGHT / 2 };
+      const isRightSide = slotIndex >= leftSlotCount;
+      const sideSlotIndex = isRightSide ? slotIndex - leftSlotCount : slotIndex;
+      const sideSlotCount = isRightSide ? slotCount - leftSlotCount : leftSlotCount;
+      const x = getColumnX(getSplitRoundColumnIndex(roundIndex, isRightSide));
+      const slotCenterY = getSideSlotCenterY(sideSlotIndex, sideSlotCount, firstRoundSideSlotCount);
+      return {
+        height: CARD_HEIGHT,
+        id: getSlotId(roundIndex, slotIndex),
+        match: round.matches[slotIndex] ?? null,
+        roundIndex,
+        slotIndex,
+        width: CARD_WIDTH,
+        x,
+        y: slotCenterY - CARD_HEIGHT / 2,
+      };
     });
   });
 
   const connectors: Connector[] = [];
-  let semifinalSlots: BracketSlot[] = [];
-  let thirdPlaceSlot: BracketSlot = {} as BracketSlot;
-  let finalSlot: BracketSlot = {} as BracketSlot;
 
-  for (const slots of slotsByRound) {
-    if (slots.some((slot) => slot.match?.match_stage === 'SF')) semifinalSlots = slots;
-    if (slots.some((slot) => slot.match?.match_stage === '3P')) thirdPlaceSlot = slots[0];
-    if (slots.some((slot) => slot.match?.match_stage === 'F')) finalSlot = slots[0];
-  }
+  for (let roundIndex = 0; roundIndex < SPLIT_STAGE_COUNT - 1; roundIndex += 1) {
+    const currentSlots = slotsByRound[roundIndex];
+    const nextSlots = slotsByRound[roundIndex + 1];
+    const currentLeftCount = Math.ceil(currentSlots.length / 2);
+    const nextLeftCount = Math.ceil(nextSlots.length / 2);
 
-  if (semifinalSlots?.length === 2 && Object.keys(thirdPlaceSlot).length && Object.keys(finalSlot).length) {
-    const startX = semifinalSlots[0].x + semifinalSlots[0].width;
-    const midX = startX + COLUMN_GAP / 2;
-    connectors.push({ startX, startY: semifinalSlots[0].y + semifinalSlots[0].height / 2, midX, endX: finalSlot.x - CARD_WIDTH - COLUMN_GAP, endY: (semifinalSlots[0].y + semifinalSlots[1].y) / 2 - semifinalSlots[0].height });
-    if (semifinalSlots?.length === 2 && thirdPlaceSlot && finalSlot) {
-      finalSlot.y = (semifinalSlots[0].y + semifinalSlots[1].y) / 2 - 3 / 2 * semifinalSlots[0].height;
-      finalSlot.x = thirdPlaceSlot.x;
-      thirdPlaceSlot.y = semifinalSlots[1].y - (semifinalSlots[1].y - semifinalSlots[0].y) / 3;
+    for (let nextIndex = 0; nextIndex < nextLeftCount; nextIndex += 1) {
+      const nextSlot = nextSlots[nextIndex];
+      const upperSlot = currentSlots[nextIndex * 2];
+      const lowerSlot = currentSlots[nextIndex * 2 + 1];
+      if (!upperSlot || !lowerSlot || !nextSlot) continue;
+      addConnector(connectors, upperSlot, nextSlot, "right");
+      addConnector(connectors, lowerSlot, nextSlot, "right");
+    }
+
+    const nextRightCount = nextSlots.length - nextLeftCount;
+    for (let nextIndex = 0; nextIndex < nextRightCount; nextIndex += 1) {
+      const nextSlot = nextSlots[nextLeftCount + nextIndex];
+      const upperSlot = currentSlots[currentLeftCount + nextIndex * 2];
+      const lowerSlot = currentSlots[currentLeftCount + nextIndex * 2 + 1];
+      if (!upperSlot || !lowerSlot || !nextSlot) continue;
+      addConnector(connectors, upperSlot, nextSlot, "left");
+      addConnector(connectors, lowerSlot, nextSlot, "left");
     }
   }
 
-  for (let roundIndex = 0; roundIndex < slotsByRound.length - 2; roundIndex += 1) {
-    const currentSlots = slotsByRound[roundIndex];
-    const nextSlots = slotsByRound[roundIndex + 1];
-    nextSlots.forEach((nextSlot, nextIndex) => {
-      const upperSlot = currentSlots[nextIndex * 2];
-      const lowerSlot = currentSlots[nextIndex * 2 + 1];
-      if (!upperSlot || !lowerSlot) return;
-      const startX = upperSlot.x + upperSlot.width;
-      const midX = startX + COLUMN_GAP / 2;
-      const endX = nextSlot.x;
-      const endY = nextSlot.y + nextSlot.height / 2;
-      connectors.push({ endX, endY, midX, startX, startY: upperSlot.y + upperSlot.height / 2 });
-      connectors.push({ endX, endY, midX, startX, startY: lowerSlot.y + lowerSlot.height / 2 });
-    });
-  }
+  const semifinalSlots = slotsByRound[3] ?? [];
+  const semifinalLeftCount = Math.ceil(semifinalSlots.length / 2);
+  const leftSemifinalSlot = semifinalSlots[0];
+  const rightSemifinalSlot = semifinalSlots[semifinalLeftCount];
+  const thirdPlaceSlot = slotsByRound[4]?.[0];
+  const finalSlot = slotsByRound[5]?.[0];
+
+  if (leftSemifinalSlot && finalSlot) addConnector(connectors, leftSemifinalSlot, finalSlot, "right");
+  if (rightSemifinalSlot && finalSlot) addConnector(connectors, rightSemifinalSlot, finalSlot, "left");
+  if (leftSemifinalSlot && thirdPlaceSlot) addConnector(connectors, leftSemifinalSlot, thirdPlaceSlot, "right");
+  if (rightSemifinalSlot && thirdPlaceSlot) addConnector(connectors, rightSemifinalSlot, thirdPlaceSlot, "left");
 
   const flatSlots = slotsByRound.flat().filter((slot) => slot.match);
   return { connectors, height, slots: flatSlots, slotsByRound, width };
@@ -148,14 +230,6 @@ const findSlot = (rounds: BracketRound[], slotId: string | null): BracketSlot | 
   const round = rounds[roundIndex];
   if (!round) return null;
   return { height: CARD_HEIGHT, id: slotId, match: round.matches[slotIndex] ?? null, roundIndex, slotIndex, width: CARD_WIDTH, x: 0, y: 0 };
-};
-
-const findFirstMatchSlotId = (rounds: BracketRound[]): string | null => {
-  for (let roundIndex = 0; roundIndex < rounds.length; roundIndex += 1) {
-    const slotIndex = rounds[roundIndex].matches.findIndex(Boolean);
-    if (slotIndex !== -1) return getSlotId(roundIndex, slotIndex);
-  }
-  return null;
 };
 
 const getMatchStatus = (match: MatchResponse | null): { label: string; tone: PillTone } => {
@@ -203,6 +277,39 @@ const drawConnector = (context: CanvasRenderingContext2D, connector: Connector):
   context.stroke();
 };
 
+const drawRoundHeader = (
+  context: CanvasRenderingContext2D,
+  label: string,
+  loadedCount: number,
+  expectedCount: number,
+  x: number,
+  isDark: boolean,
+): void => {
+  context.textAlign = "left";
+  context.textBaseline = "middle";
+  context.font = "700 12px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
+  context.fillStyle = isDark ? "#94a3b8" : "#475569";
+  context.fillText(label.toUpperCase(), x, 25);
+  context.fillStyle = isDark ? "#64748b" : "#94a3b8";
+  context.font = "500 11px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
+  context.fillText(`${loadedCount}/${expectedCount} matches`, x, 44);
+};
+
+const drawCenterLabel = (
+  context: CanvasRenderingContext2D,
+  label: string,
+  slot: BracketSlot | undefined,
+  isDark: boolean,
+): void => {
+  if (!slot) return;
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.font = "700 12px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
+  context.fillStyle = isDark ? "#94a3b8" : "#475569";
+  context.fillText(label.toUpperCase(), slot.x + slot.width / 2, slot.y - 10);
+  context.textAlign = "left";
+};
+
 const drawSlot = async (context: CanvasRenderingContext2D, slot: BracketSlot, selectedSlotId: string | null, hoveredSlotId: string | null, isDark: boolean): Promise<void> => {
   const match = slot.match;
   const isSelected = selectedSlotId === slot.id;
@@ -241,9 +348,9 @@ const drawSlot = async (context: CanvasRenderingContext2D, slot: BracketSlot, se
     return;
   }
 
-  const flagMaxWidth = 26;
-  const flagMaxHeight = 26;
-  const teamTextWidth = slot.width - 72;
+  const flagMaxWidth = 20;
+  const flagMaxHeight = 20;
+  const teamTextWidth = slot.width - 62;
 
   if (match.team1_flag_url) {
     const flagSrc = await loadImage(match.team1_flag_url);
@@ -255,7 +362,7 @@ const drawSlot = async (context: CanvasRenderingContext2D, slot: BracketSlot, se
 
   context.fillStyle = winnerSide === "team1" ? "#047857" : textPrimary;
   context.fillText(truncateText(context, match.team1_name.length < 12 ? match.team1_name : match.team1_name_short, teamTextWidth), slot.x + flagMaxWidth + 15, slot.y + flagMaxHeight - 3);
-  context.fillText(truncateText(context, match.team1_score?.toString() ?? "-", teamTextWidth), slot.x + flagMaxWidth + 10 + teamTextWidth + 15, slot.y + flagMaxHeight);
+  context.fillText(truncateText(context, match.team1_score?.toString() ?? "-", teamTextWidth), slot.x + flagMaxWidth + 10 + teamTextWidth + 15, slot.y + flagMaxHeight - 5);
 
   if (match.team2_flag_url) {
     const flagSrc = await loadImage(match.team2_flag_url);
@@ -267,17 +374,17 @@ const drawSlot = async (context: CanvasRenderingContext2D, slot: BracketSlot, se
 
   context.fillStyle = winnerSide === "team2" ? "#047857" : textPrimary;
   context.fillText(truncateText(context, match.team2_name.length < 12 ? match.team2_name : match.team2_name_short, teamTextWidth), slot.x + flagMaxWidth + 15, slot.y + 2 * flagMaxHeight + 2);
-  context.fillText(match.team2_score?.toString() ?? "-", slot.x + flagMaxWidth + 10 + teamTextWidth + 15, slot.y + 2 * flagMaxHeight + 5);
+  context.fillText(match.team2_score?.toString() ?? "-", slot.x + flagMaxWidth + 10 + teamTextWidth + 15, slot.y + 2 * flagMaxHeight + 2);
 
   context.font = "500 10px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
   context.fillStyle = textMuted;
-  context.fillText(truncateText(context, formatDateTime(match.match_datetime), teamTextWidth), slot.x + flagMaxWidth + 15, slot.y + 2 * flagMaxHeight + 22);
+  context.fillText(truncateText(context, formatDateTime(match.match_datetime), 90), slot.x + (CARD_WIDTH - 90) / 2, slot.y + 2 * flagMaxHeight + 30);
 
   if (match.match_stage === "F") {
     const trophySrc = await loadImage("/images/trophy.png");
     if (trophySrc) {
       const scale = Math.min(150 / trophySrc.width, 150 / trophySrc.height, 1);
-      context.drawImage(trophySrc, slot.x + 0.5 * CARD_WIDTH, slot.y - 0.5 * CARD_HEIGHT + 3, trophySrc.width * scale, trophySrc.height * scale);
+      context.drawImage(trophySrc, slot.x + (CARD_WIDTH - 75) / 2, slot.y - 2.5 * CARD_HEIGHT, trophySrc.width * scale, trophySrc.height * scale);
     }
   }
 };
@@ -303,21 +410,33 @@ const drawBracket = async (canvas: HTMLCanvasElement, rounds: BracketRound[], se
   context.lineWidth = 2;
   layout.connectors.forEach((connector) => drawConnector(context, connector));
 
-  context.textBaseline = "middle";
-  context.font = "700 12px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-  context.fillStyle = isDark ? "#94a3b8" : "#475569";
-  STAGES.forEach((stage, roundIndex) => {
-    let loadedCount = rounds[roundIndex]?.matches.length ?? 0;
-    if (stage.queryStage === 'F') return;
-    if (stage.queryStage === '3P') { stage.label = "3rd Place & Final"; stage.expectedMatches = 2; loadedCount = 2; }
-    const x = CANVAS_PADDING_X + roundIndex * (CARD_WIDTH + COLUMN_GAP);
-    context.fillText(stage.label.toUpperCase(), x, 34);
-    context.fillStyle = isDark ? "#64748b" : "#94a3b8";
-    context.font = "500 11px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-    context.fillText(`${loadedCount}/${stage.expectedMatches} matches`, x, 54);
-    context.font = "700 12px ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif";
-    context.fillStyle = isDark ? "#94a3b8" : "#475569";
-  });
+  for (let roundIndex = 0; roundIndex < SPLIT_STAGE_COUNT; roundIndex += 1) {
+    const stage = STAGES[roundIndex];
+    const loadedCount = rounds[roundIndex]?.matches.length ?? 0;
+    const leftExpectedCount = Math.ceil(stage.expectedMatches / 2);
+    const rightExpectedCount = stage.expectedMatches - leftExpectedCount;
+    const leftLoadedCount = Math.min(loadedCount, leftExpectedCount);
+    const rightLoadedCount = Math.max(0, loadedCount - leftExpectedCount);
+
+    drawRoundHeader(
+      context,
+      stage.label,
+      leftLoadedCount,
+      leftExpectedCount,
+      getColumnX(getSplitRoundColumnIndex(roundIndex, false)),
+      isDark,
+    );
+    drawRoundHeader(
+      context,
+      stage.label,
+      rightLoadedCount,
+      rightExpectedCount,
+      getColumnX(getSplitRoundColumnIndex(roundIndex, true)),
+      isDark,
+    );
+  }
+  drawCenterLabel(context, "Final", layout.slotsByRound[5]?.[0], isDark);
+  drawCenterLabel(context, "3rd Place", layout.slotsByRound[4]?.[0], isDark);
 
   for (const slot of layout.slots) {
     await drawSlot(context, slot, selectedSlotId, hoveredSlotId, isDark);
@@ -335,10 +454,69 @@ const hitTestSlot = (slots: BracketSlot[], point: { x: number; y: number }): Bra
   return slots.find((slot) => point.x >= slot.x && point.x <= slot.x + slot.width && point.y >= slot.y && point.y <= slot.y + slot.height) ?? null;
 };
 
+const MatchDetailPanel = ({
+  match,
+  round,
+}: {
+  match: MatchResponse | null;
+  round: BracketRound | null;
+}) => {
+  const status = getMatchStatus(match);
+
+  if (!match) {
+    return (
+      <div className="rounded-md bg-zinc-50 px-3 py-8 text-center text-sm text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+        No knockout match selected.
+      </div>
+    );
+  }
+
+  const team1Score = match.team1_score ?? "-";
+  const team2Score = match.team2_score ?? "-";
+  const team1Won = (match.team1_score ?? 0) > (match.team2_score ?? 0);
+  const team2Won = (match.team2_score ?? 0) > (match.team1_score ?? 0);
+
+  return (
+    <div className="grid gap-4 text-sm">
+      <div className="flex justify-between items-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:text-zinc-400">
+          {round?.config.label ?? "Knockout"}
+        </p>
+        <StatusPill tone={status.tone}>{status.label}</StatusPill>
+      </div>
+      <div className="flex items-center justify-center">
+        <div className="flex">{getMatchLabelWithFlag(match, "w-auto")}</div>
+      </div>
+      <div className="flex items-center justify-center">
+        <p className="mt-1 text-zinc-500 dark:text-zinc-400">{formatDateTime(match.match_datetime)}</p>
+      </div>
+      <div className="flex gap-3 items-center justify-between">
+        <div className="rounded-md bg-zinc-50 px-3 py-2 dark:bg-zinc-800 w-[33%]">
+          <div className="flex justify-center text-xs font-medium text-zinc-500 dark:text-zinc-400">Score</div>
+          <div className="flex justify-center mt-1 font-semibold text-zinc-950 dark:text-zinc-50 flex">
+            <StatusPill tone={team1Won ? "green" : "zinc"}>{team1Score}</StatusPill>
+            <span className="mx-2">vs</span>
+            <StatusPill tone={team2Won ? "green" : "zinc"}>{team2Score}</StatusPill>
+          </div>
+        </div>
+        <div className="flex flex-col items-center justify-center rounded-md bg-zinc-50 px-3 py-2 dark:bg-zinc-800 w-[33%]">
+          <div className="flex justify-center text-xs font-medium text-zinc-500 dark:text-zinc-400">Venue</div>
+          <div className="flex justify-center my-4">{MatchVenue(match)}</div>
+        </div>
+        <div className="flex flex-col items-center justify-center rounded-md bg-zinc-50 px-3 py-2 dark:bg-zinc-800 w-[33%]">
+          <div className="flex justify-center text-xs font-medium text-zinc-500 dark:text-zinc-400">Match day</div>
+          <div className="flex justify-center mt-1 font-semibold text-zinc-950 dark:text-zinc-50">{match.match_day}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const BracketCanvas = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const layoutRef = useRef<BracketLayout | null>(null);
   const [hoveredSlotId, setHoveredSlotId] = useState<string | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [rounds, setRounds] = useState<BracketRound[]>(emptyRounds);
@@ -367,12 +545,13 @@ export const BracketCanvas = () => {
       setRounds(nextRounds);
       setSelectedSlotId((currentSlotId) => {
         if (findSlot(nextRounds, currentSlotId)) return currentSlotId;
-        return findFirstMatchSlotId(nextRounds);
+        return null;
       });
     } catch (error) {
       setLoadError(getErrorMessage(error, "Unable to load bracket matches."));
       setRounds(emptyRounds());
       setSelectedSlotId(null);
+      setIsDetailOpen(false);
     } finally {
       setIsLoading(false);
     }
@@ -394,7 +573,6 @@ export const BracketCanvas = () => {
   const selectedSlot = useMemo(() => findSlot(rounds, selectedSlotId), [rounds, selectedSlotId]);
   const selectedMatch = selectedSlot?.match ?? null;
   const selectedRound = selectedSlot !== null ? rounds[selectedSlot.roundIndex] : null;
-  const selectedStatus = getMatchStatus(selectedMatch);
 
   const handlePointerMove = (event: PointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;
@@ -415,7 +593,10 @@ export const BracketCanvas = () => {
     const layout = layoutRef.current;
     if (!canvas || !layout) return;
     const slot = hitTestSlot(layout.slots, getCanvasPoint(canvas, event));
-    if (slot) setSelectedSlotId(slot.id);
+    if (slot) {
+      setSelectedSlotId(slot.id);
+      setIsDetailOpen(true);
+    }
   };
 
   return (
@@ -427,17 +608,12 @@ export const BracketCanvas = () => {
       ) : null}
 
       {isLoading && (
-        <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
-          {[...Array(2).keys()].map((item) => (
-            <div
-              key={item}
-              className="h-[1080px] animate-pulse rounded-md px-5 py-4 border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-800"
-            />
-          ))}
+        <section className="grid gap-4">
+          <div className="h-[1080px] animate-pulse rounded-md px-5 py-4 border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-800" />
         </section>
       )}
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_20rem]">
+      <section className="grid gap-4">
         <div className="overflow-auto rounded-md border border-zinc-200 bg-slate-50 shadow-sm dark:border-zinc-700 dark:bg-zinc-950">
           <canvas
             ref={canvasRef}
@@ -448,48 +624,11 @@ export const BracketCanvas = () => {
             onPointerMove={handlePointerMove}
           />
         </div>
-
-        <aside className="rounded-md border border-zinc-200 bg-white p-4 shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-50">Match Detail</h2>
-            <StatusPill tone={selectedStatus.tone}>{selectedStatus.label}</StatusPill>
-          </div>
-
-          {selectedMatch ? (
-            <div className="mt-5 grid gap-4 text-sm">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:text-zinc-400">
-                  {selectedRound?.config.label ?? "Knockout"}
-                </p>
-                <div className="flex my-4">{getMatchLabelWithFlag(selectedMatch, "w-auto")}</div>
-                <p className="mt-1 text-zinc-500 dark:text-zinc-400">{formatDateTime(selectedMatch.match_datetime)}</p>
-              </div>
-              <dl className="grid gap-3">
-                <div className="rounded-md bg-zinc-50 px-3 py-2 dark:bg-zinc-800">
-                  <dt className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Score</dt>
-                  <dd className="mt-1 font-semibold text-zinc-950 dark:text-zinc-50 flex">
-                    {StatusPill({ children: selectedMatch.team1_score || "-", tone: (selectedMatch?.team1_score || 0) > (selectedMatch?.team2_score || 0) ? "green" : "zinc" })}
-                    <span className="mx-2">vs</span>
-                    {StatusPill({ children: selectedMatch.team2_score || "-", tone: (selectedMatch?.team2_score || 0) > (selectedMatch?.team1_score || 0) ? "green" : "zinc" })}
-                  </dd>
-                </div>
-                <div className="rounded-md bg-zinc-50 px-3 py-2 dark:bg-zinc-800">
-                  <dt className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Venue</dt>
-                  <div className="flex w-[30%] my-4">{MatchVenue(selectedMatch)}</div>
-                </div>
-                <div className="rounded-md bg-zinc-50 px-3 py-2 dark:bg-zinc-800">
-                  <dt className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Match day</dt>
-                  <dd className="mt-1 font-semibold text-zinc-950 dark:text-zinc-50">{selectedMatch.match_day}</dd>
-                </div>
-              </dl>
-            </div>
-          ) : (
-            <div className="mt-5 rounded-md bg-zinc-50 px-3 py-8 text-center text-sm text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
-              No knockout match selected.
-            </div>
-          )}
-        </aside>
       </section>
+
+      <Modal isOpen={isDetailOpen} onClose={() => setIsDetailOpen(false)} title="Match Detail">
+        <MatchDetailPanel match={selectedMatch} round={selectedRound} />
+      </Modal>
     </div>
   );
 };

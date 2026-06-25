@@ -526,7 +526,7 @@ const AdminMatchesPage = () => {
                     <td className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400" colSpan={14}>Loading matches…</td>
                   </tr>
                 ) : pagedMatches.length > 0 ? (
-                  pagedMatches.map((match, idx) => {
+                  pagedMatches.map((match) => {
                     const { isMatchPlayed, isMatchLive } = isMatchPlayedOrLive(match)
                     return (
                       <tr key={match.id} className={[
@@ -538,7 +538,7 @@ const AdminMatchesPage = () => {
                           !isMatchPlayed && match.match_locked ? "bg-green-200 dark:bg-blue-950" : isMatchLive ? "bg-green-300 dark:bg-green-950" : "bg-white dark:bg-zinc-950",
                           "border-b border-zinc-200 dark:border-zinc-800",
                           "pl-5 pr-3 py-3 text-left text-zinc-700 dark:text-zinc-300"
-                        ].join(" ")}>{idx + 1}</td>
+                        ].join(" ")}>{match.id}</td>
                         <td className={[
                           "static md:sticky left-[64px] z-20 w-32 min-w-[128px] max-w-[128px]",
                           !isMatchPlayed && match.match_locked ? "bg-green-200 dark:bg-blue-950" : isMatchLive ? "bg-green-300 dark:bg-green-950" : "bg-white dark:bg-zinc-950",

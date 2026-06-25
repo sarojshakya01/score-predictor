@@ -70,7 +70,7 @@ class TeamRepository:
             statement = statement.where(Team.name.ilike(f"%{search}%"))
 
         result = await self._db.execute(
-            statement.order_by(Team.group.asc(), Team.name.asc(), Team.id.asc())
+            statement.order_by(Team.id.asc(), Team.group.asc(), Team.name.asc())
             .offset(offset)
             .limit(limit),
         )

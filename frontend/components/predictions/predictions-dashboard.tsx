@@ -262,11 +262,14 @@ export const PredictionsDashboard = () => {
     nextPredictions: PredictionResponse[],
     preferredMatchId?: number | null,
   ) => {
+    const twoHrsBack = new Date();
+    twoHrsBack.setHours(new Date().getHours() - 3)
     // Prefer the match from the URL `id` param; fall back to first unlocked match.
     const selectedMatch =
       (preferredMatchId != null
         ? nextMatches.find((m) => m.id === preferredMatchId)
         : undefined)
+      ?? nextMatches.find((m) => twoHrsBack < new Date(`${m.match_datetime}Z`) && new Date(`${m.match_datetime}Z`) < new Date())
       ?? nextMatches.find((m) => !m.match_locked)
       ?? nextMatches[0]
       ?? null;
@@ -1049,7 +1052,7 @@ export const PredictionsDashboard = () => {
                   aria-label="Reset changes to saved prediction"
                   disabled={isFormDisabled || isAiPicking}
                   onClick={handleResetPredictionChanges}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:bg-zinc-800 dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500"
+                  className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-zinc-300 bg-white px-4 text-sm font-semibold text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-50 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100 disabled:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:border-zinc-500 dark:hover:bg-zinc-800 dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500"
                 >
                   <IconCancel className="h-4 w-4" />
                   Cancel
@@ -1058,7 +1061,7 @@ export const PredictionsDashboard = () => {
               <button
                 type="submit"
                 disabled={isSubmitDisabled}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400 sm:w-auto"
+                className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md bg-tournament-primary px-4 text-sm font-semibold text-white transition hover:bg-tournament-primary disabled:cursor-not-allowed disabled:bg-zinc-400 sm:w-auto"
               >
                 <IconSave className="h-4 w-4" />
                 {isSubmitting
