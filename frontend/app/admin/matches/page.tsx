@@ -444,7 +444,7 @@ const AdminMatchesPage = () => {
                     "bg-zinc-100 dark:bg-zinc-800",
                     "border-b border-zinc-200 dark:border-zinc-700",
                     "pl-5 pr-3 py-3"
-                  ].join(" ")}>S.N.</th>
+                  ].join(" ")}>ID</th>
                   <th className={[
                     "static sm:sticky left-[50px] top-0 z-40 w-[150px] min-w-[150px] max-w-[150px] md:left-[64px] md:w-[320px] md:min-w-[320px] md:max-w-[320px]",
                     "bg-zinc-100 dark:bg-zinc-800",
@@ -523,7 +523,7 @@ const AdminMatchesPage = () => {
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                 {isLoading ? (
                   <tr>
-                    <td className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400" colSpan={14}>Loading matches…</td>
+                    <td className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400" colSpan={15}>Loading matches…</td>
                   </tr>
                 ) : pagedMatches.length > 0 ? (
                   pagedMatches.map((match) => {

@@ -276,7 +276,7 @@ const AdminUsersPage = () => {
             <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
               <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
                 <tr>
-                  <th className="px-5 py-3">S.N.</th>
+                  <th className="px-5 py-3">ID</th>
                   <th className="px-5 py-3">Name</th>
                   <th className="px-5 py-3">Email</th>
                   <th className="px-5 py-3">Mobile No.</th>
@@ -296,7 +296,7 @@ const AdminUsersPage = () => {
                 ) : pagedUsers.length > 0 ? (
                   pagedUsers.map((user) => (
                     <tr key={user.id} className="transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40">
-                      <td className="px-5 py-4 text-left text-zinc-700 dark:text-zinc-300">{user.id - users[0].id}</td>
+                      <td className="px-5 py-4 text-left text-zinc-700 dark:text-zinc-300">{user.id}</td>
                       <td className="px-5 py-4 font-medium text-zinc-950 dark:text-zinc-50 truncate">
                         {[user.first_name, user.middle_name, user.last_name]
                           .filter(Boolean)
