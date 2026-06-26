@@ -1182,7 +1182,7 @@ async def send_todays_matches_email() -> None:
         f"<p>Here is the match schedule for the next 24 hours "
         f"(as of {now.replace(tzinfo=UTC).astimezone().strftime('%Y-%m-%d %I:%M %p')}):</p>"
         f"{table_html}"
-        f"<p>Don't forget to submit your predictions before kick-off!</p>"
+        f"<p>Don't forget to submit your predictions before lock. Match locks 1 hour prior to the kick-off!</p>"
     )
 
     await send_email(
