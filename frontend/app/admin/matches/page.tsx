@@ -530,45 +530,45 @@ const AdminMatchesPage = () => {
                     const { isMatchPlayed, isMatchLive } = isMatchPlayedOrLive(match)
                     return (
                       <tr key={match.id} className={[
-                        "transition-colors hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40",
-                        !isMatchPlayed && match.match_locked ? "bg-green-200 dark:bg-blue-950" : isMatchLive ? "bg-green-300 dark:bg-green-950 animate-pulse" : "",
+                        "transition-colors",
+                        !isMatchPlayed && match.match_locked ? "bg-blue-200 dark:bg-blue-950 hover:bg-blue-200/70 dark:hover:bg-blue-950/70" : isMatchLive ? "bg-green-300 dark:bg-green-950 animate-pulse hover:bg-green-300/70 dark:hover:bg-green-950/70" : "hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40",
                       ].join(" ")}>
                         <td className={[
                           "static sm:sticky left-0 z-20 w-[50px] min-w-[50px] max-w-[50px] md:w-[64px] md:min-w-[64px] md:max-w-[64px]",
-                          !isMatchPlayed && match.match_locked ? "bg-green-200 dark:bg-blue-950" : isMatchLive ? "bg-green-300 dark:bg-green-950" : "bg-white dark:bg-zinc-950",
+                          !isMatchPlayed && match.match_locked ? "bg-blue-200 dark:bg-blue-950" : isMatchLive ? "bg-green-300 dark:bg-green-950" : "bg-white dark:bg-zinc-950",
                           "border-b border-zinc-200 dark:border-zinc-800",
                           "pl-5 pr-3 py-3 text-left text-zinc-700 dark:text-zinc-300"
                         ].join(" ")}>{match.id}</td>
                         <td className={[
                           "static md:sticky left-[64px] z-20 w-32 min-w-[128px] max-w-[128px]",
-                          !isMatchPlayed && match.match_locked ? "bg-green-200 dark:bg-blue-950" : isMatchLive ? "bg-green-300 dark:bg-green-950" : "bg-white dark:bg-zinc-950",
+                          !isMatchPlayed && match.match_locked ? "bg-blue-200 dark:bg-blue-950" : isMatchLive ? "bg-green-300 dark:bg-green-950" : "bg-white dark:bg-zinc-950",
                           "border-b border-zinc-200 dark:border-zinc-800",
                           "pl-3 pr-0 py-3 font-medium text-zinc-950 dark:text-zinc-50",
                           "hidden md:table-cell"
                         ].join(" ")}>{getTeam1WithFlag(match, "sm")}</td>
                         <td className={[
                           "static sm:sticky left-[50px] z-20 w-[75px] min-w-[75px] max-w-[75px]",
-                          !isMatchPlayed && match.match_locked ? "bg-green-200 dark:bg-blue-950" : isMatchLive ? "bg-green-300 dark:bg-green-950" : "bg-white dark:bg-zinc-950",
+                          !isMatchPlayed && match.match_locked ? "bg-blue-200 dark:bg-blue-950" : isMatchLive ? "bg-green-300 dark:bg-green-950" : "bg-white dark:bg-zinc-950",
                           "border-b border-zinc-200 dark:border-zinc-800",
                           "px-1 py-3 font-medium text-zinc-950 dark:text-zinc-50 text-center",
                           "table-cell md:hidden"
                         ].join(" ")}><p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">{match.team1_name_short}</p></td>
                         <td className={[
                           "static sm:sticky left-[125px] md:left-[192px] z-20 w-[25px] min-w-[25px] max-w-[25px] md:w-[64px] md:min-w-[64px] md:max-w-[64px]",
-                          !isMatchPlayed && match.match_locked ? "bg-green-200 dark:bg-blue-950" : isMatchLive ? "bg-green-300 dark:bg-green-950" : "bg-white dark:bg-zinc-950",
+                          !isMatchPlayed && match.match_locked ? "bg-blue-200 dark:bg-blue-950" : isMatchLive ? "bg-green-300 dark:bg-green-950" : "bg-white dark:bg-zinc-950",
                           "border-b border-zinc-200 dark:border-zinc-800",
                           "px-0 md:px-3 py-3 text-center font-medium text-zinc-950 dark:text-zinc-50"
                         ].join(" ")}>{getVs("sm")}</td>
                         <td className={[
                           "static md:sticky md:left-[256px] z-20 w-32 min-w-[128px] max-w-[128px]",
-                          !isMatchPlayed && match.match_locked ? "bg-green-200 dark:bg-blue-950" : isMatchLive ? "bg-green-300 dark:bg-green-950" : "bg-white dark:bg-zinc-950",
+                          !isMatchPlayed && match.match_locked ? "bg-blue-200 dark:bg-blue-950" : isMatchLive ? "bg-green-300 dark:bg-green-950" : "bg-white dark:bg-zinc-950",
                           "border-b border-zinc-200 dark:border-zinc-800",
                           "pl-0 pr-3 py-3 font-medium text-zinc-950 dark:text-zinc-50",
                           "hidden md:table-cell"
                         ].join(" ")}>{getTeam2WithFlag(match, "sm")}</td>
                         <td className={[
                           "static sm:sticky left-[150px] z-[50px] w-[75px] min-w-[75px] max-w-[75px]",
-                          !isMatchPlayed && match.match_locked ? "bg-green-200 dark:bg-blue-950" : isMatchLive ? "bg-green-300 dark:bg-green-950" : "bg-white dark:bg-zinc-950",
+                          !isMatchPlayed && match.match_locked ? "bg-blue-200 dark:bg-blue-950" : isMatchLive ? "bg-green-300 dark:bg-green-950" : "bg-white dark:bg-zinc-950",
                           "border-b border-zinc-200 dark:border-zinc-800",
                           "px-1 py-3 font-medium text-zinc-950 dark:text-zinc-50 text-center",
                           "table-cell md:hidden"
