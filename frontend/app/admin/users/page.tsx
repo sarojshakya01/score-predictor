@@ -328,7 +328,6 @@ const AdminUsersPage = () => {
                               onClick={() => void handleOpenEditModal(user)}
                             >
                               <IconPencil className="h-4 w-4" />
-                              <span className="sr-only">Edit</span>
                             </button>
                           </Tooltip>
                           <Tooltip content="Delete">
@@ -340,7 +339,6 @@ const AdminUsersPage = () => {
                               onClick={() => handleDeleteClick(user)}
                             >
                               <IconTrash className="h-4 w-4" />
-                              <span className="sr-only">Delete</span>
                             </button>
                           </Tooltip>
                         </div>

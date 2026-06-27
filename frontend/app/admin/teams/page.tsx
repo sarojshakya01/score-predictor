@@ -299,7 +299,6 @@ const AdminTeamsPage = () => {
                               onClick={() => void handleOpenEditModal(team)}
                             >
                               <IconPencil className="h-4 w-4" />
-                              <span className="sr-only">Edit</span>
                             </button>
                           </Tooltip>
                           <Tooltip content="Delete">
@@ -311,7 +310,6 @@ const AdminTeamsPage = () => {
                               onClick={() => handleDeleteClick(team)}
                             >
                               <IconTrash className="h-4 w-4" />
-                              <span className="sr-only">Delete</span>
                             </button>
                           </Tooltip>
                         </div>

@@ -435,7 +435,7 @@ const AdminMatchesPage = () => {
                 : `${filteredMatches.length} of ${matches.length} match${matches.length !== 1 ? "es" : ""} match "${searchQuery}"`}
             </div>
           )}
-          <div className="overflow-auto">
+          <div className="overflow-auto max-h-[32rem]">
             <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
               <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
                 <tr>
@@ -616,13 +616,11 @@ const AdminMatchesPage = () => {
                             <Tooltip content="Edit">
                               <button aria-label="Edit" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-emerald-700 hover:bg-emerald-50 cursor-pointer transition disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-400 dark:hover:bg-emerald-950" disabled={openingEditMatchId !== null} type="button" onClick={() => void startEditingMatch(match)}>
                                 <IconPencil className="h-4 w-4" />
-                                <span className="sr-only">Edit</span>
                               </button>
                             </Tooltip>
                             <Tooltip content="Delete">
                               <button aria-label="Delete" className="inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-700 hover:bg-rose-50 cursor-pointer transition disabled:opacity-40 dark:text-rose-400 dark:hover:bg-rose-950" disabled={isDeletingId === match.id} type="button" onClick={() => handleDeleteClick(match)}>
                                 <IconTrash className="h-4 w-4" />
-                                <span className="sr-only">Delete</span>
                               </button>
                             </Tooltip>
                           </div>

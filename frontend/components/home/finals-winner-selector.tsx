@@ -711,9 +711,6 @@ export const FinalsWinnerSelector = () => {
           <div className="hidden sm:block"><WorldCupHistoryTooltip /></div>
 
           <div className="hidden sm:block relative w-full sm:w-auto text-sm">
-            <label className="sr-only" htmlFor="winner-team-search">
-              Search teams
-            </label>
             <IconSearch className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400 dark:text-zinc-500" />
             <input
               id="winner-team-search"

@@ -314,7 +314,6 @@ const AdminSettingsPage = () => {
                               className="inline-flex h-8 w-8 items-center justify-center rounded-md text-emerald-700 transition hover:bg-emerald-50 disabled:cursor-not-allowed disabled:opacity-40 dark:text-emerald-400 dark:hover:bg-emerald-950"
                             >
                               <IconPencil className="h-4 w-4" />
-                              <span className="sr-only">Edit</span>
                             </button>
                           </Tooltip>
                           <Tooltip content="Delete">
@@ -326,7 +325,6 @@ const AdminSettingsPage = () => {
                               className="inline-flex h-8 w-8 items-center justify-center rounded-md text-rose-700 transition hover:bg-rose-50 disabled:opacity-40 dark:text-rose-400 dark:hover:bg-rose-950"
                             >
                               <IconTrash className="h-4 w-4" />
-                              <span className="sr-only">Delete</span>
                             </button>
                           </Tooltip>
                         </div>
