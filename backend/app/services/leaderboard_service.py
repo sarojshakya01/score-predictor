@@ -1023,24 +1023,21 @@ class LeaderboardService:
         runner_up_team = (
             final_match.team2_id
             if final_match is not None and final_match.team1_id == final_match.winner_id
-            else (
-                final_match.team1_id
-                if final_match is not None
-                else None
-            )
+            else None
         )
 
         top_3_actual = []
-        if final_match is not None:
+        if final_match is not None and final_match.winner is not None:
             top_3_actual.append(final_match.winner)
-        if runner_up_team is not None:
+        if runner_up_team is not None and runner_up_team is not None:
             top_3_actual.append(runner_up_team)
-        if third_place_match is not None:
+        if third_place_match is not None and third_place_match.winner_id is not None:
             top_3_actual.append(third_place_match.winner_id)
 
         winner_points = rules.winner if user.winner_team_id is not None and final_match is not None and user.winner_team_id == final_match.winner else 0
         runner_up_points = rules.runner_up if user.runner_up_team_id is not None and runner_up_team is not None and user.runner_up_team_id == runner_up_team else 0
         third_place_points = rules.third_place if user.third_place_team_id is not None and third_place_match is not None and user.third_place_team_id == third_place_match.winner_id else 0
+
         if winner_points + runner_up_points + third_place_points == 0:
             if user.third_place_team_id in top_3_actual and user.runner_up_team_id in top_3_actual and user.winner_team_id in top_3_actual:
                 winner_points = rules.correct_3_in_3 - rules.correct_2_in_3

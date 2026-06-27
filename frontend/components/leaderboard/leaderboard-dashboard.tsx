@@ -326,7 +326,7 @@ const UserPointsDetailModal = ({
                 label: "Avg per Match",
                 value:
                   data.items.length > 0
-                    ? ((data.total_points - (data.winner_points + data.runner_up_points + data.third_place_points)) / data.items.filter((i) => i.kick_off_team && i.predicted_team1_score !== null && i.predicted_team1_score !== null).length).toFixed(1)
+                    ? ((data.total_points - (data.winner_points + data.runner_up_points + data.third_place_points)) / Math.max(data.items.filter((i) => i.kick_off_team && i.predicted_team1_score !== null && i.predicted_team1_score !== null).length, 1)).toFixed(1)
                     : "—",
                 color: "text-zinc-900",
               },
