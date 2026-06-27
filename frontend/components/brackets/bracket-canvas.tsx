@@ -316,7 +316,7 @@ const drawSlot = async (context: CanvasRenderingContext2D, slot: BracketSlot, se
   const isHovered = hoveredSlotId === slot.id;
   const winnerSide = match ? getWinnerSide(match) : null;
 
-  const cardBg = isDark ? (match ? "#1c1f2e" : "#151721") : (match ? "#ffffff" : "#f8fafc");
+  const cardBg = isDark ? ((match && !isHovered) ? "#1c1f2e" : "#0c0e14ff") : (match && !isHovered) ? "#ffffff" : "#f0f4f7ff";
   const borderColor = isSelected ? "#047857" : isHovered ? "#d97706" : (isDark ? "#3f3f46" : "#d4d4d8");
   const textPrimary = isDark ? "#f4f4f5" : "#18181b";
   const textMuted = isDark ? "#a1a1aa" : "#71717a";
