@@ -11,6 +11,47 @@ import { UserResponse } from "@/lib/auth";
 import { toneClasses, toneClassesLight } from "@/components/ui/status-pill";
 import { RoleName } from "@/lib/auth/types";
 
+type TeamGoalStat = {
+  goals: number;
+  teamName: string;
+};
+
+const getGoalStats = (matches: MatchResponse[]) => {
+  const teamGoals = new Map<number, TeamGoalStat>();
+  let scoredMatches = 0;
+  let totalGoals = 0;
+
+  matches.forEach((match) => {
+    if (match.team1_score === null && match.team2_score === null) return;
+
+    const team1Goals = match.team1_score ?? 0;
+    const team2Goals = match.team2_score ?? 0;
+    scoredMatches += 1;
+    totalGoals += team1Goals + team2Goals;
+
+    const team1Stat = teamGoals.get(match.team1_id) ?? {
+      goals: 0,
+      teamName: match.team1_name,
+    };
+    team1Stat.goals += team1Goals;
+    teamGoals.set(match.team1_id, team1Stat);
+
+    const team2Stat = teamGoals.get(match.team2_id) ?? {
+      goals: 0,
+      teamName: match.team2_name,
+    };
+    team2Stat.goals += team2Goals;
+    teamGoals.set(match.team2_id, team2Stat);
+  });
+
+  const highestScoringTeams = [...teamGoals.values()]
+    .filter((team) => team.goals > 0)
+    .sort((left, right) => right.goals - left.goals || left.teamName.localeCompare(right.teamName))
+    .slice(0, 3);
+
+  return { highestScoringTeams, scoredMatches, totalGoals };
+};
+
 const AdminPage = () => {
 
   const [teams, setTeams] = useState<TeamResponse[]>([]);
@@ -54,6 +95,13 @@ const AdminPage = () => {
     };
   }, []);
 
+  const goalStats = getGoalStats(matches);
+  const highestScoringTeamsLabel = goalStats.highestScoringTeams.length
+    ? goalStats.highestScoringTeams
+      .map((team) => `${team.teamName} ${team.goals}`)
+      .join(", ")
+    : "No goals recorded yet";
+
   const adminMetrics = [
     {
       label: "Total Matches",
@@ -61,13 +109,15 @@ const AdminPage = () => {
       tone: toneClassesLight.primary,
     },
     {
-      label: "Total Users",
-      value: isLoading ? "..." : `${users.length.toString()} users are competing for the title`,
+      label: "Total Goals",
+      value: isLoading
+        ? "..."
+        : `${goalStats.totalGoals.toString()} goals from ${goalStats.scoredMatches.toString()} scored matches`,
       tone: toneClassesLight.secondary,
     },
     {
-      label: "Total Teams",
-      value: isLoading ? "..." : `${teams.length.toString()} teams left in the tournament`,
+      label: "Highest Scoring Teams",
+      value: isLoading ? "..." : highestScoringTeamsLabel,
       tone: toneClassesLight.accent,
     },
   ];

@@ -664,7 +664,6 @@ export const ResultsDashboard = () => {
                     // "Group",
                     "Highlights",
                     "Score",
-                    "Goal Diff",
                     "1st Goal In",
                     "1st Score By",
                     "Y Card",
@@ -758,9 +757,6 @@ export const ResultsDashboard = () => {
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 font-semibold text-zinc-950 dark:text-zinc-50">
                         {formatScore(match.team1_score, match.team2_score)}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
-                        {formatGoalDifference(match.team1_score, match.team2_score)}
                       </td>
                       <td className="whitespace-nowrap px-3 py-4 text-zinc-700 dark:text-zinc-300">
                         {formatFirstGoalIn(match.first_goal_in)}
