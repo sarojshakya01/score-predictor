@@ -377,7 +377,7 @@ const MatchPointsModal = ({
                     key={row.user_id}
                     className={[
                       "transition-colors",
-                      row.user_id === user?.id ? "bg-zinc-200 dark:bg-emerald-900/90 hover:bg-emerald-800/80 dark:hover:bg-emerald-900/70 font-bold" : "hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40",
+                      row.user_id === user?.id ? "bg-zinc-200 dark:bg-emerald-900/90 hover:bg-zinc-200/80 dark:hover:bg-emerald-900/70 font-bold" : "hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40",
                     ].join(" ")}
                   >
                     <td
