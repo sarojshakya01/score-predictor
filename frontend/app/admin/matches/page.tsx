@@ -435,7 +435,7 @@ const AdminMatchesPage = () => {
                 : `${filteredMatches.length} of ${matches.length} match${matches.length !== 1 ? "es" : ""} match "${searchQuery}"`}
             </div>
           )}
-          <div className="overflow-auto max-h-[32rem]">
+          <div className="overflow-auto max-h-[38rem]">
             <table className="min-w-full divide-y divide-zinc-200 text-sm dark:divide-zinc-700">
               <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
                 <tr>
@@ -639,8 +639,6 @@ const AdminMatchesPage = () => {
             </table>
           </div>
         </section>
-
-        <Pagination page={page} pageSize={PAGE_SIZE} total={filteredMatches.length} onChange={setPage} />
 
         <ConfirmModal
           isOpen={deleteTarget !== null}
