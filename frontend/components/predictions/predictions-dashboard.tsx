@@ -1045,7 +1045,7 @@ export const PredictionsDashboard = () => {
                 <span className={labelTextCls}>Match Duration</span>
                 <select name="match_duration" disabled={!!(selectedMatch && selectedMatch.match_stage === "GROUP")} value={selectedMatch && selectedMatch.match_stage === "GROUP" ? matchDurations[0] : formState.matchDuration} onChange={(e) => updateField("matchDuration", e.target.value)} className={selectCls}>
                   {selectedMatch && selectedMatch.match_stage === "GROUP" && matchDurations.filter((duration) => duration !== "PENALTY").map((d) => <option key={d} value={d}>{matchDurationLabels[d]}</option>)}
-                  {selectedMatch && selectedMatch.match_stage !== "GROUP" && <option value="">Select duration</option>}
+                  {selectedMatch && selectedMatch.match_stage !== "GROUP" && <option value="">Select Duration</option>}
                   {selectedMatch && selectedMatch.match_stage !== "GROUP" && (formState.team1Score && formState.team2Score && Number(formState.team1Score) === Number(formState.team2Score) ?
                     matchDurations.filter((duration) => duration === "PENALTY").map((d) => <option key={d} value={d}>{matchDurationLabels[d]}</option>)
                     : formState.team1Score && formState.team2Score && Number(formState.team1Score) !== Number(formState.team2Score) ?
