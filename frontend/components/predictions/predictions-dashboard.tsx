@@ -964,6 +964,11 @@ export const PredictionsDashboard = () => {
                   updateField("team1Score", e.target.value);
                   if (e.target.value && formState.team2Score === '') updateField("team2Score", '0');
                   else if (!e.target.value && formState.team2Score === '0') updateField("team2Score", '');
+                  if (e.target.value && formState.team2Score && e.target.value === formState.team2Score && formState.matchDuration !== 'PENALTY') {
+                    updateField("matchDuration", '');
+                  } else if (e.target.value && formState.team2Score && e.target.value !== formState.team2Score && formState.matchDuration === 'PENALTY') {
+                    updateField("matchDuration", '');
+                  }
                 }} className={inputCls} />
               </label>
 
@@ -983,6 +988,11 @@ export const PredictionsDashboard = () => {
                   updateField("team2Score", e.target.value);
                   if (e.target.value && formState.team1Score === '') updateField("team1Score", '0');
                   else if (!e.target.value && formState.team1Score === '0') updateField("team1Score", '');
+                  if (e.target.value && formState.team1Score && e.target.value === formState.team1Score && formState.matchDuration !== 'PENALTY') {
+                    updateField("matchDuration", '');
+                  } else if (e.target.value && formState.team1Score && e.target.value !== formState.team1Score && formState.matchDuration === 'PENALTY') {
+                    updateField("matchDuration", '');
+                  }
                 }} className={inputCls} />
               </label>
 
@@ -1024,13 +1034,9 @@ export const PredictionsDashboard = () => {
               <label className="flex flex-col gap-1">
                 <span className={labelTextCls}>Kick-off Team</span>
                 <select name="kick_off_team_id" value={formState.kickoffTeamId} onChange={(e) => updateField("kickoffTeamId", e.target.value)} className={selectCls}>
-                  {selectedMatch ? (
-                    <>
-                      <option value="">Select Team</option>
-                      <option value={selectedMatch.team1_id}>{selectedMatch.team1_name}</option>
-                      <option value={selectedMatch.team2_id}>{selectedMatch.team2_name}</option>
-                    </>
-                  ) : <option value="">Select match first</option>}
+                  <option value="">Select Team</option>
+                  {selectedMatch && <option value={selectedMatch.team1_id}>{selectedMatch.team1_name}</option>}
+                  {selectedMatch && <option value={selectedMatch.team2_id}>{selectedMatch.team2_name}</option>}
                 </select>
               </label>
 
@@ -1038,9 +1044,13 @@ export const PredictionsDashboard = () => {
               <label className="flex flex-col gap-1">
                 <span className={labelTextCls}>Match Duration</span>
                 <select name="match_duration" disabled={!!(selectedMatch && selectedMatch.match_stage === "GROUP")} value={selectedMatch && selectedMatch.match_stage === "GROUP" ? matchDurations[0] : formState.matchDuration} onChange={(e) => updateField("matchDuration", e.target.value)} className={selectCls}>
-                  {Number(formState.team1Score) !== Number(formState.team2Score) ?
-                    matchDurations.filter((duration) => duration !== "PENALTY").map((d) => <option key={d} value={d}>{matchDurationLabels[d]}</option>)
-                    : matchDurations.map((d) => <option key={d} value={d}>{matchDurationLabels[d]}</option>)}
+                  {selectedMatch && selectedMatch.match_stage === "GROUP" && matchDurations.filter((duration) => duration !== "PENALTY").map((d) => <option key={d} value={d}>{matchDurationLabels[d]}</option>)}
+                  {selectedMatch && selectedMatch.match_stage !== "GROUP" && <option value="">Select duration</option>}
+                  {selectedMatch && selectedMatch.match_stage !== "GROUP" && (formState.team1Score && formState.team2Score && Number(formState.team1Score) === Number(formState.team2Score) ?
+                    matchDurations.filter((duration) => duration === "PENALTY").map((d) => <option key={d} value={d}>{matchDurationLabels[d]}</option>)
+                    : formState.team1Score && formState.team2Score && Number(formState.team1Score) !== Number(formState.team2Score) ?
+                      matchDurations.filter((duration) => duration !== "PENALTY").map((d) => <option key={d} value={d}>{matchDurationLabels[d]}</option>)
+                      : matchDurations.map((d) => <option key={d} value={d}>{matchDurationLabels[d]}</option>))}
                 </select>
               </label>
             </div>
