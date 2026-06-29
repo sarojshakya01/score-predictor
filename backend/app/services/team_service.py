@@ -150,7 +150,7 @@ class TeamService:
     def _to_response(team: Team) -> TeamResponse:
         """Build a team response with its FIFA flag URL."""
         if "TBD" in team.name:
-            flag_url = "default"
+            flag_url = ""
         else:
             flag_url = TeamService.flag_base_url + team.fifa_code
         return TeamResponse.model_validate(
@@ -164,5 +164,5 @@ class TeamService:
     def team_flag_url(team) -> TeamResponse:
         """Buld team's flag URL."""
         if "TBD" in team.name:
-            return "default"
+            return ""
         return TeamService.flag_base_url + team.fifa_code

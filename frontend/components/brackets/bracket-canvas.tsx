@@ -15,7 +15,6 @@ import { getErrorMessage } from "@/lib/forms/error-message";
 import { listMatches } from "@/lib/matches";
 import type { MatchResponse } from "@/lib/matches";
 import { formatDateTime, getMatchLabelWithFlag, MatchVenue } from "../ui/match-card";
-import defaultFlag from "@/public/images/default-flag.png";
 
 type StageConfig = { expectedMatches: number; label: string; queryStage: string };
 type BracketRound = { config: StageConfig; matches: MatchResponse[]; queryStage: string };
@@ -354,12 +353,15 @@ const drawSlot = async (context: CanvasRenderingContext2D, slot: BracketSlot, se
   const teamTextWidth = slot.width - 62;
 
   if (match.team1_flag_url) {
-    const flagUrl = match.team1_flag_url === "default" ? defaultFlag.src : match.team1_flag_url;
-    const flagSrc = await loadImage(flagUrl);
+    const flagSrc = await loadImage(match.team1_flag_url);
     if (flagSrc) {
       const scale = Math.min(flagMaxWidth / flagSrc.width, flagMaxHeight / flagSrc.height, 1);
       context.drawImage(flagSrc, slot.x + 10, slot.y + flagMaxHeight / 2, flagSrc.width * scale, flagSrc.height * scale);
     }
+
+  } else {
+    context.fillStyle = isDark ? "rgba(239, 223, 223, 0.15)" : "rgba(0, 0, 0, 0.15)";
+    context.fillRect(slot.x + 10, slot.y + flagMaxHeight / 2, flagMaxWidth, flagMaxHeight - 6);
   }
 
   context.fillStyle = winnerSide === "team1" ? "#047857" : (winnerSide ? '#9d9d9d66' : textPrimary);
@@ -367,12 +369,14 @@ const drawSlot = async (context: CanvasRenderingContext2D, slot: BracketSlot, se
   context.fillText(truncateText(context, match.team1_score?.toString() ?? "-", teamTextWidth), slot.x + flagMaxWidth + 10 + teamTextWidth + 15, slot.y + flagMaxHeight - 5);
 
   if (match.team2_flag_url) {
-    const flagUrl = match.team2_flag_url === "default" ? defaultFlag.src : match.team2_flag_url;
-    const flagSrc = await loadImage(flagUrl);
+    const flagSrc = await loadImage(match.team2_flag_url);
     if (flagSrc) {
       const scale = Math.min(flagMaxWidth / flagSrc.width, flagMaxHeight / flagSrc.height, 1);
       context.drawImage(flagSrc, slot.x + 10, slot.y + 1.5 * flagMaxHeight + 5, flagSrc.width * scale, flagSrc.height * scale);
     }
+  } else {
+    context.fillStyle = isDark ? "rgba(239, 223, 223, 0.15)" : "rgba(0, 0, 0, 0.15)";
+    context.fillRect(slot.x + 10, slot.y + 1.5 * flagMaxHeight + 5, flagMaxWidth, flagMaxHeight - 6);
   }
 
   context.fillStyle = winnerSide === "team2" ? "#047857" : (winnerSide ? '#9d9d9d66' : textPrimary);

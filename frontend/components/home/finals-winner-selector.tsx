@@ -29,7 +29,6 @@ import { getErrorMessage } from "@/lib/forms/error-message";
 import { getFinalistPredictionDeadline } from "@/lib/settings";
 import { updateCurrentUserFinalist, UserCreate } from "@/lib/users";
 import { WorldCupHistoryTooltip } from "./world-cup-history-tooltip";
-import defaultFlag from "@/public/images/default-flag.png";
 
 type PlaceId = 1 | 2 | 3;
 
@@ -782,7 +781,7 @@ export const FinalsWinnerSelector = () => {
                       className={place.scale.flagMinHeight + " w-auto shrink-0 rounded object-cover shadow-sm"}
                       decoding="async"
                       loading="lazy"
-                      src={selectedTeam.flag_url === "default" ? defaultFlag : selectedTeam.flag_url}
+                      src={selectedTeam.flag_url}
                       alt={`${selectedTeam.name} flag`}
                     />
                     <div className="min-w-0">
@@ -846,7 +845,7 @@ export const FinalsWinnerSelector = () => {
                       className="min-h-[28px] w-auto rounded object-cover shadow-sm"
                       decoding="async"
                       loading="lazy"
-                      src={team.flag_url === "default" ? defaultFlag : team.flag_url}
+                      src={team.flag_url}
                       alt={`${team.name} flag`}
                     />
                     {selectedPlace && IconTeamPlace ? (
@@ -971,7 +970,7 @@ export const FinalsWinnerSelector = () => {
                       className="min-h-[19px] w-auto shrink-0 rounded object-cover shadow-sm"
                       decoding="async"
                       loading="lazy"
-                      src={team.flag_url === "default" ? defaultFlag : team.flag_url}
+                      src={team.flag_url}
                       alt={`${teamsById.get(Number(value))?.name || "Not Selected"} flag`}
                     />
                     <div className="min-w-0 px-5">
