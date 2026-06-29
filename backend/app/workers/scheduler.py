@@ -703,7 +703,7 @@ async def extract_live_match_data_fifa() -> None:
 
                 if match.match_stage != MatchStage.GROUP:
                     match_time = result.get('MatchTime').split("'")[0]
-                    match_duration = MatchDuration.REGULAR if int(match_time) <= 90 else MatchDuration.EXTRA_TIME if int(match_time) <= 120 else MatchDuration.PENALTY
+                    match_duration = MatchDuration.REGULAR if int(match_time) < 120 else MatchDuration.EXTRA_TIME if int(match_time) > 120 else MatchDuration.PENALTY if team1_score is not None and team1_score == team2_score else None
 
                 if result.get('Winner') and team1_score > team2_score:
                     winner_id = match.team1_id
