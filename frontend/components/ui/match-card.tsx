@@ -107,7 +107,7 @@ const MatchDayNGroupNStatus = (match: MatchResponse) => {
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
           Match day {match.match_day}
         </p>
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">{formatMatchGroup(match)}</p>
+        {match.match_stage === "GROUP" && <p className="text-xs font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">{formatMatchGroup(match)}</p>}
         {isMatchPlayed
           ? (<StatusPill tone={isMatchLive ? "green" : "primary"} urgency="none">{isMatchLive ? <IconLiveDot /> : null} {isMatchLive ? "Live: " : "FT: "}{match.team1_score} - {match.team2_score}</StatusPill>)
           : (<StatusPill tone={getStatusTone(status)} urgency={urgency}>{status}</StatusPill>)}

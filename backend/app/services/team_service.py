@@ -149,14 +149,20 @@ class TeamService:
     @staticmethod
     def _to_response(team: Team) -> TeamResponse:
         """Build a team response with its FIFA flag URL."""
+        if "TBD" in team.name:
+            flag_url = "default"
+        else:
+            flag_url = TeamService.flag_base_url + team.fifa_code
         return TeamResponse.model_validate(
             {
                 **team.__dict__,
-                "flag_url": TeamService.flag_base_url + team.fifa_code,
+                "flag_url": flag_url,
             },
         )
 
     @staticmethod
     def team_flag_url(team) -> TeamResponse:
         """Buld team's flag URL."""
+        if "TBD" in team.name:
+            return "default"
         return TeamService.flag_base_url + team.fifa_code

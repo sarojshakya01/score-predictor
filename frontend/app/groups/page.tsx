@@ -6,6 +6,7 @@ import { PageShell } from "@/components/ui/page-shell";
 import { ApiError } from "@/lib/api";
 import { listGroupTables } from "@/lib/groups";
 import type { GroupTableResponse } from "@/lib/groups";
+import defaultFlag from "@/public/images/default-flag.png";
 
 const formatGroupLabel = (group: string): string => {
   const normalizedGroup = group.trim();
@@ -87,7 +88,7 @@ const GroupsPage = () => {
                         <td className="px-5 py-4 min-w-[100px] md:min-w-[230px] font-medium text-zinc-950 dark:text-zinc-50">
                           <span className="flex min-w-[80px] items-center gap-1">
                             <span className="inline-flex items-center justify-center rounded border border-zinc-200 bg-zinc-50 text-xs font-semibold text-zinc-600 relative dark:border-zinc-700 dark:bg-zinc-800">
-                              <Image width={30} height={30} alt={team.fifa_code} className="object-cover rounded min-h-[25px] w-auto" src={team.flag_url} />
+                              <Image width={30} height={30} alt={team.fifa_code} className="object-cover rounded min-h-[25px] w-auto" src={team.flag_url === "default" ? defaultFlag : team.flag_url} />
                             </span>
                             <span className="hidden pl-2 sm:table-cell xl:truncate xl:max-w-[140px]">{team.team}</span>
                             <span className="sm:hidden pl-2 xl:truncate xl:max-w-[140px]">{team.fifa_code}</span>

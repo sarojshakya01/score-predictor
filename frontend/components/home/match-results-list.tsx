@@ -5,6 +5,7 @@ import { IconHighlight } from "@/components/ui/icons";
 import { formatDateTime, isMatchPlayedOrLive } from "@/components/ui/match-card";
 import { Tooltip } from "@/components/ui/tooltip";
 import type { MatchResponse } from "@/lib/matches";
+import defaultFlag from "@/public/images/default-flag.png";
 
 const getHighlightsUrl = (match: MatchResponse): string | null => {
   return match.highlights_url ?? null;
@@ -110,13 +111,13 @@ export const MatchResultsList = ({ matches }: { matches: MatchResponse[] }) => {
 
               <div className="pointer-events-none relative z-20 mt-4 grid gap-2">
                 <TeamScoreRow
-                  flagUrl={match.team1_flag_url}
+                  flagUrl={match.team1_flag_url === "default" ? defaultFlag.src : match.team1_flag_url}
                   isWinner={team1Won}
                   name={match.team1_name}
                   score={match.team1_score}
                 />
                 <TeamScoreRow
-                  flagUrl={match.team2_flag_url}
+                  flagUrl={match.team2_flag_url === "default" ? defaultFlag.src : match.team2_flag_url}
                   isWinner={team2Won}
                   name={match.team2_name}
                   score={match.team2_score}

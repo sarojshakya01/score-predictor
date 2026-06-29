@@ -45,6 +45,7 @@ import { IconCancel, IconChevronLeft, IconChevronRight, IconLiveDot, IconSave } 
 import { IconSparkles } from "@/components/ui/icons";
 import ImageWithFallback from "../ui/image-with-fallback";
 import { FirstGoalIn } from "@/lib/matches/types";
+import defaultFlag from "@/public/images/default-flag.png";
 
 type PredictionFormState = {
   firstScoringTeamId: string;
@@ -954,7 +955,7 @@ export const PredictionsDashboard = () => {
                   {selectedMatch ? (
                     <>
                       {selectedMatch.team1_flag_url && (
-                        <Image width={32} height={32} className="min-h-[30px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team1_flag_url} alt={selectedMatch.team1_name} />
+                        <Image width={32} height={32} className="min-h-[30px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team1_flag_url === "default" ? defaultFlag : selectedMatch.team1_flag_url} alt={selectedMatch.team1_name} />
                       )}
                       <span>{selectedMatch.team1_name} {selectedMatch.team1_fifa_rank ? `(Rank: ${selectedMatch.team1_fifa_rank})` : ""}</span>
                     </>
@@ -978,7 +979,7 @@ export const PredictionsDashboard = () => {
                   {selectedMatch ? (
                     <>
                       {selectedMatch.team2_flag_url && (
-                        <Image width={32} height={32} className="min-h-[30px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team2_flag_url} alt={selectedMatch.team2_name} />
+                        <Image width={32} height={32} className="min-h-[30px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={selectedMatch.team2_flag_url === "default" ? defaultFlag : selectedMatch.team2_flag_url} alt={selectedMatch.team2_name} />
                       )}
                       <span>{selectedMatch.team2_name} {selectedMatch.team2_fifa_rank ? `(Rank: ${selectedMatch.team2_fifa_rank})` : ""}</span>
                     </>

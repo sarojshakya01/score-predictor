@@ -18,6 +18,7 @@ import { IconCancel, IconPencil, IconPlus, IconSave, IconSearch, IconTrash } fro
 import { Pagination } from "@/components/ui/pagination";
 import { ToastViewport, useToast } from "@/components/ui/toast";
 import { Tooltip } from "@/components/ui/tooltip";
+import defaultFlag from "@/public/images/default-flag.png";
 
 const emptyFormState: TeamCreate = {
   name: "",
@@ -280,7 +281,7 @@ const AdminTeamsPage = () => {
                       <td className="px-5 py-4 font-medium text-zinc-950 dark:text-zinc-50">{team.id}</td>
                       <td className="px-5 py-4 font-medium text-zinc-950 dark:text-zinc-50">
                         <div className="flex items-center gap-2">
-                          <Image width={30} height={30} className="min-h-[25px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={team.flag_url} alt="flag" />
+                          <Image width={30} height={30} className="min-h-[25px] w-auto rounded object-cover shadow-sm" decoding="async" loading="lazy" src={team.flag_url === "default" ? defaultFlag : team.flag_url} alt="flag" />
                           <span className="ml-2 hidden md:block">{team.name}</span>
                           <span className="ml-2 table-cell md:hidden">{team.fifa_code}</span>
                         </div>
