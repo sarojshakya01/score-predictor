@@ -240,9 +240,9 @@ const getMatchStatus = (match: MatchResponse | null): { label: string; tone: Pil
 };
 
 const getWinnerSide = (match: MatchResponse): "team1" | "team2" | null => {
-  if (match.team1_score === null || match.team2_score === null) return null;
-  if (match.team1_score > match.team2_score) return "team1";
-  if (match.team2_score > match.team1_score) return "team2";
+  if (match.team1_score === null || match.team2_score === null || match.winner_id === null) return null;
+  if (match.winner_id === match.team1_id) return "team1";
+  if (match.winner_id === match.team2_id) return "team2";
   return null;
 };
 
