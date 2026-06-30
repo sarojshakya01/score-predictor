@@ -356,7 +356,9 @@ const drawSlot = async (context: CanvasRenderingContext2D, slot: BracketSlot, se
     const flagSrc = await loadImage(match.team1_flag_url);
     if (flagSrc) {
       const scale = Math.min(flagMaxWidth / flagSrc.width, flagMaxHeight / flagSrc.height, 1);
+      context.globalAlpha = winnerSide && winnerSide === "team2" ? 0.2 : 1.0;
       context.drawImage(flagSrc, slot.x + 10, slot.y + flagMaxHeight / 2, flagSrc.width * scale, flagSrc.height * scale);
+      context.globalAlpha = 1;
     }
 
   } else {
@@ -364,7 +366,7 @@ const drawSlot = async (context: CanvasRenderingContext2D, slot: BracketSlot, se
     context.fillRect(slot.x + 10, slot.y + flagMaxHeight / 2, flagMaxWidth, flagMaxHeight - 6);
   }
 
-  context.fillStyle = winnerSide === "team1" ? "#047857" : (winnerSide ? '#9d9d9d66' : textPrimary);
+  context.fillStyle = winnerSide === "team1" ? textPrimary : (winnerSide ? '#9d9d9d66' : textPrimary);
   context.fillText(truncateText(context, match.team1_name.length < 12 ? match.team1_name : match.team1_name_short, teamTextWidth), slot.x + flagMaxWidth + 15, slot.y + flagMaxHeight - 3);
   context.fillText(truncateText(context, match.team1_score?.toString() ?? "-", teamTextWidth), slot.x + flagMaxWidth + 10 + teamTextWidth + 15, slot.y + flagMaxHeight - 5);
 
@@ -372,14 +374,16 @@ const drawSlot = async (context: CanvasRenderingContext2D, slot: BracketSlot, se
     const flagSrc = await loadImage(match.team2_flag_url);
     if (flagSrc) {
       const scale = Math.min(flagMaxWidth / flagSrc.width, flagMaxHeight / flagSrc.height, 1);
+      context.globalAlpha = winnerSide && winnerSide === "team1" ? 0.2 : 1.0;
       context.drawImage(flagSrc, slot.x + 10, slot.y + 1.5 * flagMaxHeight + 5, flagSrc.width * scale, flagSrc.height * scale);
+      context.globalAlpha = 1;
     }
   } else {
     context.fillStyle = isDark ? "rgba(239, 223, 223, 0.15)" : "rgba(0, 0, 0, 0.15)";
     context.fillRect(slot.x + 10, slot.y + 1.5 * flagMaxHeight + 5, flagMaxWidth, flagMaxHeight - 6);
   }
 
-  context.fillStyle = winnerSide === "team2" ? "#047857" : (winnerSide ? '#9d9d9d66' : textPrimary);
+  context.fillStyle = winnerSide === "team2" ? textPrimary : (winnerSide ? '#9d9d9d66' : textPrimary);
   context.fillText(truncateText(context, match.team2_name.length < 12 ? match.team2_name : match.team2_name_short, teamTextWidth), slot.x + flagMaxWidth + 15, slot.y + 2 * flagMaxHeight + 2);
   context.fillText(match.team2_score?.toString() ?? "-", slot.x + flagMaxWidth + 10 + teamTextWidth + 15, slot.y + 2 * flagMaxHeight + 2);
 
