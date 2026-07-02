@@ -93,7 +93,7 @@ const formatGroupLabel = (group: string): string => {
 };
 
 const formatMatchGroup = (match: MatchResponse): string => {
-  if (match.team1_group === match.team2_group) return formatGroupLabel(match.team1_group);
+  if (match.match_stage === "GROUP" && match.team1_group === match.team2_group) return formatGroupLabel(match.team1_group);
   return matchStageLabels[match.match_stage];
 };
 
