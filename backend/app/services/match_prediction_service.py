@@ -8,10 +8,11 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from typing import Any
 
-from app.models.match import Match, MatchStage
+from app.models.match import Match
 
 _SCORE_PAIR_RE = re.compile(r"(?<!\d)(\d{1,2})\s*(?:-|:|–|—)\s*(\d{1,2})(?!\d)")
 _INTEGER_RE = re.compile(r"\d+")
+_DRAW_EXPECTED_GOALS_DELTA = 0.30
 
 
 @dataclass
@@ -126,7 +127,6 @@ class MatchScorePredictionService:
         team1_score, team2_score = self._expected_goals_to_score(
             team1_expected_goals=team1_expected,
             team2_expected_goals=team2_expected,
-            match_stage=match.match_stage,
         )
 
         return MatchScorePrediction(
@@ -453,32 +453,20 @@ class MatchScorePredictionService:
         *,
         team1_expected_goals: float,
         team2_expected_goals: float,
-        match_stage: MatchStage | str | None,
     ) -> tuple[int, int]:
         team1_expected = _clamp(team1_expected_goals, 0.15, 4.8)
         team2_expected = _clamp(team2_expected_goals, 0.15, 4.8)
         team1_score = _round_goal(team1_expected)
         team2_score = _round_goal(team2_expected)
-        expected_total = team1_expected + team2_expected
-
-        if team1_score == 0 and team2_score == 0 and expected_total >= 1.55:
-            if team1_expected >= team2_expected:
-                team1_score = 1
-            else:
-                team2_score = 1
-
         expected_delta = team1_expected - team2_expected
-        if team1_score == team2_score and abs(expected_delta) >= 0.38:
-            if expected_delta > 0:
-                team1_score = min(team1_score + 1, 6)
-            else:
-                team2_score = min(team2_score + 1, 6)
 
-        if team1_score == team2_score and not _is_group_stage(match_stage):
-            if expected_delta >= 0:
-                team1_score = min(team1_score + 1, 6)
-            else:
-                team2_score = min(team2_score + 1, 6)
+        if team1_score == team2_score and abs(expected_delta) >= _DRAW_EXPECTED_GOALS_DELTA:
+            team1_score, team2_score = _tilt_equal_score_to_expected_favorite(
+                team1_score=team1_score,
+                team2_score=team2_score,
+                team1_expected_goals=team1_expected,
+                team2_expected_goals=team2_expected,
+            )
 
         return _clamp_int(team1_score, 0, 6), _clamp_int(team2_score, 0, 6)
 
@@ -606,18 +594,52 @@ def _round_goal(value: float) -> int:
     return _clamp_int(math.floor(value + 0.5), 0, 6)
 
 
+def _tilt_equal_score_to_expected_favorite(
+    *,
+    team1_score: int,
+    team2_score: int,
+    team1_expected_goals: float,
+    team2_expected_goals: float,
+) -> tuple[int, int]:
+    if team1_expected_goals >= team2_expected_goals:
+        favorite_score, underdog_score = _nearest_non_draw_score(
+            equal_score=team1_score,
+            favorite_expected_goals=team1_expected_goals,
+            underdog_expected_goals=team2_expected_goals,
+        )
+        return favorite_score, underdog_score
+
+    favorite_score, underdog_score = _nearest_non_draw_score(
+        equal_score=team2_score,
+        favorite_expected_goals=team2_expected_goals,
+        underdog_expected_goals=team1_expected_goals,
+    )
+    return underdog_score, favorite_score
+
+
+def _nearest_non_draw_score(
+    *,
+    equal_score: int,
+    favorite_expected_goals: float,
+    underdog_expected_goals: float,
+) -> tuple[int, int]:
+    candidates = [(min(equal_score + 1, 6), equal_score)]
+    if equal_score > 0:
+        candidates.append((equal_score, equal_score - 1))
+
+    return min(
+        candidates,
+        key=lambda score_pair: (
+            abs(score_pair[0] - favorite_expected_goals)
+            + abs(score_pair[1] - underdog_expected_goals),
+            score_pair[0] + score_pair[1],
+        ),
+    )
+
+
 def _clamp(value: float, minimum: float, maximum: float) -> float:
     return min(maximum, max(minimum, value))
 
 
 def _clamp_int(value: int, minimum: int, maximum: int) -> int:
     return min(maximum, max(minimum, value))
-
-
-def _is_group_stage(match_stage: MatchStage | str | None) -> bool:
-    if match_stage is None:
-        return True
-    if isinstance(match_stage, MatchStage):
-        return match_stage == MatchStage.GROUP
-
-    return str(match_stage) == MatchStage.GROUP.value

@@ -667,8 +667,6 @@ export const PredictionsDashboard = () => {
           0
         );
 
-        console.log(12121, totalWeight)
-
         let random = Math.random() * totalWeight;
 
         for (const option of weights) {
@@ -690,9 +688,11 @@ export const PredictionsDashboard = () => {
       const randomKickoffTeamId = String(Math.random() < 0.5 ? selectedMatch.team1_id : selectedMatch.team2_id);
 
       // Random match duration (only for knockout stage, weighted toward 90)
-      const randomMatchDuration = isKnockout
-        ? (() => { const roll = Math.random(); return roll < 0.6 ? "90" : roll < 0.85 ? "120" : "PENALTY"; })()
+      let randomMatchDuration = isKnockout
+        ? (() => { const roll = Math.random(); return roll < 0.6 ? "90" : roll < 0.85 ? "120" : (team1Score === team2Score ? "PENALTY" : "90"); })()
         : "90";
+
+      randomMatchDuration = isKnockout && team1Score && team1Score === team2Score ? "PENALTY" : randomMatchDuration;
 
       setFormState((current) => ({
         ...current,
@@ -705,6 +705,7 @@ export const PredictionsDashboard = () => {
         team2Score: String(team2Score),
         yellowCardCount: String(randomYellowCards),
       }));
+
       showToast({
         message: matchInsight.summary || "AI score pick loaded.",
         tone: "success",
