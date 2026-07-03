@@ -65,7 +65,7 @@ const emptyRounds = (): BracketRound[] => STAGES.map((config) => ({ config, matc
 const getSlotId = (roundIndex: number, slotIndex: number): string => `${roundIndex}:${slotIndex}`;
 
 const sortMatches = (matches: MatchResponse[]): MatchResponse[] => {
-  const sortOrderMatchId = [73, 76, 75, 78, 81, 82, 83, 84, 74, 77, 79, 80, 85, 88, 86, 87];
+  const sortOrderMatchId = matches.length === 16 ? [73, 76, 75, 78, 81, 82, 83, 84, 74, 77, 79, 80, 85, 88, 86, 87] : matches.length === 8 ? [89, 90, 91, 92, 93, 94, 96, 95] : matches.length === 4 ? [97, 98, 99, 100] : matches.length === 2 ? [102, 101] : [];
   const orderMap = new Map(
     sortOrderMatchId.map((id, index) => [id, index])
   );
