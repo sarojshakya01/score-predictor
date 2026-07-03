@@ -519,12 +519,17 @@ const AdminMatchesPage = () => {
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 text-right"
                   ].join(" ")}>Actions</th>
+                  <th className={[
+                    "static sm:sticky top-0 z-30",
+                    "bg-zinc-100 dark:bg-zinc-700",
+                    "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 text-right"
+                  ].join(" ")}>Match ID</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
                 {isLoading ? (
                   <tr>
-                    <td className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400" colSpan={15}>Loading matches…</td>
+                    <td className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400" colSpan={16}>Loading matches…</td>
                   </tr>
                 ) : pagedMatches.length > 0 ? (
                   pagedMatches.map((match, idx) => {
@@ -626,6 +631,7 @@ const AdminMatchesPage = () => {
                             </Tooltip>
                           </div>
                         </td>
+                        <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.id}</td>
                       </tr>
                     )
                   })
