@@ -519,11 +519,6 @@ const AdminMatchesPage = () => {
                     "bg-zinc-100 dark:bg-zinc-700",
                     "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 text-right"
                   ].join(" ")}>Actions</th>
-                  <th className={[
-                    "static sm:sticky top-0 z-30",
-                    "bg-zinc-100 dark:bg-zinc-700",
-                    "px-3 py-3 border-b border-zinc-200 dark:border-zinc-700 text-right"
-                  ].join(" ")}>Match ID</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
@@ -631,13 +626,12 @@ const AdminMatchesPage = () => {
                             </Tooltip>
                           </div>
                         </td>
-                        <td className="px-3 py-3 text-zinc-700 dark:text-zinc-300">{match.id}</td>
                       </tr>
                     )
                   })
                 ) : (
                   <tr>
-                    <td className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400" colSpan={14}>
+                    <td className="px-5 py-8 text-center text-zinc-500 dark:text-zinc-400" colSpan={13}>
                       {isSearchActive ? `No matches match "${searchQuery}".` : "No matches found."}
                     </td>
                   </tr>
