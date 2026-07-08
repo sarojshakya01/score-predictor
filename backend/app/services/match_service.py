@@ -627,6 +627,7 @@ class MatchService:
             return match_highlight_cache[cache_key]
 
         match_details_list = await MatchService.get_match_details(match.id)
+        id_stage, id_match, items = None, None, None
         # schema based on response of MATCH_DETAILS_ENDPOINT
         for match_detail in match_details_list:
             home_country_code = ((match_detail.get('Home') or {}).get('IdCountry', '') or '').upper()
@@ -638,20 +639,21 @@ class MatchService:
                 id_match = match_detail.get("IdMatch")
                 break
 
-        url = (
-            MATCH_HIGHTLIGHTS_ENDPOINT
-            + f"&stageId={id_stage}&matchId={id_match}"
-        )
+        if id_stage and id_match:
+            url = (
+                MATCH_HIGHTLIGHTS_ENDPOINT
+                + f"&stageId={id_stage}&matchId={id_match}"
+            )
 
-        async with httpx.AsyncClient(timeout=15) as client:
-            highlights_resp = await client.get(url, headers=HEADERS)
-            highlights_resp.raise_for_status()
+            async with httpx.AsyncClient(timeout=15) as client:
+                highlights_resp = await client.get(url, headers=HEADERS)
+                highlights_resp.raise_for_status()
 
-        data = highlights_resp.json()
+            data = highlights_resp.json()
 
-        items = (
-            (data.get("vodVideosBaseCarousel", {}) or {}).get("items", [])
-        )
+            items = (
+                (data.get("vodVideosBaseCarousel", {}) or {}).get("items", [])
+            )
 
         highlight_url = ''
 
