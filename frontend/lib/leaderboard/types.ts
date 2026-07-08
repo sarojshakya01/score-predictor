@@ -59,6 +59,33 @@ export type ListLeaderboardParams = {
   is_race_data_required?: boolean
 };
 
+export type FinalistPredictionTeamResponse = {
+  id: number;
+  fifa_code: string;
+  flag_url: string;
+  name: string;
+};
+
+export type FinalistPredictionEntryResponse = {
+  rank: number;
+  user_id: number;
+  user_name: string;
+  total_points: number;
+  winner_points: number;
+  runner_up_points: number;
+  third_place_points: number;
+  is_prediction_visible: boolean;
+  winner_prediction: FinalistPredictionTeamResponse | null;
+  runner_up_prediction: FinalistPredictionTeamResponse | null;
+  third_place_prediction: FinalistPredictionTeamResponse | null;
+};
+
+export type FinalistPredictionsResponse = {
+  items: FinalistPredictionEntryResponse[];
+  total: number;
+  predictions_visible: boolean;
+};
+
 export type UserPointsDetailsResponse = {
   match_id: number;
   match_label: string;

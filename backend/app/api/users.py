@@ -8,7 +8,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import CurrentAdminUser, CurrentUser
 from app.db.session import get_db
 from app.models.user import UserRole
-from app.schemas.leaderboard import LeaderboardResponse, MatchPointsDetailsResponse
+from app.schemas.leaderboard import (
+    FinalistPredictionsResponse,
+    LeaderboardResponse,
+    MatchPointsDetailsResponse,
+)
 from app.schemas.prediction import UserPointsDetailsListResponse
 from app.schemas.user import (
     UserCreate,
@@ -98,6 +102,20 @@ async def get_user_points_details(
     """Return scored prediction details for a specific user across completed matches."""
     service = LeaderboardService(db)
     return await service.get_user_points_details(current_user=current_user, user_id=user_id)
+
+
+@leaderboard_router.get(
+    "/finalist-predictions",
+    response_model=FinalistPredictionsResponse,
+    summary="Get finalist predictions",
+)
+async def get_finalist_predictions(
+    current_user: CurrentUser,
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> FinalistPredictionsResponse:
+    """Return all users' finalist predictions in leaderboard order."""
+    service = LeaderboardService(db)
+    return await service.get_finalist_predictions(current_user=current_user)
 
 
 @leaderboard_router.get(

@@ -17,6 +17,9 @@ from app.repositories.setting_repository import SettingRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.leaderboard import (
     AccumulatedPoints,
+    FinalistPredictionEntryResponse,
+    FinalistPredictionsResponse,
+    FinalistPredictionTeamResponse,
     LeaderboardEntryResponse,
     LeaderboardFrame,
     LeaderboardResponse,
@@ -253,6 +256,8 @@ class PredictionScore:
 class LeaderboardService:
     """Builds ranked users from completed matches and predictions."""
 
+    flag_base_url = "https://api.fifa.com/api/v3/picture/flags-sq-1/"
+
     def __init__(self, db: AsyncSession) -> None:
         self._match_repository = MatchRepository(db)
         self._prediction_repository = PredictionRepository(db)
@@ -353,11 +358,8 @@ class LeaderboardService:
 
             locked_matches = await self._match_repository.list_locked_matches()
 
-            current_match_day_setting = await self._setting_repository.get_by_name("current_match_day")
-            finalist_prediction_deadline_setting = await self._setting_repository.get_by_name("finalist_prediction_deadline")
-
-            current_match_day = int(current_match_day_setting.value["day"]) if current_match_day_setting else 0
-            finalist_prediction_deadline = int(finalist_prediction_deadline_setting.value["days"]) if finalist_prediction_deadline_setting else 7
+            current_match_day = await self._get_current_match_day()
+            can_view_all_finalist_predictions = await self._can_view_all_finalist_predictions()
 
             points_from_predictions = await self._prediction_repository.list_points_from_predictions_of_user(
                 current_user=current_user, user_id=user_id, current_match_day=current_match_day, locked_matches=locked_matches
@@ -427,7 +429,7 @@ class LeaderboardService:
             winner_prediction, runner_up_prediction, third_place_prediction = None, None, None
 
 
-            if current_match_day > finalist_prediction_deadline or current_user.id == user_id:
+            if can_view_all_finalist_predictions or current_user.id == user_id:
                 winner_prediction, runner_up_prediction, third_place_prediction = await self._team_repository.get_by_id(user.winner_team_id), await self._team_repository.get_by_id(user.runner_up_team_id), await self._team_repository.get_by_id(user.third_place_team_id)
 
             return UserPointsDetailsListResponse(
@@ -449,6 +451,95 @@ class LeaderboardService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="An unexpected error occurred: could not read user points details",
+            )
+
+    async def get_finalist_predictions(
+        self,
+        *,
+        current_user: CurrentUser,
+    ) -> FinalistPredictionsResponse:
+        """Return all users' finalist predictions sorted by leaderboard rank."""
+        try:
+            rules = await self._get_scoring_rules()
+            users = await self._user_repository.list_active_normal_users()
+            predictions, prediction_counts = await self._get_prediction_data()
+            final_matches = await self._match_repository.list_finals(include_locked=True)
+
+            totals = self._initialize_user_totals(
+                users=users,
+                prediction_counts=prediction_counts,
+            )
+            self._apply_prediction_scores(
+                totals=totals,
+                predictions=predictions,
+                final_matches=final_matches,
+                users=users,
+                rules=rules,
+            )
+
+            ranked_totals = sorted(totals.values(), key=self._leaderboard_sort_key)
+            users_by_id = {user.id: user for user in users}
+            teams_by_id = {
+                team.id: team
+                for team in await self._team_repository.list_all_teams()
+            }
+            can_view_all_predictions = await self._can_view_all_finalist_predictions()
+
+            def team_response(team_id: int | None) -> FinalistPredictionTeamResponse | None:
+                if team_id is None:
+                    return None
+                team = teams_by_id.get(team_id)
+                if team is None:
+                    return None
+                return FinalistPredictionTeamResponse(
+                    id=team.id,
+                    name=team.name,
+                    fifa_code=team.fifa_code,
+                    flag_url=self._team_flag_url(team),
+                )
+
+            items: list[FinalistPredictionEntryResponse] = []
+            for index, total in enumerate(ranked_totals, start=1):
+                user = users_by_id[total.user_id]
+                is_prediction_visible = (
+                    can_view_all_predictions
+                    or current_user.id == user.id
+                )
+
+                items.append(
+                    FinalistPredictionEntryResponse(
+                        rank=index,
+                        user_id=user.id,
+                        user_name=self._format_user_name(user),
+                        total_points=total.total_points,
+                        winner_points=total.winner_points,
+                        runner_up_points=total.runner_up_points,
+                        third_place_points=total.third_place_points,
+                        is_prediction_visible=is_prediction_visible,
+                        winner_prediction=team_response(user.winner_team_id)
+                        if is_prediction_visible
+                        else None,
+                        runner_up_prediction=team_response(user.runner_up_team_id)
+                        if is_prediction_visible
+                        else None,
+                        third_place_prediction=team_response(user.third_place_team_id)
+                        if is_prediction_visible
+                        else None,
+                    )
+                )
+
+            return FinalistPredictionsResponse(
+                items=items,
+                total=len(items),
+                predictions_visible=can_view_all_predictions,
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.exception("Unexpected error during get_finalist_predictions", e)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="An unexpected error occurred: could not read finalist predictions",
             )
 
     async def get_match_points_details(
@@ -577,6 +668,25 @@ class LeaderboardService:
             return True
         return "predictions" in str(error).lower() and "doesn't exist" in str(error).lower()
 
+    async def _can_view_all_finalist_predictions(self) -> bool:
+        """Return whether finalist predictions can be publicly shown."""
+        current_match_day = await self._get_current_match_day()
+        finalist_prediction_deadline = await self._get_finalist_prediction_deadline()
+
+        return current_match_day > finalist_prediction_deadline
+
+    async def _get_current_match_day(self) -> int:
+        """Return the configured current match day."""
+        current_match_day_setting = await self._setting_repository.get_by_name("current_match_day")
+
+        return int(current_match_day_setting.value["day"]) if current_match_day_setting else 0
+
+    async def _get_finalist_prediction_deadline(self) -> int:
+        """Return the configured finalist prediction deadline match day."""
+        finalist_prediction_deadline_setting = await self._setting_repository.get_by_name("finalist_prediction_deadline")
+
+        return int(finalist_prediction_deadline_setting.value["days"]) if finalist_prediction_deadline_setting else 7
+
     @staticmethod
     def _initialize_user_totals(
         *,
@@ -603,6 +713,13 @@ class LeaderboardService:
         ]
         display_name = " ".join(part for part in name_parts if part)
         return display_name or f"User #{user.id}"
+
+    @staticmethod
+    def _team_flag_url(team) -> str:
+        """Build a FIFA flag URL for a team."""
+        if "TBD" in team.name:
+            return ""
+        return LeaderboardService.flag_base_url + team.fifa_code
 
     @staticmethod
     def _apply_prediction_scores(

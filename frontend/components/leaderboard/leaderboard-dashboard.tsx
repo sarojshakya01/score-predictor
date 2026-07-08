@@ -1,15 +1,19 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 
 import { Modal } from "@/components/ui/modal";
 import { SearchInput } from "@/components/ui/search-input";
-import { IconChevronDown } from "@/components/ui/icons";
+import { IconChevronDown, IconLock, IconTrophy } from "@/components/ui/icons";
 import { ApiError } from "@/lib/api";
 import { getCurrentUser, isAuthenticated, MissingAuthTokenError, SessionExpiredError } from "@/lib/auth";
-import { getUserPredictionDetails, listLeaderboard } from "@/lib/leaderboard";
+import { getUserPredictionDetails, listFinalistPredictions, listLeaderboard } from "@/lib/leaderboard";
 import type {
+  FinalistPredictionEntryResponse,
+  FinalistPredictionsResponse,
+  FinalistPredictionTeamResponse,
   LeaderboardEntryResponse,
   LeaderboardResponse,
   UserPointsDetailsListResponse,
@@ -279,12 +283,6 @@ const UserPointsDetailModal = ({
       isMounted = false;
     };
   }, [isOpen, userId]);
-
-  const hasFinalMatch = data?.items.some((d) => d.match_stage === "F") ?? false;
-  const hasThirdPlaceMatch = data?.items.some(
-    (d) => d.match_stage === "3P",
-  ) ?? false;
-  const hasFinalRows = true;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={`Points Breakdown — ${userName}`} isLarge isSticky={true}>
@@ -641,6 +639,217 @@ const UserPointsDetailModal = ({
   );
 };
 
+const FinalistTeamCell = ({
+  isVisible,
+  points,
+  team,
+}: {
+  isVisible: boolean;
+  points: number;
+  team: FinalistPredictionTeamResponse | null;
+}) => {
+  if (!isVisible) {
+    return (
+      <div className="flex min-w-[10rem] items-center gap-2 text-zinc-400 dark:text-zinc-500">
+        <IconLock className="h-4 w-4 shrink-0" />
+        <span className="text-sm font-medium">Hidden</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-w-[10rem] items-center justify-between gap-3">
+      <div className="flex min-w-0 items-center gap-2">
+        <span className="inline-flex h-7 w-10 shrink-0 items-center justify-center rounded border border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800">
+          {team?.flag_url ? (
+            <Image
+              width={30}
+              height={30}
+              alt={`${team.name} flag`}
+              className="h-6 w-auto rounded object-cover"
+              src={team.flag_url}
+            />
+          ) : (
+            <span className="text-xs font-semibold text-zinc-400 dark:text-zinc-500">—</span>
+          )}
+        </span>
+        <div className="max-w-[11rem] truncate text-xs text-zinc-500 dark:text-zinc-400">
+          {team?.name ?? "No pick"}
+        </div>
+      </div>
+      <span
+        className={`inline-flex h-7 min-w-9 shrink-0 items-center justify-center rounded-md px-2 text-xs font-bold ${totalColor(points)}`}
+      >
+        {points}
+      </span>
+    </div>
+  );
+};
+
+const FinalistPredictionRow = ({
+  row,
+  user,
+}: {
+  row: FinalistPredictionEntryResponse;
+  user: UserResponse | null;
+}) => {
+  const isCurrentUser = row.user_id === user?.id;
+
+  return (
+    <tr
+      className={[
+        "transition-colors",
+        isCurrentUser
+          ? "bg-zinc-200 font-bold dark:bg-sky-900/90"
+          : "hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40",
+      ].join(" ")}
+    >
+      <td
+        className={[
+          "static sm:sticky left-0 z-20 w-[56px] min-w-[56px]",
+          "border-b border-zinc-200 px-3 py-3 text-center font-semibold dark:border-zinc-800",
+          isCurrentUser ? "bg-zinc-200 dark:bg-sky-900" : "bg-white dark:bg-zinc-950",
+        ].join(" ")}
+      >
+        {row.rank}
+      </td>
+      <td
+        className={[
+          "static sm:sticky left-[56px] z-20 w-[160px] min-w-[160px]",
+          "border-b border-zinc-200 px-3 py-3 dark:border-zinc-800",
+          isCurrentUser ? "bg-zinc-200 dark:bg-sky-900" : "bg-white dark:bg-zinc-950",
+        ].join(" ")}
+      >
+        <div className="truncate text-sm font-semibold text-zinc-950 dark:text-zinc-100">
+          {row.user_name}
+        </div>
+        <div className="text-xs text-zinc-500 dark:text-zinc-400">
+          {row.total_points} pts
+        </div>
+      </td>
+      <td className="border-b border-zinc-100 px-3 py-3 dark:border-zinc-800">
+        <FinalistTeamCell
+          isVisible={row.is_prediction_visible}
+          points={row.winner_points}
+          team={row.winner_prediction}
+        />
+      </td>
+      <td className="border-b border-zinc-100 px-3 py-3 dark:border-zinc-800">
+        <FinalistTeamCell
+          isVisible={row.is_prediction_visible}
+          points={row.runner_up_points}
+          team={row.runner_up_prediction}
+        />
+      </td>
+      <td className="border-b border-zinc-100 px-3 py-3 dark:border-zinc-800">
+        <FinalistTeamCell
+          isVisible={row.is_prediction_visible}
+          points={row.third_place_points}
+          team={row.third_place_prediction}
+        />
+      </td>
+    </tr>
+  );
+};
+
+const FinalistPredictionsModal = ({
+  isOpen,
+  onClose,
+  user,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  user: UserResponse | null;
+}) => {
+  const [data, setData] = useState<FinalistPredictionsResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    let isMounted = true;
+
+    const load = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        setData(null);
+        const result = await listFinalistPredictions();
+        if (isMounted) {
+          setData(result);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(getLoadErrorMessage(err));
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void load();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Winner Predictions" isLarge>
+      {isLoading && (
+        <div className="flex flex-col gap-3">
+          <div className="h-12 animate-pulse rounded-lg bg-zinc-100 dark:bg-zinc-800" />
+          {[1, 2, 3].map((item) => (
+            <div key={item} className="h-14 animate-pulse rounded-lg bg-zinc-100 dark:bg-zinc-800" />
+          ))}
+        </div>
+      )}
+
+      {error && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+          {error}
+        </div>
+      )}
+
+      {data && !isLoading && (
+        data.items.length === 0 ? (
+          <div className="rounded-lg border border-zinc-200 bg-zinc-50 py-12 text-center dark:border-zinc-700 dark:bg-zinc-800/50">
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">No finalist predictions yet.</p>
+          </div>
+        ) : (
+          <div className="overflow-auto max-h-[40rem] rounded-lg border border-zinc-200 dark:border-zinc-700">
+            <table className="min-w-max w-full border-collapse text-sm">
+              <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800/70 dark:text-zinc-400">
+                <tr>
+                  <th className="static sm:sticky left-0 top-0 z-40 w-[56px] min-w-[56px] bg-zinc-100 px-3 py-3 text-center dark:bg-zinc-800">
+                    Rank
+                  </th>
+                  <th className="static sm:sticky left-[56px] top-0 z-40 w-[160px] min-w-[160px] bg-zinc-100 px-3 py-3 dark:bg-zinc-800">
+                    User
+                  </th>
+                  <th className="min-w-[12rem] px-3 py-3">Final</th>
+                  <th className="min-w-[12rem] px-3 py-3">Runner-up</th>
+                  <th className="min-w-[12rem] px-3 py-3">Third Place</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                {data.items.map((row) => (
+                  <FinalistPredictionRow key={row.user_id} row={row} user={user} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )
+      )}
+    </Modal>
+  );
+};
+
 
 const LeaderboardRow = ({
   user,
@@ -723,6 +932,7 @@ export const LeaderboardDashboard = () => {
   const [modalUserId, setModalUserId] = useState<number | null>(null);
   const [modalUserName, setModalUserName] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFinalistModalOpen, setIsFinalistModalOpen] = useState(false);
   const [user, setUser] = useState<UserResponse | null>(null);
   const [userSearchQuery, setUserSearchQuery] = useState("");
 
@@ -734,6 +944,10 @@ export const LeaderboardDashboard = () => {
 
   const handleModalClose = () => {
     setIsModalOpen(false);
+  };
+
+  const handleFinalistModalClose = () => {
+    setIsFinalistModalOpen(false);
   };
 
   useEffect(() => {
@@ -854,13 +1068,23 @@ export const LeaderboardDashboard = () => {
                 Showing {filteredRows.length} of {rows.length} ranked users
               </p>
             </div>
-            <SearchInput
-              value={userSearchQuery}
-              onChange={setUserSearchQuery}
-              placeholder="Search user..."
-              resultCount={filteredRows.length}
-              totalCount={rows.length}
-            />
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <button
+                type="button"
+                onClick={() => setIsFinalistModalOpen(true)}
+                className="inline-flex h-10 items-center justify-center gap-2 rounded-md border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
+              >
+                <IconTrophy className="h-4 w-4" />
+                Winner Predictions
+              </button>
+              <SearchInput
+                value={userSearchQuery}
+                onChange={setUserSearchQuery}
+                placeholder="Search user..."
+                resultCount={filteredRows.length}
+                totalCount={rows.length}
+              />
+            </div>
           </div>
           {isUserSearchActive && filteredRows.length === 0 ? (
             <div className="px-5 py-12 text-center">
@@ -980,6 +1204,11 @@ export const LeaderboardDashboard = () => {
         userName={modalUserName}
         isOpen={isModalOpen}
         onClose={handleModalClose}
+      />
+      <FinalistPredictionsModal
+        isOpen={isFinalistModalOpen}
+        onClose={handleFinalistModalClose}
+        user={user}
       />
     </>
   );

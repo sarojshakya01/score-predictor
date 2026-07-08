@@ -50,6 +50,39 @@ class LeaderboardResponse(BaseModel):
     completed_matches: int = Field(..., ge=0)
 
 
+class FinalistPredictionTeamResponse(BaseModel):
+    """Team selected by a user for a tournament podium prediction."""
+
+    id: int
+    name: str
+    fifa_code: str
+    flag_url: str
+
+
+class FinalistPredictionEntryResponse(BaseModel):
+    """Single user's finalist predictions in leaderboard order."""
+
+    rank: int = Field(..., gt=0)
+    user_id: int
+    user_name: str
+    total_points: int
+    winner_points: int
+    runner_up_points: int
+    third_place_points: int
+    is_prediction_visible: bool
+    winner_prediction: FinalistPredictionTeamResponse | None
+    runner_up_prediction: FinalistPredictionTeamResponse | None
+    third_place_prediction: FinalistPredictionTeamResponse | None
+
+
+class FinalistPredictionsResponse(BaseModel):
+    """All users' finalist predictions sorted by leaderboard position."""
+
+    items: list[FinalistPredictionEntryResponse]
+    total: int = Field(..., ge=0)
+    predictions_visible: bool
+
+
 class MatchUserPointsDetailsResponse(BaseModel):
     """Scored prediction detail for one user on a single completed match."""
 

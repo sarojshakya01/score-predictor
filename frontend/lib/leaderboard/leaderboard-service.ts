@@ -1,5 +1,6 @@
 import { authenticatedApiFetch } from "@/lib/auth";
 import type {
+  FinalistPredictionsResponse,
   LeaderboardResponse,
   ListLeaderboardParams,
   MatchPointsDetailsResponse,
@@ -44,6 +45,13 @@ export const getUserPredictionDetails = async (
   );
 };
 
+export const listFinalistPredictions = async (): Promise<FinalistPredictionsResponse> => {
+  return authenticatedApiFetch<FinalistPredictionsResponse>(
+    "/leaderboard/finalist-predictions",
+    { method: "GET" },
+  );
+};
+
 export const getMatchPointsDetails = async (
   matchId: number,
 ): Promise<MatchPointsDetailsResponse> => {
@@ -56,5 +64,6 @@ export const getMatchPointsDetails = async (
 export const leaderboardService = {
   getMatchPointsDetails,
   listLeaderboard,
+  listFinalistPredictions,
   getUserPredictionDetails,
 };
