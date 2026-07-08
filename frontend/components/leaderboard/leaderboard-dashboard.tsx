@@ -19,10 +19,13 @@ import type {
   UserPointsDetailsListResponse,
   UserPointsDetailsResponse,
 } from "@/lib/leaderboard";
-import { firstGoalInLabels, MatchDuration, matchDurationLabels } from "@/lib/matches";
+import { firstGoalInLabels, getCurrentMatchDay, MatchDuration, matchDurationLabels } from "@/lib/matches";
 import { FirstGoalIn } from "@/lib/matches/types";
+import { getFinalistPredictionDeadline } from "@/lib/settings";
 import RaceChart from "./race-chart";
 import { UserResponse } from "@/lib/users";
+
+const DEFAULT_FINALIST_PREDICTION_DEADLINE = 7;
 
 export type LeaderboardRow = {
   name: string;
@@ -838,9 +841,17 @@ const FinalistPredictionsModal = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                {data.items.map((row) => (
-                  <FinalistPredictionRow key={row.user_id} row={row} user={user} />
-                ))}
+                {data.predictions_visible ? (
+                  data.items.map((row) => (
+                    <FinalistPredictionRow key={row.user_id} row={row} user={user} />
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="text-center py-4 text-sm text-zinc-500 dark:text-zinc-400">
+                      Finalist predictions are not locked yet.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -933,6 +944,10 @@ export const LeaderboardDashboard = () => {
   const [modalUserName, setModalUserName] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFinalistModalOpen, setIsFinalistModalOpen] = useState(false);
+  const [currentMatchDay, setCurrentMatchDay] = useState<number | null>(null);
+  const [finalistPredictionDeadline, setFinalistPredictionDeadline] = useState(
+    DEFAULT_FINALIST_PREDICTION_DEADLINE,
+  );
   const [user, setUser] = useState<UserResponse | null>(null);
   const [userSearchQuery, setUserSearchQuery] = useState("");
 
@@ -967,14 +982,27 @@ export const LeaderboardDashboard = () => {
       }
 
       try {
-        const leaderboardResponse = await listLeaderboard({ limit: 10000, is_race_data_required: true });
+        const [
+          leaderboardResponse,
+          currentUser,
+          matchDayResponse,
+          deadlineResponse,
+        ] = await Promise.all([
+          listLeaderboard({ limit: 10000, is_race_data_required: true }),
+          getCurrentUser(),
+          getCurrentMatchDay().catch(() => null),
+          getFinalistPredictionDeadline().catch(() => null),
+        ]);
 
         if (!isMounted) {
           return;
         }
 
-        const currentUser = await getCurrentUser();
         setUser(currentUser);
+        setCurrentMatchDay(matchDayResponse?.value ?? null);
+        setFinalistPredictionDeadline(
+          deadlineResponse?.value ?? DEFAULT_FINALIST_PREDICTION_DEADLINE,
+        );
 
         setAuthRequired(false);
         setLeaderboard(leaderboardResponse);
@@ -1019,6 +1047,7 @@ export const LeaderboardDashboard = () => {
     );
   }, [normalizedUserSearchQuery, rows]);
   const isUserSearchActive = normalizedUserSearchQuery.length > 0;
+  const predictionLocked = currentMatchDay ? currentMatchDay > finalistPredictionDeadline : false;
 
   if (isLoading) {
     return (
@@ -1069,14 +1098,16 @@ export const LeaderboardDashboard = () => {
               </p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <button
-                type="button"
-                onClick={() => setIsFinalistModalOpen(true)}
-                className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
-              >
-                <IconTrophy className="h-4 w-4" />
-                Winner Predictions
-              </button>
+              {predictionLocked ? (
+                <button
+                  type="button"
+                  onClick={() => setIsFinalistModalOpen(true)}
+                  className="inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-md border border-zinc-200 bg-white px-3 text-sm font-semibold text-zinc-700 transition hover:border-zinc-300 hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
+                >
+                  <IconTrophy className="h-4 w-4" />
+                  Winner Predictions
+                </button>
+              ) : null}
               <SearchInput
                 value={userSearchQuery}
                 onChange={setUserSearchQuery}
@@ -1205,11 +1236,13 @@ export const LeaderboardDashboard = () => {
         isOpen={isModalOpen}
         onClose={handleModalClose}
       />
-      <FinalistPredictionsModal
-        isOpen={isFinalistModalOpen}
-        onClose={handleFinalistModalClose}
-        user={user}
-      />
+      {predictionLocked ? (
+        <FinalistPredictionsModal
+          isOpen={isFinalistModalOpen}
+          onClose={handleFinalistModalClose}
+          user={user}
+        />
+      ) : null}
     </>
   );
 };
