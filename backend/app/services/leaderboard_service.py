@@ -353,10 +353,14 @@ class LeaderboardService:
 
             locked_matches = await self._match_repository.list_locked_matches()
 
-            current_match_day = await self._setting_repository.get_by_name("current_match_day")
+            current_match_day_setting = await self._setting_repository.get_by_name("current_match_day")
+            finalist_prediction_deadline_setting = await self._setting_repository.get_by_name("finalist_prediction_deadline")
+
+            current_match_day = int(current_match_day_setting.value["day"]) if current_match_day_setting else 0
+            finalist_prediction_deadline = int(finalist_prediction_deadline_setting.value["days"]) if finalist_prediction_deadline_setting else 7
 
             points_from_predictions = await self._prediction_repository.list_points_from_predictions_of_user(
-                current_user=current_user, user_id=user_id, current_match_day=int(current_match_day.value['day']), locked_matches=locked_matches
+                current_user=current_user, user_id=user_id, current_match_day=current_match_day, locked_matches=locked_matches
             )
 
             items: list[UserPointsDetailsResponse] = []
@@ -420,7 +424,11 @@ class LeaderboardService:
             final_matches = await self._match_repository.list_finals(include_locked=True)
             winner_points, runner_up_points, third_place_points = self._calculate_finalist_points(final_matches, user, rules)
 
-            winner_prediction, runner_up_prediction, third_place_prediction = await self._team_repository.get_by_id(user.winner_team_id), await self._team_repository.get_by_id(user.runner_up_team_id), await self._team_repository.get_by_id(user.third_place_team_id)
+            winner_prediction, runner_up_prediction, third_place_prediction = None, None, None
+
+
+            if current_match_day > finalist_prediction_deadline or current_user.id == user_id:
+                winner_prediction, runner_up_prediction, third_place_prediction = await self._team_repository.get_by_id(user.winner_team_id), await self._team_repository.get_by_id(user.runner_up_team_id), await self._team_repository.get_by_id(user.third_place_team_id)
 
             return UserPointsDetailsListResponse(
                 user_id=user_id,
