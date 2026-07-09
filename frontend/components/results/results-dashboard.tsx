@@ -247,7 +247,7 @@ const MatchPointsModal = ({
   const isUserSearchActive = normalizedUserSearchQuery.length > 0;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} isLarge isNoPadding={true}>
+    <Modal isOpen={isOpen} onClose={onClose} title={title} modalSize="LARGE" isNoPadding={true}>
       {isLoading ? (
         <div className="grid gap-3">
           <div className="h-16 animate-pulse rounded-md bg-zinc-100 dark:bg-zinc-800" />
@@ -295,7 +295,7 @@ const MatchPointsModal = ({
           </div>
 
 
-          <div className="overflow-auto max-h-[60vh] rounded-md border border-zinc-200 dark:border-zinc-700">
+          <div className="overflow-auto max-h-[60vh] border border-zinc-200 dark:border-zinc-700">
             <table className="min-w-max w-full border-collapse text-sm">
               <thead>
                 <tr className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800">

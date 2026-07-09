@@ -5,12 +5,12 @@ type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
   title: string;
-  isLarge?: boolean;
+  modalSize?: string;
   isNoPadding?: boolean;
   isSticky?: boolean;
 };
 
-export const Modal = ({ children, isOpen, onClose, title, isLarge = false, isNoPadding = false, isSticky = false }: ModalProps) => {
+export const Modal = ({ children, isOpen, onClose, title, modalSize = "DEFAULT", isNoPadding = false, isSticky = false }: ModalProps) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -54,7 +54,11 @@ export const Modal = ({ children, isOpen, onClose, title, isLarge = false, isNoP
   return (
     <dialog
       ref={dialogRef}
-      className={"backdrop:bg-tournament-primary/50 backdrop:backdrop-blur-sm open:animate-in open:fade-in-0 open:zoom-in-95 rounded-lg p-0 shadow-xl m-auto bg-white border border-zinc-200 dark:bg-zinc-900 dark:border-zinc-700" + (isLarge ? " " : " max-w-2xl ") + "w-full"}
+      className={["backdrop:bg-tournament-primary/50 backdrop:backdrop-blur-sm open:animate-in open:fade-in-0 open:zoom-in-95 rounded-lg",
+        "p-0 shadow-xl m-auto bg-white border border-zinc-200 dark:bg-zinc-900 dark:border-zinc-700 w-full",
+        modalSize === "DEFAULT" ? "max-w-2xl" : "",
+        modalSize === "MEDIUM" ? "max-w-4xl" : ""
+      ].join(" ")}
       onClick={handleBackdropClick}
       onKeyDown={handleKeyDown}
     >

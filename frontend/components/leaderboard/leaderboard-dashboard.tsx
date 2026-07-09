@@ -288,7 +288,7 @@ const UserPointsDetailModal = ({
   }, [isOpen, userId]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Points Breakdown — ${userName}`} isLarge isSticky={true}>
+    <Modal isOpen={isOpen} onClose={onClose} title={`Points Breakdown — ${userName}`} modalSize="LARGE" isSticky={true}>
       {/* Loading skeleton */}
       {isLoading && (
         <div className="flex flex-col gap-3 py-2">
@@ -803,7 +803,7 @@ const FinalistPredictionsModal = ({
   }, [isOpen]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Winner Predictions" isLarge>
+    <Modal isOpen={isOpen} onClose={onClose} modalSize="MEDIUM" isNoPadding={true} title="Winner Predictions">
       {isLoading && (
         <div className="flex flex-col gap-3">
           <div className="h-12 animate-pulse rounded-lg bg-zinc-100 dark:bg-zinc-800" />
@@ -825,7 +825,7 @@ const FinalistPredictionsModal = ({
             <p className="text-sm text-zinc-500 dark:text-zinc-400">No finalist predictions yet.</p>
           </div>
         ) : (
-          <div className="overflow-auto max-h-[40rem] rounded-lg border border-zinc-200 dark:border-zinc-700">
+          <div className="overflow-auto max-h-[40rem] border border-zinc-200 dark:border-zinc-700">
             <table className="min-w-max w-full border-collapse text-sm">
               <thead className="bg-zinc-50 text-left text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 dark:bg-zinc-800/70 dark:text-zinc-400">
                 <tr>
@@ -835,9 +835,9 @@ const FinalistPredictionsModal = ({
                   <th className="static sm:sticky left-[56px] top-0 z-40 w-[160px] min-w-[160px] bg-zinc-100 px-3 py-3 dark:bg-zinc-800">
                     User
                   </th>
-                  <th className="min-w-[12rem] px-3 py-3">Final</th>
-                  <th className="min-w-[12rem] px-3 py-3">Runner-up</th>
-                  <th className="min-w-[12rem] px-3 py-3">Third Place</th>
+                  <th className="min-w-[12rem] px-3 py-3 static sm:sticky top-0 z-30 bg-zinc-100 dark:bg-zinc-700">Final</th>
+                  <th className="min-w-[12rem] px-3 py-3 static sm:sticky top-0 z-30 bg-zinc-100 dark:bg-zinc-700">Runner-up</th>
+                  <th className="min-w-[12rem] px-3 py-3 static sm:sticky top-0 z-30 bg-zinc-100 dark:bg-zinc-700">Third Place</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
