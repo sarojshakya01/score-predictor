@@ -63,6 +63,7 @@ export type FinalistPredictionTeamResponse = {
   id: number;
   fifa_code: string;
   flag_url: string;
+  is_eliminated: boolean;
   name: string;
 };
 

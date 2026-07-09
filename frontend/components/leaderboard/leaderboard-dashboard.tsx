@@ -730,21 +730,30 @@ const FinalistPredictionRow = ({
           {row.total_points} pts
         </div>
       </td>
-      <td className="border-b border-zinc-100 px-3 py-3 dark:border-zinc-800">
+      <td className={[
+        "border-b border-zinc-100 px-3 py-3 dark:border-zinc-800",
+        row.winner_prediction?.is_eliminated ? "opacity-40 grayscale" : ""
+      ].join(" ")}>
         <FinalistTeamCell
           isVisible={row.is_prediction_visible}
           points={row.winner_points}
           team={row.winner_prediction}
         />
       </td>
-      <td className="border-b border-zinc-100 px-3 py-3 dark:border-zinc-800">
+      <td className={[
+        "border-b border-zinc-100 px-3 py-3 dark:border-zinc-800",
+        row.runner_up_prediction?.is_eliminated ? "opacity-40 grayscale" : ""
+      ].join(" ")}>
         <FinalistTeamCell
           isVisible={row.is_prediction_visible}
           points={row.runner_up_points}
           team={row.runner_up_prediction}
         />
       </td>
-      <td className="border-b border-zinc-100 px-3 py-3 dark:border-zinc-800">
+      <td className={[
+        "border-b border-zinc-100 px-3 py-3 dark:border-zinc-800",
+        row.third_place_prediction?.is_eliminated ? "opacity-40 grayscale" : ""
+      ].join(" ")}>
         <FinalistTeamCell
           isVisible={row.is_prediction_visible}
           points={row.third_place_points}

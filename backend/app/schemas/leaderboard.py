@@ -57,6 +57,7 @@ class FinalistPredictionTeamResponse(BaseModel):
     name: str
     fifa_code: str
     flag_url: str
+    is_eliminated: bool
 
 
 class FinalistPredictionEntryResponse(BaseModel):

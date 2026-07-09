@@ -462,8 +462,18 @@ class LeaderboardService:
         try:
             rules = await self._get_scoring_rules()
             users = await self._user_repository.list_active_normal_users()
+            current_match_day = await self._get_current_match_day()
             predictions, prediction_counts = await self._get_prediction_data()
             final_matches = await self._match_repository.list_finals(include_locked=True)
+            all_matches = await self._match_repository.list_matches()
+
+            remaining_teams = []
+            for m in all_matches:
+                if m.match_stage != MatchStage.GROUP and (m.match_day or 0) >= current_match_day:
+                    if m.team1_id not in remaining_teams and m.team1_id <= 48:
+                        remaining_teams.append(m.team1_id)
+                    if m.team2_id not in remaining_teams and m.team2_id <= 48:
+                        remaining_teams.append(m.team2_id)
 
             totals = self._initialize_user_totals(
                 users=users,
@@ -496,6 +506,7 @@ class LeaderboardService:
                     name=team.name,
                     fifa_code=team.fifa_code,
                     flag_url=self._team_flag_url(team),
+                    is_eliminated=team.id not in remaining_teams,
                 )
 
             items: list[FinalistPredictionEntryResponse] = []
