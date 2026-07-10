@@ -10,18 +10,31 @@ const TOP_PERFORMER = 20;
 const BAR_ROW_HEIGHT = 20;
 const CHART_VERTICAL_PADDING = 10;
 
+const getRaceUserName = (user: RaceFrame): string =>
+  user.user_name?.trim() || `User #${user.user_id}`;
+
 export default function RaceChart({
   dataset,
-  userId
+  userId,
+  onUserClick
 }: {
   dataset: RaceFrame[];
   userId?: number | undefined;
+  onUserClick?: (userId: number, userName: string) => void;
 }) {
   const chartRef = useRef<HighchartsReact.RefObject>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
   const matchValRef = useRef<HTMLButtonElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const usersByLabel = new Map(
+    dataset.map((user) => {
+      const userName = getRaceUserName(user);
+      const label = user.user_id === userId ? 'You' : userName;
+
+      return [label, { userId: user.user_id, userName }];
+    }),
+  );
 
   const startMatch = dataset[0].acc_points.length;
   const endMatch = dataset[0].acc_points.length;
@@ -31,8 +44,9 @@ export default function RaceChart({
   ) {
     const output = dataset
       .map((user) => {
+        const userName = getRaceUserName(user);
         return {
-          name: user.user_id === userId ? 'You' : user.user_name,
+          name: user.user_id === userId ? 'You' : userName,
           id: `user_${user.user_id}`,
           y: (user.acc_points.find((point) => point.match_num === matchNum)?.points || 0),
           sort_param1: (user.acc_points.find((point) => point.match_num === matchNum)?.winner_points || 0),
@@ -141,6 +155,37 @@ export default function RaceChart({
       animation: { duration: 1000 },
       marginRight: 50,
       height: TOP_PERFORMER * BAR_ROW_HEIGHT + TOP_PERFORMER * CHART_VERTICAL_PADDING,
+      events: {
+        render: function () {
+          if (!onUserClick) {
+            return;
+          }
+
+          Object.values(this.xAxis[0]?.ticks ?? {}).forEach((tick) => {
+            const label = tick.label;
+            if (!label) {
+              return;
+            }
+
+            const labelText = label.element.textContent?.trim() ?? '';
+            const labelUser = usersByLabel.get(labelText);
+            if (!labelUser) {
+              return;
+            }
+
+            label.css({
+              color: '#4f46e5',
+              cursor: 'pointer',
+              fontWeight: '600',
+            });
+            label.element.onclick = (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              onUserClick(labelUser.userId, labelUser.userName);
+            };
+          });
+        },
+      },
     },
     title: {
       text: undefined,
@@ -149,13 +194,29 @@ export default function RaceChart({
     xAxis: {
       type: 'category',
       uniqueNames: true,
-      reversed: true
+      gridLineWidth: 0,
+      lineWidth: 0,
+      reversed: true,
+      tickLength: 0,
+      tickWidth: 0,
+      labels: {
+        formatter: function () {
+          const label = String(this.value);
+          return label;
+        },
+      },
     },
     yAxis: {
+      gridLineWidth: 0,
+      lineWidth: 0,
+      minorGridLineWidth: 0,
       opposite: true,
       tickPixelInterval: 150,
+      tickLength: 0,
+      tickWidth: 0,
       title: { text: undefined },
       labels: {
+        enabled: false,
         useHTML: true,
       }
     },

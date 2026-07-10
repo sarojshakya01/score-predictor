@@ -1061,8 +1061,8 @@ export const LeaderboardDashboard = () => {
   if (isLoading) {
     return (
       <>
-        <section className="h-[687px] animate-pulse rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-800" />
-        <section className="h-[727px] animate-pulse rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-800" />
+        <section className="h-[687px] animate-pulse rounded-md border border-zinc-200 bg-zinc-100 shadow-sm dark:border-zinc-700 dark:bg-zinc-800" />
+        <section className="h-[727px] animate-pulse rounded-md border border-zinc-200 bg-zinc-100 shadow-sm dark:border-zinc-700 dark:bg-zinc-800" />
       </>
     );
   }
@@ -1095,7 +1095,13 @@ export const LeaderboardDashboard = () => {
         </section>
       ) : null}
 
-      {leaderboard ? <RaceChart dataset={leaderboard.race_frames} userId={user?.id} /> : null}
+      {leaderboard ? (
+        <RaceChart
+          dataset={leaderboard.race_frames}
+          userId={user?.id}
+          onUserClick={handleUserClick}
+        />
+      ) : null}
 
       {rows.length > 0 ? (
         <section className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">

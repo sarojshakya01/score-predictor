@@ -21,7 +21,7 @@ const TeamWithFlag = ({ match, size, isHomeTeam }: { match: MatchResponse, size:
 
       {isLoading1 && (
         <div
-          className={(size === "sm" ? "min-h-[18px] min-w-[25px]" : "min-h-[25px] min-w-[40px]") + " absolute shrink-0 animate-pulse rounded-md border border-zinc-200 shadow-sm dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-zinc-950"}
+          className={(size === "sm" ? "min-h-[18px] min-w-[25px]" : "min-h-[25px] min-w-[40px]") + " absolute shrink-0 animate-pulse rounded-md border border-zinc-200 shadow-sm dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 dark:shadow-zinc-950"}
         />
       )}
       {match.team1_flag_url ? (
@@ -35,7 +35,7 @@ const TeamWithFlag = ({ match, size, isHomeTeam }: { match: MatchResponse, size:
     return (<div className={(size === "sm" ? "w-full" : "w-[47%]") + " flex items-center justify-start gap-2"}>
       {isLoading2 && (
         <div
-          className={(size === "sm" ? "min-h-[18px] min-w-[25px]" : "min-h-[25px] min-w-[40px]") + " absolute shrink-0 animate-pulse rounded-md border border-zinc-200 shadow-sm dark:border-zinc-700 dark:bg-zinc-800 dark:shadow-zinc-950"}
+          className={(size === "sm" ? "min-h-[18px] min-w-[25px]" : "min-h-[25px] min-w-[40px]") + " absolute shrink-0 animate-pulse rounded-md border border-zinc-200 shadow-sm dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 dark:shadow-zinc-950"}
         />
       )}
       {match.team2_flag_url ? (
