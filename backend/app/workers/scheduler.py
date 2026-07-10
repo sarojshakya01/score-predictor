@@ -1097,7 +1097,7 @@ async def send_reminder_email() -> None:
             body = build_base_html(
                 f"<p>Hi {_fmt_user_name(user)},</p>"
                 f"<p>{match_copy} and you have not submitted your "
-                f"{prediction_copy} yet. Please submit before kick-off.</p>"
+                f"{prediction_copy} yet. Please submit before one hour prior to kick-off.</p>"
                 f"{table_html}"
             )
 
