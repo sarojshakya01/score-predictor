@@ -220,14 +220,8 @@ export default function RaceChart({
         useHTML: true,
       }
     },
-    colors: [
-      '#45a3b9',
-      '#afaded',
-      '#73caf5',
-      '#21487d',
-      '#73caf3',
-      '#24477a'
-    ],
+    colors: ["#6272ca", "#676fc7", "#6a6fc4", "#6f6dc1", "#7968b7", "#7e67b7", "#8266b3", "#8465b1", "#8c62ae", "#8c62ad", "#8665b0", "#9062ab", "#9a5ca5", "#9d5a9f", "#a2588d", "#ae5376", "#b04f6e", "#b54d64", "#b74c60", "#bd4a5b", "#bc474f", "#c14448"]
+    ,
     plotOptions: {
       bar: {
         grouping: false,
