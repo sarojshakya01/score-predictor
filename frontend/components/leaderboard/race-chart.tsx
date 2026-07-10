@@ -174,7 +174,7 @@ export default function RaceChart({
             }
 
             label.css({
-              color: '#4f46e5',
+              color: '#819ce0',
               cursor: 'pointer',
               fontWeight: '600',
             });
@@ -220,6 +220,14 @@ export default function RaceChart({
         useHTML: true,
       }
     },
+    colors: [
+      '#45a3b9',
+      '#afaded',
+      '#73caf5',
+      '#21487d',
+      '#73caf3',
+      '#24477a'
+    ],
     plotOptions: {
       bar: {
         grouping: false,
