@@ -469,7 +469,7 @@ class LeaderboardService:
 
             remaining_teams = []
             for m in all_matches:
-                if m.match_stage != MatchStage.GROUP and (m.match_day or 0) > current_match_day:
+                if m.match_stage != MatchStage.GROUP and (m.match_day or 0) >= current_match_day and m.winner_id is None:
                     if m.team1_id not in remaining_teams and m.team1_id <= 48:
                         remaining_teams.append(m.team1_id)
                     if m.team2_id not in remaining_teams and m.team2_id <= 48:
