@@ -12,6 +12,7 @@ from app.core.security import (
     TokenExpiredError,
     TokenType,
     decode_token,
+    token_password_fingerprint_matches,
 )
 from app.db.session import get_db
 from app.models.user import User, UserRole
@@ -61,6 +62,9 @@ async def get_current_user(
 
     if not user:
         raise _unauthorized("User not found")
+
+    if not token_password_fingerprint_matches(payload, user.password):
+        raise _unauthorized("Session is no longer valid")
 
     if not user.is_active:
         detail = (
@@ -135,6 +139,9 @@ async def get_optional_current_user(
         return None
 
     if not user or not user.is_active:
+        return None
+
+    if not token_password_fingerprint_matches(payload, user.password):
         return None
 
     return user

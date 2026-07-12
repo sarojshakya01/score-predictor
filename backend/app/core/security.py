@@ -2,6 +2,7 @@
 
 import enum
 import hashlib
+import hmac
 import secrets
 import uuid
 from datetime import datetime, timedelta, timezone
@@ -42,6 +43,30 @@ def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
+def create_password_fingerprint(password_hash: str) -> str:
+    """Create a server-secret fingerprint for token invalidation."""
+    return hmac.new(
+        settings.JWT_SECRET.encode("utf-8"),
+        password_hash.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def token_password_fingerprint_matches(
+    payload: dict[str, Any],
+    password_hash: str,
+) -> bool:
+    """Return whether a JWT still matches the user's current password hash."""
+    token_fingerprint = payload.get("pwd")
+    if not isinstance(token_fingerprint, str):
+        return False
+
+    return hmac.compare_digest(
+        token_fingerprint,
+        create_password_fingerprint(password_hash),
+    )
+
+
 # ── JWT Tokens ──────────────────────────────────────────────────
 
 
@@ -66,6 +91,7 @@ def _create_token(
     token_type: TokenType,
     expires_delta: timedelta,
     role: UserRole | None = None,
+    password_hash: str | None = None,
 ) -> str:
     """Create a signed JWT token."""
     now = datetime.now(timezone.utc)
@@ -80,28 +106,40 @@ def _create_token(
     if role is not None:
         payload["role"] = role.value
 
+    if password_hash is not None:
+        payload["pwd"] = create_password_fingerprint(password_hash)
+
     token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
     if isinstance(token, bytes):
         return token.decode("utf-8")
     return token
 
 
-def create_access_token(subject: int | str, role: UserRole | None = None) -> str:
+def create_access_token(
+    subject: int | str,
+    role: UserRole | None = None,
+    password_hash: str | None = None,
+) -> str:
     """Create a short-lived access token."""
     return _create_token(
         subject=subject,
         token_type=TokenType.ACCESS,
         expires_delta=timedelta(minutes=settings.JWT_ACCESS_EXPIRE_MINUTES),
         role=role,
+        password_hash=password_hash,
     )
 
 
-def create_refresh_token(subject: int | str) -> str:
+def create_refresh_token(
+    subject: int | str,
+    password_hash: str | None = None,
+) -> str:
     """Create a long-lived refresh token."""
     return _create_token(
         subject=subject,
         token_type=TokenType.REFRESH,
         expires_delta=timedelta(minutes=settings.JWT_REFRESH_EXPIRE_MINUTES),
+        password_hash=password_hash,
     )
 
 

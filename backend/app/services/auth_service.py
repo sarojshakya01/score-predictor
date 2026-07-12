@@ -18,6 +18,7 @@ from app.core.security import (
     decode_token,
     hash_password,
     hash_token,
+    token_password_fingerprint_matches,
     verify_password,
 )
 from app.models.user import User, UserRole
@@ -190,6 +191,12 @@ class AuthService:
                 detail="User not found or deactivated",
             )
 
+        if not token_password_fingerprint_matches(payload, user.password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Session is no longer valid",
+            )
+
         return self._generate_tokens(user)
 
     async def verify_email(self, data: TokenRequest) -> MessageResponse:
@@ -344,8 +351,15 @@ class AuthService:
         message = "User created and logged in successfully." if user.is_active else "User created successfully. Please contact admin for activation."
 
         return TokenResponse(
-            access_token=create_access_token(subject=user.id, role=user.role),
-            refresh_token=create_refresh_token(subject=user.id),
+            access_token=create_access_token(
+                subject=user.id,
+                role=user.role,
+                password_hash=user.password,
+            ),
+            refresh_token=create_refresh_token(
+                subject=user.id,
+                password_hash=user.password,
+            ),
             message=message
         )
 

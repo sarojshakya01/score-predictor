@@ -7,11 +7,13 @@ import { FormEvent, useState } from "react";
 import { changePassword, MissingAuthTokenError, SessionExpiredError } from "@/lib/auth";
 import { getErrorMessage } from "@/lib/forms/error-message";
 import { IconKey } from "@/components/ui/icons";
+import { useAuth } from "@/components/auth/auth-context";
 
 const inputCls = "mt-2 h-11 w-full rounded-md border border-zinc-300 px-3 text-zinc-950 outline-none transition focus:border-tournament-primary focus:ring-2 focus:ring-emerald-100 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-50 dark:focus:ring-emerald-900";
 
 export const ChangePasswordForm = () => {
   const router = useRouter();
+  const { logout } = useAuth();
   const [confirmPassword, setConfirmPassword] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -38,7 +40,11 @@ export const ChangePasswordForm = () => {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      setSuccessMessage(response.message);
+      setSuccessMessage(`${response.message} Please login again.`);
+      logout();
+      window.setTimeout(() => {
+        router.replace("/login");
+      }, 1200);
     } catch (error) {
       if (error instanceof SessionExpiredError) {
         return;

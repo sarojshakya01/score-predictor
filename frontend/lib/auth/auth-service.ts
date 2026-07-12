@@ -142,13 +142,17 @@ export const resetPassword = async (
 export const changePassword = async (
   data: ChangePasswordRequest,
 ): Promise<MessageResponse> => {
-  return authenticatedApiFetch<MessageResponse, ChangePasswordRequest>(
+  const response = await authenticatedApiFetch<MessageResponse, ChangePasswordRequest>(
     "/auth/change-password",
     {
       body: data,
       method: "POST",
     },
   );
+
+  clearAuthTokens();
+
+  return response;
 };
 
 export const getCurrentUser = async (
