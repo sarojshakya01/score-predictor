@@ -242,6 +242,37 @@ export const PredictionsDashboard = () => {
         : undefined,
     [predictions, selectedMatch],
   );
+  const sortedAllMatches = useMemo(
+    () =>
+      [...allMatches].sort((left, right) => {
+        const dateComparison =
+          new Date(`${left.match_datetime}Z`).getTime() -
+          new Date(`${right.match_datetime}Z`).getTime();
+
+        if (dateComparison !== 0) {
+          return dateComparison;
+        }
+
+        return left.id - right.id;
+      }),
+    [allMatches],
+  );
+  const selectedGlobalMatchIndex = useMemo(
+    () =>
+      selectedMatchId === null
+        ? -1
+        : sortedAllMatches.findIndex((match) => match.id === selectedMatchId),
+    [selectedMatchId, sortedAllMatches],
+  );
+  const previousGlobalMatch =
+    selectedGlobalMatchIndex > 0
+      ? sortedAllMatches[selectedGlobalMatchIndex - 1]
+      : null;
+  const nextGlobalMatch =
+    selectedGlobalMatchIndex >= 0 &&
+      selectedGlobalMatchIndex < sortedAllMatches.length - 1
+      ? sortedAllMatches[selectedGlobalMatchIndex + 1]
+      : null;
   const initialFormState = useMemo(
     () =>
       selectedMatch
@@ -738,6 +769,33 @@ export const PredictionsDashboard = () => {
     card.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
   };
 
+  const handleGlobalMatchChange = (targetMatch: MatchResponse | null) => {
+    if (!targetMatch) {
+      return;
+    }
+
+    const targetDayMatches = sortedAllMatches.filter(
+      (match) => match.match_day === targetMatch.match_day,
+    );
+    const nextMatches = targetDayMatches.length > 0 ? targetDayMatches : [targetMatch];
+    const targetPrediction = predictions.find(
+      (prediction) => prediction.match_id === targetMatch.id,
+    );
+
+    setLoadError(null);
+    setMatches(nextMatches);
+    setCurrentMatchDay(targetMatch.match_day);
+    setSelectedMatchId(targetMatch.id);
+    setFormState(buildFormState(targetMatch, targetPrediction));
+
+    window.requestAnimationFrame(() => {
+      const card = cardStripRef.current?.querySelector<HTMLElement>(
+        `[data-match-id="${targetMatch.id}"]`,
+      );
+      card?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    });
+  };
+
   const handleMatchDayChange = async (matchDay: number) => {
     setIsLoading(true);
     setLoadError(null);
@@ -839,50 +897,70 @@ export const PredictionsDashboard = () => {
             </button>
           </div>
         </div>
-        <div className={[
-          "flex gap-4 overflow-x-scroll p-4 overflow-hidden rounded-md",
-          "border border-zinc-200 dark:border-zinc-700",
-          "shadow-sm dark:shadow-zinc-950",
-          "bg-white dark:bg-zinc-900"
-        ].join(" ")}>
-          {isLoading ? (
-            Array.from({ length: 4 }, (_, index) => (
-              <div
-                key={index}
-                className="h-55 w-[280px] shrink-0 animate-pulse rounded-md border border-zinc-200 shadow-sm dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 dark:shadow-zinc-950 sm:w-80 lg:w-[360px]"
-              />
-            ))
-          ) : matches.length > 0 ? (
-            matches.map((match) => {
-              const isSelected = match.id === selectedMatchId;
-              const prediction = predictions.find(
-                (prediction) => prediction.match_id === match.id,
-              );
-
-              const isSaved = !!prediction;
-              let isCorrectWinner = null;
-              if (match.team1_score !== null && match.team2_score !== null) {
-                isCorrectWinner = prediction ? (match.match_locked && ((prediction.team1_score ?? 0) > (prediction.team2_score ?? 0) && match.team1_score > match.team2_score) || ((prediction.team2_score ?? 0) > (prediction.team1_score ?? 0) && match.team2_score > match.team1_score) || (prediction.team1_score === prediction.team2_score && match.team1_score === match.team2_score)) : false;
-              }
-
-              return (
-                <SelectableMatchCard
-                  key={match.id}
-                  match={match}
-                  isSaved={isSaved}
-                  isPredictionAvailable={predictions.length > 0}
-                  isCorrectWinner={isCorrectWinner}
-                  isSelected={isSelected}
-                  handleCardClick={handleCardClick}
-                  className="h-55 shrink-0 w-[360px]"
+        <div className="relative">
+          <button
+            type="button"
+            aria-label="Previous match"
+            disabled={isLoading || previousGlobalMatch === null}
+            onClick={() => handleGlobalMatchChange(previousGlobalMatch)}
+            className="absolute left-2 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center cursor-pointer rounded-full border border-zinc-300 bg-white/95 text-zinc-700 shadow-md backdrop-blur transition hover:border-tournament-primary hover:text-emerald-800 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100/90 disabled:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-800/95 dark:text-zinc-300 dark:shadow-zinc-950 dark:hover:border-tournament-primary dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800/90 dark:disabled:text-zinc-600"
+          >
+            <IconChevronLeft className="h-5 w-5" />
+          </button>
+          <div className={[
+            "flex gap-4 overflow-x-scroll p-4 overflow-hidden rounded-md",
+            "border border-zinc-200 dark:border-zinc-700",
+            "shadow-sm dark:shadow-zinc-950",
+            "bg-white dark:bg-zinc-900"
+          ].join(" ")}>
+            {isLoading ? (
+              Array.from({ length: 4 }, (_, index) => (
+                <div
+                  key={index}
+                  className="h-55 w-[280px] shrink-0 animate-pulse rounded-md border border-zinc-200 shadow-sm dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 dark:shadow-zinc-950 sm:w-80 lg:w-[360px]"
                 />
-              );
-            })
-          ) : (
-            <div className="w-full rounded-md border border-zinc-200 p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:shadow-zinc-950">
-              No upcoming matches are available.
-            </div>
-          )}
+              ))
+            ) : matches.length > 0 ? (
+              matches.map((match) => {
+                const isSelected = match.id === selectedMatchId;
+                const prediction = predictions.find(
+                  (prediction) => prediction.match_id === match.id,
+                );
+
+                const isSaved = !!prediction;
+                let isCorrectWinner = null;
+                if (match.team1_score !== null && match.team2_score !== null) {
+                  isCorrectWinner = prediction ? (match.match_locked && ((prediction.team1_score ?? 0) > (prediction.team2_score ?? 0) && match.team1_score > match.team2_score) || ((prediction.team2_score ?? 0) > (prediction.team1_score ?? 0) && match.team2_score > match.team1_score) || (prediction.team1_score === prediction.team2_score && match.team1_score === match.team2_score)) : false;
+                }
+
+                return (
+                  <SelectableMatchCard
+                    key={match.id}
+                    match={match}
+                    isSaved={isSaved}
+                    isPredictionAvailable={predictions.length > 0}
+                    isCorrectWinner={isCorrectWinner}
+                    isSelected={isSelected}
+                    handleCardClick={handleCardClick}
+                    className="h-55 shrink-0 w-[360px]"
+                  />
+                );
+              })
+            ) : (
+              <div className="w-full rounded-md border border-zinc-200 p-5 text-sm text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-400 dark:shadow-zinc-950">
+                No upcoming matches are available.
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            aria-label="Next match"
+            disabled={isLoading || nextGlobalMatch === null}
+            onClick={() => handleGlobalMatchChange(nextGlobalMatch)}
+            className="absolute right-2 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center cursor-pointer rounded-full border border-zinc-300 bg-white/95 text-zinc-700 shadow-md backdrop-blur transition hover:border-tournament-primary hover:text-emerald-800 disabled:cursor-not-allowed disabled:border-zinc-200 disabled:bg-zinc-100/90 disabled:text-zinc-400 dark:border-zinc-600 dark:bg-zinc-800/95 dark:text-zinc-300 dark:shadow-zinc-950 dark:hover:border-tournament-primary dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800/90 dark:disabled:text-zinc-600"
+          >
+            <IconChevronRight className="h-5 w-5" />
+          </button>
         </div>
       </section >
 
