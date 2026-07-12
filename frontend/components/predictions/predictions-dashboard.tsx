@@ -273,6 +273,13 @@ export const PredictionsDashboard = () => {
       selectedGlobalMatchIndex < sortedAllMatches.length - 1
       ? sortedAllMatches[selectedGlobalMatchIndex + 1]
       : null;
+  const availableMatchDays = useMemo(
+    () =>
+      Array.from(new Set(allMatches.map((match) => match.match_day))).sort(
+        (left, right) => left - right,
+      ),
+    [allMatches],
+  );
   const initialFormState = useMemo(
     () =>
       selectedMatch
@@ -830,11 +837,15 @@ export const PredictionsDashboard = () => {
 
   const referenceMatchDay = currentMatchDay ?? getReferenceMatchDay(matches);
   const previousMatchDay =
-    referenceMatchDay !== null && referenceMatchDay > 1
-      ? referenceMatchDay - 1
+    referenceMatchDay !== null
+      ? [...availableMatchDays]
+        .reverse()
+        .find((matchDay) => matchDay < referenceMatchDay) ?? null
       : null;
   const nextMatchDay =
-    referenceMatchDay !== null ? referenceMatchDay + 1 : null;
+    referenceMatchDay !== null
+      ? availableMatchDays.find((matchDay) => matchDay > referenceMatchDay) ?? null
+      : null;
   const matchListTitle = "Upcoming Matches" + (currentMatchDay ? ` - Match Day ${currentMatchDay}` : "");
 
   const isFormDisabled =
