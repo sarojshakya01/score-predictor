@@ -257,6 +257,7 @@ export const PredictionsDashboard = () => {
       }),
     [allMatches],
   );
+
   const selectedGlobalMatchIndex = useMemo(
     () =>
       selectedMatchId === null
@@ -316,7 +317,13 @@ export const PredictionsDashboard = () => {
       ? nextPredictions.find((p) => p.match_id === selectedMatch!.id)
       : undefined;
 
-    setMatches(nextMatches);
+    const allMatchesCompleted = nextMatches.some((m) => twoHrsBack >= new Date(`${m.match_datetime}Z`))
+    if (allMatchesCompleted) {
+      nextMatches.sort((a, b) => (new Date(`${a.match_datetime}Z`).getTime() - new Date(`${b.match_datetime}Z`).getTime()))
+    }
+
+    setMatches([...nextMatches]);
+
     setSelectedMatchId(selectedMatch?.id ?? null);
     setFormState(
       selectedMatch
