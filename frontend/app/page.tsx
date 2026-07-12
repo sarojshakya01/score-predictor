@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { TournamentWinnerCelebration } from "@/components/celebrations/tournament-winner-celebration";
 import { FinalsWinnerSelector } from "@/components/home/finals-winner-selector";
 import { MatchResultsList } from "@/components/home/match-results-list";
 // import { MetricCard, Metrics } from "@/components/ui/metric-card";
@@ -168,7 +169,7 @@ const LiveWindowPanel = ({
             {summary ? `${summary.open_matches} open` : "Live API"}
           </span>
         </div>
-        <div className="text-gray-900/70">
+        {nextLock && <div className="text-gray-900/70">
           <p className="text-sm font-medium text-black">
             Next match
           </p>
@@ -179,11 +180,9 @@ const LiveWindowPanel = ({
             {nextLock ? formatMinutes(nextLock.minutes_until_lock) : "N/A"}
           </p>
           <p className="mt-3 text-md leading-6 text-black">
-            {nextLock
-              ? `${nextLock.label} locks at ${formatDateTime(nextLock.lock_datetime, false)}.`
-              : "Predictions will reopen when new unlocked fixtures are available."}
+            {`${nextLock.label} locks at ${formatDateTime(nextLock.lock_datetime, false)}.`}
           </p>
-        </div>
+        </div>}
       </div>
     </section>
   );
@@ -226,6 +225,8 @@ const Home = async () => {
         </section>
       ) : null}
 
+      <TournamentWinnerCelebration />
+
       {/* Announcements */}
       {(new Date() < predictionStartDate) && <section
         className="rounded-md border border-yellow-700 dark:bg-yellow-950 px-5 py-4 text-sm dark:text-amber-500 dark:border-amber-700 bg-yellow-100 dark:bg-amber-950 dark:text-amber-300"
@@ -249,28 +250,53 @@ const Home = async () => {
         <LiveWindowPanel nextLock={nextLock} summary={summary} />
       </section>
 
-      <UpcomingMatchesSection matches={matches} />
+      {matches.length ? <>
+        <UpcomingMatchesSection matches={matches} />
 
-      <section className="lg:grid-cols-[1.4fr_0.8fr] z-0">
-        <div className="mb-4 flex items-end justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
-              Match results
-            </h2>
-            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-              See the latest match results.
-            </p>
+        <section className="lg:grid-cols-[1.4fr_0.8fr] z-0">
+          <div className="mb-4 flex items-end justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
+                Match results
+              </h2>
+              <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                See the latest match results.
+              </p>
+            </div>
+            <Link
+              href="/results"
+              className="hidden text-sm font-semibold text-emerald-700 hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-300 sm:inline"
+            >
+              All results
+            </Link>
           </div>
-          <Link
-            href="/results"
-            className="hidden text-sm font-semibold text-emerald-700 hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-300 sm:inline"
-          >
-            All results
-          </Link>
-        </div>
 
-        <MatchResultsList matches={results} />
-      </section>
+          <MatchResultsList matches={results} />
+        </section>
+      </> :
+        <>
+          <section className="lg:grid-cols-[1.4fr_0.8fr] z-0">
+            <div className="mb-4 flex items-end justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold text-zinc-950 dark:text-zinc-50">
+                  Match results
+                </h2>
+                <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                  See the latest match results.
+                </p>
+              </div>
+              <Link
+                href="/results"
+                className="hidden text-sm font-semibold text-emerald-700 hover:text-emerald-900 dark:text-emerald-400 dark:hover:text-emerald-300 sm:inline"
+              >
+                All results
+              </Link>
+            </div>
+
+            <MatchResultsList matches={results} />
+          </section>
+          <UpcomingMatchesSection matches={matches} />
+        </>}
 
       <section>
         <div className="mb-4 flex items-end justify-between gap-4">

@@ -992,7 +992,8 @@ export const PredictionsDashboard = () => {
         <div className={[
           "hidden lg:flex w-40 h-[504px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48",
           (selectedMatch?.winner_id && selectedMatch?.winner_id === selectedMatch?.team2_id) ? "opacity-50" : (selectedMatch?.team1_score !== null && selectedMatch?.team1_score === selectedMatch?.team2_score) ? "opacity-70" : "opacity-100",
-          (selectedMatch?.match_stage !== "GROUP" && selectedMatch?.winner_id && selectedMatch?.winner_id === selectedMatch?.team2_id) ? "filter grayscale" : ""
+          (!["GROUP", "SF", "F"].includes(selectedMatch?.match_stage || "") && selectedMatch?.winner_id && selectedMatch?.winner_id === selectedMatch?.team2_id) ? "filter grayscale" : "",
+          (selectedMatch?.match_stage === "3P" && selectedMatch?.winner_id && selectedMatch?.winner_id === selectedMatch?.team1_id) ? "opacity-50" : ""
         ].join(" ")}>
           <ImageWithFallback width={530} height={530} src={"/images/players/" + selectedMatch?.team1_name_short?.toLowerCase() + ".png"} alt={selectedMatch?.team1_name || "Captain Image"} />
         </div>
@@ -1191,7 +1192,8 @@ export const PredictionsDashboard = () => {
         <div className={[
           "hidden lg:flex w-40 h-[504px] shrink-0 grow basis-0 flex-col gap-2 items-center justify-center text-center bg-player rounded-md min-h-48",
           (selectedMatch?.winner_id && selectedMatch?.winner_id === selectedMatch?.team1_id) ? "opacity-50" : (selectedMatch?.team1_score !== null && selectedMatch?.team1_score === selectedMatch?.team2_score) ? "opacity-70" : "opacity-100",
-          (selectedMatch?.match_stage !== "GROUP" && selectedMatch?.winner_id && selectedMatch?.winner_id === selectedMatch?.team1_id) ? "filter grayscale" : ""
+          (!["GROUP", "SF", "F"].includes(selectedMatch?.match_stage || "") && selectedMatch?.winner_id && selectedMatch?.winner_id === selectedMatch?.team1_id) ? "filter grayscale" : "",
+          (selectedMatch?.match_stage === "3P" && selectedMatch?.winner_id && selectedMatch?.winner_id === selectedMatch?.team1_id) ? "opacity-50" : ""
         ].join(" ")}>
           <ImageWithFallback width={530} height={530} src={"/images/players/" + selectedMatch?.team2_name_short?.toLowerCase() + ".png"} alt={selectedMatch?.team2_name || "Captain Image"} />
         </div>

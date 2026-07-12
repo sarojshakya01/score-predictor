@@ -13,7 +13,7 @@ const CHART_VERTICAL_PADDING = 10;
 const getRaceUserName = (user: RaceFrame): string =>
   user.user_name?.trim() || `User #${user.user_id}`;
 
-export default function RaceChart({
+const RaceChart = ({
   dataset,
   userId,
   onUserClick
@@ -21,7 +21,7 @@ export default function RaceChart({
   dataset: RaceFrame[];
   userId?: number | undefined;
   onUserClick?: (userId: number, userName: string) => void;
-}) {
+}) => {
   const chartRef = useRef<HighchartsReact.RefObject>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -39,9 +39,9 @@ export default function RaceChart({
   const startMatch = dataset[0].acc_points.length;
   const endMatch = dataset[0].acc_points.length;
 
-  function getData(
+  const getData = (
     matchNum: number,
-  ) {
+  ) => {
     const output = dataset
       .map((user) => {
         const userName = getRaceUserName(user);
@@ -90,7 +90,7 @@ export default function RaceChart({
     return data;
   }
 
-  function pause() {
+  const pause = () => {
     const btn = btnRef.current!;
     const chart = chartRef.current?.chart as any; // eslint-disable-line
     btn.innerHTML = '▶️';
@@ -98,7 +98,7 @@ export default function RaceChart({
     chart.sequenceTimer = undefined;
   }
 
-  function update(increment?: number) {
+  const update = (increment?: number) => {
     const input = inputRef.current!;
     const chart = chartRef.current?.chart as any; // eslint-disable-line
     matchValRef.current!.innerText = String(input.value);
@@ -294,12 +294,12 @@ export default function RaceChart({
 
   return (
     <section className="overflow-hidden rounded-md border border-zinc-200 bg-white shadow-sm dark:border-zinc-700 dark:bg-zinc-900">
-      <div className="flex flex-col gap-4 border-b border-zinc-200 px-5 py-4 lg:flex-row lg:justify-between dark:border-zinc-700 items-center">
-        <div>
+      <div className="flex grid sm:grid-cols-2 gap-4 border-b border-zinc-200 px-5 py-3 dark:border-zinc-700 items-center">
+        <div className="items-center">
           <h2 className="text-lg font-semibold text-zinc-950 dark:text-zinc-100">Leaderboard Race</h2>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">Match Number: <span ref={matchValRef}>{startMatch}</span></p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 justify-end">
           <Tooltip content={isPlaying ? 'Pause' : 'Play'}>
             <button
               ref={btnRef}
@@ -326,3 +326,5 @@ export default function RaceChart({
     </section>
   );
 }
+
+export default RaceChart;

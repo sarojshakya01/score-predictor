@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import React, { useEffect, useMemo, useState } from "react";
 
+import { LeaderboardPodiumCelebration } from "@/components/celebrations/leaderboard-podium-celebration";
 import { Modal } from "@/components/ui/modal";
 import { SearchInput } from "@/components/ui/search-input";
 import { IconChevronDown, IconLock, IconTrophy } from "@/components/ui/icons";
@@ -1093,6 +1094,10 @@ export const LeaderboardDashboard = () => {
         >
           {loadError}
         </section>
+      ) : null}
+
+      {rows.length > 0 ? (
+        <LeaderboardPodiumCelebration items={rows} />
       ) : null}
 
       {leaderboard ? (

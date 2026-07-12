@@ -469,7 +469,12 @@ class LeaderboardService:
 
             remaining_teams = []
             for m in all_matches:
-                if m.match_stage != MatchStage.GROUP and (m.match_day or 0) >= current_match_day and m.winner_id is None:
+                if m.match_stage == MatchStage.THIRD_PLACE and m.winner_id is not None:
+                    remaining_teams.append(m.winner_id)
+                elif m.match_stage == MatchStage.FINAL and m.winner_id is not None:
+                    remaining_teams.append(m.team1_id)
+                    remaining_teams.append(m.team2_id)
+                elif m.match_stage != MatchStage.GROUP and (m.match_day or 0) >= current_match_day and m.winner_id is None:
                     if m.team1_id not in remaining_teams and m.team1_id <= 48:
                         remaining_teams.append(m.team1_id)
                     if m.team2_id not in remaining_teams and m.team2_id <= 48:
@@ -1163,14 +1168,14 @@ class LeaderboardService:
         )
 
         top_3_actual = []
-        if final_match is not None and final_match.winner is not None:
-            top_3_actual.append(final_match.winner)
+        if final_match is not None and final_match.winner_id is not None:
+            top_3_actual.append(final_match.winner_id)
         if runner_up_team is not None and runner_up_team is not None:
             top_3_actual.append(runner_up_team)
         if third_place_match is not None and third_place_match.winner_id is not None:
             top_3_actual.append(third_place_match.winner_id)
 
-        winner_points = rules.winner if user.winner_team_id is not None and final_match is not None and user.winner_team_id == final_match.winner else 0
+        winner_points = rules.winner if user.winner_team_id is not None and final_match is not None and user.winner_team_id == final_match.winner_id else 0
         runner_up_points = rules.runner_up if user.runner_up_team_id is not None and runner_up_team is not None and user.runner_up_team_id == runner_up_team else 0
         third_place_points = rules.third_place if user.third_place_team_id is not None and third_place_match is not None and user.third_place_team_id == third_place_match.winner_id else 0
 
