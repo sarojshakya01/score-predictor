@@ -394,8 +394,8 @@ const drawSlot = async (context: CanvasRenderingContext2D, slot: BracketSlot, se
   if (match.match_stage === "F") {
     const trophySrc = await loadImage("/images/trophy.png");
     if (trophySrc) {
-      const scale = Math.min(150 / trophySrc.width, 150 / trophySrc.height, 1);
-      context.drawImage(trophySrc, slot.x + (CARD_WIDTH - 75) / 2, slot.y - 2.5 * CARD_HEIGHT, trophySrc.width * scale, trophySrc.height * scale);
+      const scale = Math.min(140 / trophySrc.width, 140 / trophySrc.height, 1);
+      context.drawImage(trophySrc, slot.x + (CARD_WIDTH - 55) / 2, slot.y - 2.7 * CARD_HEIGHT, trophySrc.width * scale, trophySrc.height * scale);
     }
   }
 };
