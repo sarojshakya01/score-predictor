@@ -1157,63 +1157,64 @@ class LeaderboardService:
 
     @staticmethod
     def _calculate_finalist_points(final_matches: list[Match], user: User, rules: ScoringRules) -> tuple[int, int, int]:
-        """Get points from finalist predictions."""
+        """Get points from finalist predictions.
+
+        No points are awarded for a position until that guess is actually
+        decided. Winner and runner-up are decided once the final is played,
+        OR - even before that - once the finalists are known and the guess
+        isn't one of them (so it's already confirmed wrong regardless of who
+        wins the final).
+        """
         third_place_match = next((m for m in final_matches if m.match_stage == MatchStage.THIRD_PLACE), None)
         final_match = next((m for m in final_matches if m.match_stage == MatchStage.FINAL), None)
 
-        runner_up_team = (
-            final_match.team2_id
-            if final_match is not None and final_match.team1_id == final_match.winner_id
-            else None
-        )
+        final_decided = final_match is not None and final_match.winner_id is not None
+        third_decided = third_place_match is not None and third_place_match.winner_id is not None
 
+        # Nothing has been finalized yet - no points possible.
+        if not final_decided and not third_decided:
+            return 0, 0, 0
+
+        finalists_known = final_match is not None and final_match.team1_id is not None and final_match.team2_id is not None
+        winner_decided = final_decided or (finalists_known and user.winner_team_id not in (final_match.team1_id, final_match.team2_id))
+        runner_up_decided = final_decided or (finalists_known and user.runner_up_team_id not in (final_match.team1_id, final_match.team2_id))
+
+        runner_up_team = None
+        if final_decided:
+            if final_match.team1_id == final_match.winner_id:
+                runner_up_team = final_match.team2_id
+            elif final_match.team2_id == final_match.winner_id:
+                runner_up_team = final_match.team1_id
+
+        # Teams confirmed to be part of the actual top 3, regardless of exact
+        # position - a finalist is guaranteed a top-2 finish even before the
+        # final itself is played.
         top_3_actual = []
-        if final_match is not None and final_match.winner_id is not None:
-            top_3_actual.append(final_match.winner_id)
-        if runner_up_team is not None and runner_up_team is not None:
-            top_3_actual.append(runner_up_team)
-        if third_place_match is not None and third_place_match.winner_id is not None:
+        if final_match is not None:
+            if final_match.team1_id is not None:
+                top_3_actual.append(final_match.team1_id)
+            if final_match.team2_id is not None:
+                top_3_actual.append(final_match.team2_id)
+        if third_decided:
             top_3_actual.append(third_place_match.winner_id)
 
-        winner_points = rules.winner if user.winner_team_id is not None and final_match is not None and user.winner_team_id == final_match.winner_id else 0
-        runner_up_points = rules.runner_up if user.runner_up_team_id is not None and runner_up_team is not None and user.runner_up_team_id == runner_up_team else 0
-        third_place_points = rules.third_place if user.third_place_team_id is not None and third_place_match is not None and user.third_place_team_id == third_place_match.winner_id else 0
+        winner_points = rules.winner if final_decided and user.winner_team_id is not None and user.winner_team_id == final_match.winner_id else 0
+        runner_up_points = rules.runner_up if final_decided and user.runner_up_team_id is not None and runner_up_team is not None and user.runner_up_team_id == runner_up_team else 0
+        third_place_points = rules.third_place if third_decided and user.third_place_team_id is not None and user.third_place_team_id == third_place_match.winner_id else 0
 
-        if winner_points + runner_up_points + third_place_points == 0:
-            if user.third_place_team_id in top_3_actual and user.runner_up_team_id in top_3_actual and user.winner_team_id in top_3_actual:
-                winner_points = rules.correct_3_in_3 - rules.correct_2_in_3
-                runner_up_points = rules.correct_2_in_3 - rules.correct_1_in_3
-                third_place_points = rules.correct_1_in_3
-            elif (user.third_place_team_id in top_3_actual and user.runner_up_team_id in top_3_actual) or (user.third_place_team_id in top_3_actual and user.winner_team_id in top_3_actual) or (user.runner_up_team_id in top_3_actual and user.winner_team_id in top_3_actual):
-                runner_up_points = rules.correct_2_in_3 - rules.correct_1_in_3
-                third_place_points = rules.correct_1_in_3
-            elif user.third_place_team_id in top_3_actual or user.runner_up_team_id in top_3_actual or user.winner_team_id in top_3_actual:
-                third_place_points = rules.correct_1_in_3
-        elif (third_place_points + runner_up_points == 0 and winner_points > 0) or (third_place_points + winner_points == 0 and runner_up_points > 0) or (runner_up_points + winner_points == 0 and third_place_points > 0):
-            if (third_place_points + runner_up_points == 0 and winner_points > 0):
-                if (user.third_place_team_id in top_3_actual and user.runner_up_team_id in top_3_actual):
-                    runner_up_points = rules.correct_2_in_3 - rules.correct_1_in_3
-                    third_place_points = rules.correct_1_in_3
-                elif (user.third_place_team_id in top_3_actual or user.runner_up_team_id in top_3_actual):
-                    third_place_points = rules.correct_1_in_3
-            elif (third_place_points + winner_points == 0 and runner_up_points > 0):
-                if (user.third_place_team_id in top_3_actual and user.winner_team_id in top_3_actual):
-                    winner_points = rules.correct_2_in_3 - rules.correct_1_in_3
-                    third_place_points = rules.correct_1_in_3
-                elif (user.third_place_team_id in top_3_actual or user.winner_team_id in top_3_actual):
-                    third_place_points = rules.correct_1_in_3
-            elif (runner_up_points + winner_points == 0 and third_place_points > 0):
-                if (user.runner_up_team_id in top_3_actual and user.winner_team_id in top_3_actual):
-                    winner_points = rules.correct_2_in_3 - rules.correct_1_in_3
-                    runner_up_points = rules.correct_1_in_3
-                elif (user.runner_up_team_id in top_3_actual or user.winner_team_id in top_3_actual):
-                    runner_up_points = rules.correct_1_in_3
-        elif (third_place_points == 0 and runner_up_points > 0 and winner_points > 0) or (third_place_points > 0 and runner_up_points == 0 and winner_points > 0) or (third_place_points > 0 and runner_up_points > 0 and winner_points == 0):
-            if (third_place_points == 0 and runner_up_points > 0 and winner_points > 0) and user.third_place_team_id in top_3_actual:
-                third_place_points = rules.correct_1_in_3
-            elif (third_place_points > 0 and runner_up_points == 0 and winner_points > 0) and user.runner_up_team_id in top_3_actual:
-                runner_up_points = rules.correct_1_in_3
-            elif (third_place_points > 0 and runner_up_points > 0 and winner_points == 0) and user.winner_team_id in top_3_actual:
-                winner_points = rules.correct_1_in_3
+        points = [winner_points, runner_up_points, third_place_points]
+        guesses = (user.winner_team_id, user.runner_up_team_id, user.third_place_team_id)
+        eligible = (winner_decided, runner_up_decided, third_decided)
 
-        return winner_points, runner_up_points, third_place_points
+        remaining = [i for i in range(3) if points[i] == 0 and eligible[i]]
+        if remaining:
+            tiers = {0: 0, 1: rules.correct_1_in_3, 2: rules.correct_2_in_3, 3: rules.correct_3_in_3}
+            # Credit only the slots whose guess is actually a top-3 member,
+            # in order - not the tail of `remaining` by count alone.
+            correct_slots = [i for i in remaining if guesses[i] in top_3_actual]
+            member_count = len(correct_slots)
+            for rank, idx in enumerate(correct_slots):
+                k = member_count - rank
+                points[idx] = tiers[k] - tiers[k - 1]
+
+        return tuple(points)
