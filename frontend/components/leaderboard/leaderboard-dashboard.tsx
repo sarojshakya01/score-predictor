@@ -28,6 +28,38 @@ import { UserResponse } from "@/lib/users";
 
 const DEFAULT_FINALIST_PREDICTION_DEADLINE = 7;
 
+type SortDirection = "asc" | "desc";
+type SortableBreakdownColumnKey =
+  | "total_points"
+  | "score_points"
+  | "goal_difference_points"
+  | "first_goal_in_points"
+  | "first_scoring_team_points"
+  | "yellow_card_points"
+  | "red_card_points"
+  | "kick_off_team_points"
+  | "match_duration_points";
+
+type BreakdownSort = {
+  direction: SortDirection;
+  key: SortableBreakdownColumnKey;
+};
+
+const sortableBreakdownColumns: {
+  className?: string;
+  key: SortableBreakdownColumnKey;
+  label: string;
+}[] = [
+  { key: "score_points", label: "Score" },
+  { className: "min-w-[105px]", key: "goal_difference_points", label: "Goal Diff" },
+  { className: "min-w-[145px]", key: "first_goal_in_points", label: "First Score In" },
+  { className: "min-w-[145px]", key: "first_scoring_team_points", label: "First Score By" },
+  { className: "min-w-[120px]", key: "yellow_card_points", label: "Yellow Card" },
+  { className: "min-w-[100px]", key: "red_card_points", label: "Red Card" },
+  { className: "min-w-[100px]", key: "kick_off_team_points", label: "Kick-off" },
+  { key: "match_duration_points", label: "Duration" },
+];
+
 export type LeaderboardRow = {
   name: string;
   points: number;
@@ -960,6 +992,7 @@ export const LeaderboardDashboard = () => {
   );
   const [user, setUser] = useState<UserResponse | null>(null);
   const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [breakdownSort, setBreakdownSort] = useState<BreakdownSort | null>(null);
 
   const handleUserClick = (userId: number, userName: string) => {
     setModalUserId(userId);
@@ -973,6 +1006,19 @@ export const LeaderboardDashboard = () => {
 
   const handleFinalistModalClose = () => {
     setIsFinalistModalOpen(false);
+  };
+
+  const handleBreakdownSort = (key: SortableBreakdownColumnKey) => {
+    setBreakdownSort((currentSort) => {
+      if (currentSort?.key !== key) {
+        return { direction: "desc", key };
+      }
+
+      return {
+        direction: currentSort.direction === "desc" ? "asc" : "desc",
+        key,
+      };
+    });
   };
 
   useEffect(() => {
@@ -1056,6 +1102,27 @@ export const LeaderboardDashboard = () => {
       row.name.toLowerCase().includes(normalizedUserSearchQuery),
     );
   }, [normalizedUserSearchQuery, rows]);
+  const displayedRows = useMemo(() => {
+    if (!breakdownSort) {
+      return filteredRows;
+    }
+
+    const directionMultiplier = breakdownSort.direction === "asc" ? 1 : -1;
+
+    return [...filteredRows].sort((first, second) => {
+      const valueDifference = first[breakdownSort.key] - second[breakdownSort.key];
+
+      if (valueDifference !== 0) {
+        return valueDifference * directionMultiplier;
+      }
+
+      if (first.rank !== second.rank) {
+        return first.rank - second.rank;
+      }
+
+      return first.name.localeCompare(second.name);
+    });
+  }, [breakdownSort, filteredRows]);
   const isUserSearchActive = normalizedUserSearchQuery.length > 0;
   const predictionLocked = currentMatchDay ? currentMatchDay > finalistPredictionDeadline : false;
 
@@ -1176,47 +1243,66 @@ export const LeaderboardDashboard = () => {
                       "font-semibold text-sm text-right",
                       "border-b border-zinc-200 dark:border-zinc-700",
                       "px-3 py-3"
-                    ].join(" ")}>Total</th>
-                    <th className={[
-                      "static sm:sticky top-0 z-30",
-                      "bg-zinc-100 dark:bg-zinc-700",
-                      "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right"
-                    ].join(" ")}>Score</th>
-                    <th className={[
-                      "static sm:sticky top-0 z-30",
-                      "bg-zinc-100 dark:bg-zinc-700",
-                      "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[105px]"
-                    ].join(" ")}>Goal Diff</th>
-                    <th className={[
-                      "static sm:sticky top-0 z-30",
-                      "bg-zinc-100 dark:bg-zinc-700",
-                      "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[145px]"
-                    ].join(" ")}>First Score In</th>
-                    <th className={[
-                      "static sm:sticky top-0 z-30",
-                      "bg-zinc-100 dark:bg-zinc-700",
-                      "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[145px]"
-                    ].join(" ")}>First Score By</th>
-                    <th className={[
-                      "static sm:sticky top-0 z-30",
-                      "bg-zinc-100 dark:bg-zinc-700",
-                      "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[120px]"
-                    ].join(" ")}>Yello Card</th>
-                    <th className={[
-                      "static sm:sticky top-0 z-30",
-                      "bg-zinc-100 dark:bg-zinc-700",
-                      "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[100px]"
-                    ].join(" ")}>Red Card</th>
-                    <th className={[
-                      "static sm:sticky top-0 z-30",
-                      "bg-zinc-100 dark:bg-zinc-700",
-                      "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right min-w-[100px]"
-                    ].join(" ")}>Kick-off</th>
-                    <th className={[
-                      "static sm:sticky top-0 z-30",
-                      "bg-zinc-100 dark:bg-zinc-700",
-                      "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right"
-                    ].join(" ")}>Duration</th>
+                    ].join(" ")}
+                      aria-sort={
+                        breakdownSort?.key === "total_points"
+                          ? breakdownSort.direction === "asc"
+                            ? "ascending"
+                            : "descending"
+                          : "none"
+                      }
+                    >
+                      <button
+                        type="button"
+                        onClick={() => handleBreakdownSort("total_points")}
+                        className="inline-flex w-full items-center justify-end gap-1 rounded-sm text-right font-semibold transition hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:hover:text-zinc-100"
+                      >
+                        <span>Total</span>
+                        <IconChevronDown
+                          className={[
+                            "h-3.5 w-3.5 shrink-0 transition",
+                            breakdownSort?.key === "total_points" ? "opacity-100" : "opacity-35",
+                            breakdownSort?.key === "total_points" && breakdownSort.direction === "asc" ? "rotate-180" : "",
+                          ].join(" ")}
+                        />
+                      </button>
+                    </th>
+                    {sortableBreakdownColumns.map((column) => {
+                      const isActiveSort = breakdownSort?.key === column.key;
+                      return (
+                        <th
+                          key={column.key}
+                          aria-sort={
+                            isActiveSort
+                              ? breakdownSort.direction === "asc"
+                                ? "ascending"
+                                : "descending"
+                              : "none"
+                          }
+                          className={[
+                            "static sm:sticky top-0 z-30",
+                            "bg-zinc-100 dark:bg-zinc-700",
+                            "px-3 py-3 dark:text-zinc-400 border-b border-zinc-200 dark:border-zinc-700 text-right",
+                            column.className ?? "",
+                          ].join(" ")}
+                        >
+                          <button
+                            type="button"
+                            onClick={() => handleBreakdownSort(column.key)}
+                            className="inline-flex w-full items-center justify-end gap-1 rounded-sm text-right font-semibold transition hover:text-zinc-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 dark:hover:text-zinc-100"
+                          >
+                            <span>{column.label}</span>
+                            <IconChevronDown
+                              className={[
+                                "h-3.5 w-3.5 shrink-0 transition",
+                                isActiveSort ? "opacity-100" : "opacity-35",
+                                isActiveSort && breakdownSort.direction === "asc" ? "rotate-180" : "",
+                              ].join(" ")}
+                            />
+                          </button>
+                        </th>
+                      );
+                    })}
                     <th className={[
                       "static sm:sticky top-0 z-30",
                       "bg-zinc-100 dark:bg-zinc-700",
@@ -1225,7 +1311,7 @@ export const LeaderboardDashboard = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-                  {filteredRows.map((row) => (
+                  {displayedRows.map((row) => (
                     <LeaderboardRow
                       user={user}
                       key={row.user_id}

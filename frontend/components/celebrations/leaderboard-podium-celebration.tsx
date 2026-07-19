@@ -261,7 +261,7 @@ export const LeaderboardPodiumCelebration = ({
             ].join(" ")}
           >
             <div className="flex items-center justify-between gap-3">
-              <span className={`inline-flex h-${9 - slot.item.rank} w-${9 - slot.item.rank} items-center justify-center rounded-full bg-zinc-950 text-sm font-bold text-white dark:bg-white dark:text-zinc-950`}>
+              <span className={`inline-flex h-${10 - slot.item.rank} w-${10 - slot.item.rank} items-center justify-center rounded-full bg-zinc-950 text-sm font-bold text-white dark:bg-white dark:text-zinc-950`}>
                 {slot.item.rank}
               </span>
               <span className={`${slot.textSize} font-semibold uppercase tracking-[0.16em] ${slot.accent}`}>
