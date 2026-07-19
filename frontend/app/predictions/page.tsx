@@ -7,7 +7,7 @@ import { PageShell } from "@/components/ui/page-shell";
 const PredictionsPage = () => {
   return (
     <PageShell>
-      <TournamentWinnerCelebration />
+      <TournamentWinnerCelebration duration={6000} />
       <Suspense>
         <PredictionsDashboard />
       </Suspense>

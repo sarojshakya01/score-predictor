@@ -27,6 +27,7 @@ const Fireworks = dynamic(
 );
 
 type TournamentWinnerCelebrationProps = {
+  duration: number;
   className?: string;
 };
 
@@ -84,6 +85,7 @@ const huesToMinMax = (hues: number[]): { min: number; max: number } => {
 }
 
 export const TournamentWinnerCelebration = ({
+  duration = 6000,
   className = "",
 }: TournamentWinnerCelebrationProps) => {
   const { winner } = useFinalMatchWinner();
@@ -112,12 +114,12 @@ export const TournamentWinnerCelebration = ({
     // Starts opacity fade-out at 4.5 seconds
     const fadeTimer = setTimeout(() => {
       setIsFadingOut(true);
-    }, 6000);
+    }, duration);
 
     // Fully removes component from DOM at 5 seconds
     const stopTimer = setTimeout(() => {
       setShouldRender(false);
-    }, 7000);
+    }, duration + 1000);
 
     return () => {
       clearInterval(timer);

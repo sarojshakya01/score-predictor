@@ -5,7 +5,7 @@ import { PageShell } from "@/components/ui/page-shell";
 const BracketsPage = () => {
   return (
     <PageShell>
-      <TournamentWinnerCelebration />
+      <TournamentWinnerCelebration duration={60000} />
       <BracketCanvas />
     </PageShell>
   );

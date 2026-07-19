@@ -225,7 +225,7 @@ const Home = async () => {
         </section>
       ) : null}
 
-      <TournamentWinnerCelebration />
+      <TournamentWinnerCelebration duration={15000} />
 
       {/* Announcements */}
       {(new Date() < predictionStartDate) && <section
