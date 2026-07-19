@@ -598,11 +598,11 @@ class LeaderboardService:
 
                 extra_points = 0
 
-                if match.match_stage == MatchStage.FINAL and (match.team1_id == user.winner_team_id or match.team2_id == user.winner_team_id):
+                if match.match_stage == MatchStage.FINAL and match.winner_id == user.winner_team_id:
                     extra_points = rules.winner
-                elif match.match_stage == MatchStage.FINAL and (match.team1_id == user.runner_up_team_id or match.team2_id == user.runner_up_team_id):
+                elif match.match_stage == MatchStage.FINAL and user.runner_up_team_id in (match.team1_id, match.team2_id):
                     extra_points = rules.runner_up
-                elif match.match_stage == MatchStage.THIRD_PLACE and (match.team1_id == user.third_place_team_id or match.team2_id == user.third_place_team_id):
+                elif match.match_stage == MatchStage.THIRD_PLACE and user.third_place_team_id == match.winner_id:
                     extra_points = rules.third_place
 
                 score = self._score_prediction(prediction, rules)
