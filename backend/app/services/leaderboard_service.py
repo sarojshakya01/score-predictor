@@ -832,11 +832,13 @@ class LeaderboardService:
 
                 if match.match_stage == MatchStage.THIRD_PLACE:
                     cumulative_points[prediction.user_id]["total_points"] += (
-                        score.total_points + third_place_points
+                        score.total_points + cumulative_points[prediction.user_id]["third_place_points"]
                     )
                 elif match.match_stage == MatchStage.FINAL:
                     cumulative_points[prediction.user_id]["total_points"] += (
-                        score.total_points + winner_points + runner_up_points + third_place_points
+                        score.total_points + cumulative_points[prediction.user_id]["winner_points"]
+                        + cumulative_points[prediction.user_id]["runner_up_points"]
+                        + cumulative_points[prediction.user_id]["third_place_points"]
                     )
                 else:
                     cumulative_points[prediction.user_id]["total_points"] += (
