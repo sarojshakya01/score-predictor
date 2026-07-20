@@ -838,7 +838,6 @@ class LeaderboardService:
                     cumulative_points[prediction.user_id]["total_points"] += (
                         score.total_points + cumulative_points[prediction.user_id]["winner_points"]
                         + cumulative_points[prediction.user_id]["runner_up_points"]
-                        + cumulative_points[prediction.user_id]["third_place_points"]
                     )
                 else:
                     cumulative_points[prediction.user_id]["total_points"] += (
