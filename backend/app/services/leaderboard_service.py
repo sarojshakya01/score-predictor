@@ -830,19 +830,9 @@ class LeaderboardService:
                     rules,
                 )
 
-                if match.match_stage == MatchStage.THIRD_PLACE:
-                    cumulative_points[prediction.user_id]["total_points"] += (
-                        score.total_points + cumulative_points[prediction.user_id]["third_place_points"]
-                    )
-                elif match.match_stage == MatchStage.FINAL:
-                    cumulative_points[prediction.user_id]["total_points"] += (
-                        score.total_points + cumulative_points[prediction.user_id]["winner_points"]
-                        + cumulative_points[prediction.user_id]["runner_up_points"]
-                    )
-                else:
-                    cumulative_points[prediction.user_id]["total_points"] += (
-                        score.total_points
-                    )
+                cumulative_points[prediction.user_id]["total_points"] += (
+                    score.total_points
+                )
 
                 cumulative_points[prediction.user_id]["score_points"] += (
                     score.score_points
@@ -853,6 +843,10 @@ class LeaderboardService:
 
             # Capture standings after this match
             for user in users:
+                if match.match_stage == MatchStage.THIRD_PLACE:
+                    cumulative_points[user.id]["total_points"] += cumulative_points[user.id]["third_place_points"]
+                elif match.match_stage == MatchStage.FINAL:
+                    cumulative_points[user.id]["total_points"] += cumulative_points[user.id]["winner_points"] + cumulative_points[user.id]["runner_up_points"]
                 user_match_points[user.id].append(
                     AccumulatedPoints(
                         match_num=idx,
