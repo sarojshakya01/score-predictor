@@ -1135,6 +1135,11 @@ async def send_todays_matches_email() -> None:
     tomorrow = now + timedelta(days=1)
 
     async with async_session_factory() as db:
+        final_match_not_played = await db.execute(
+            select(Match)
+            .where(Match.match_stage == MatchStage.FINAL)
+            .where(Match.winner_id.is_(None)))
+
         result = await db.execute(
             select(Match)
             .options(
@@ -1156,6 +1161,12 @@ async def send_todays_matches_email() -> None:
         all_users: list[User] = list(user_result.scalars().all())
         recipients: list[str] = [user.email for user in all_users if user.role == UserRole.USER]
         admin_emails: list[str] = [user.email for user in all_users if user.role == UserRole.ADMIN]
+
+    final_match_not_played_list = list(final_match_not_played.scalars().all())
+
+    if not final_match_not_played_list:
+        logger.info("[JOB5] No match remaining to inform")
+        return
 
     if not recipients:
         logger.info("[JOB5] No active users – skipping email")
